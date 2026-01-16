@@ -123,12 +123,12 @@ export default function Home() {
           }`}>
             {heroTitle || 'Elizabeth Zolotova'}
           </h2>
-          <p className={`text-xl mb-8 max-w-2xl mx-auto leading-relaxed ${
+          <p className={`text-xl mb-8 max-w-2xl mx-auto leading-relaxed font-serif ${
             heroVideoUrl
               ? 'text-white/95 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]'
               : 'text-muted-foreground'
           }`}>
-            {heroTagline || "I'm a Pro dancer and dance teacher who can make you fall in love with dance..."}
+            {heroTagline || "I'm a professional dancer and dance teacher who can make you fall in love with dance."}
           </p>
           <div className="flex justify-center gap-4 mb-8">
             <Button variant="outline" size="icon" className="rounded-full hover:bg-pink-100 transition-colors">

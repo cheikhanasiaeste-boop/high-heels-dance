@@ -27,7 +27,7 @@ export function ContentEditor() {
   useEffect(() => {
     setContent({
       hero_title: heroTitle || 'Elizabeth Zolotova',
-      hero_tagline: heroTagline || "I'm a Pro dancer and dance teacher who can make you fall in love with dance...",
+      hero_tagline: heroTagline || "I'm a professional dancer and dance teacher who can make you fall in love with dance.",
       courses_heading: coursesHeading || 'Dance Courses',
       testimonials_heading: testimonialsHeading || 'Student Testimonials',
     });
