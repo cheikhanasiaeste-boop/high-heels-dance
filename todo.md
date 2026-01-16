@@ -474,3 +474,7 @@
 
 ## Update Widget Text to Upcoming Events
 - [x] Change "Happening Soon" to "Upcoming Events" with loudspeaker emoji
+
+## Update Widget Styling
+- [x] Remove loudspeaker emoji from widget text
+- [x] Change widget color to something catchy and coherent with page vibe
