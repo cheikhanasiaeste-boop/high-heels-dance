@@ -471,3 +471,6 @@
 
 ## Rename Widget Text
 - [x] Change "Upcoming Sessions" to "Happening Soon" in widget
+
+## Update Widget Text to Upcoming Events
+- [x] Change "Happening Soon" to "Upcoming Events" with loudspeaker emoji
