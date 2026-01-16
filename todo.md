@@ -313,3 +313,9 @@
 - [x] Remove Section Headings subsection from Page Content area
 - [x] Keep only Content Editor in Page Content
 - [x] Test settings page after removal
+
+## Add Section Headings Back to Settings
+- [x] Add Section Headings editor back to Site Settings
+- [x] Ensure edit functionality for existing headings works
+- [x] Ensure create functionality for new headings works
+- [x] Test all CRUD operations
