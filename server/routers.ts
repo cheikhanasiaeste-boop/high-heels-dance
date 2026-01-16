@@ -251,6 +251,46 @@ export const appRouter = router({
         }),
     }),
 
+    // Testimonial management
+    testimonials: router({
+      // List all testimonials
+      list: adminProcedure.query(async () => {
+        return await db.getAllTestimonials();
+      }),
+
+      // Approve testimonial
+      approve: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          await db.updateTestimonial(input.id, { status: 'approved' });
+          return { success: true };
+        }),
+
+      // Reject testimonial
+      reject: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          await db.updateTestimonial(input.id, { status: 'rejected' });
+          return { success: true };
+        }),
+
+      // Toggle featured status
+      toggleFeatured: adminProcedure
+        .input(z.object({ id: z.number(), isFeatured: z.boolean() }))
+        .mutation(async ({ input }) => {
+          await db.updateTestimonial(input.id, { isFeatured: input.isFeatured });
+          return { success: true };
+        }),
+
+      // Delete testimonial
+      delete: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          await db.deleteTestimonial(input.id);
+          return { success: true };
+        }),
+    }),
+
     // Banner management
     banner: router({
       get: adminProcedure.query(async () => {
@@ -544,6 +584,68 @@ Be friendly, professional, and helpful. If you don't know something specific, of
     history: protectedProcedure.query(async ({ ctx }) => {
       return await db.getChatHistory(ctx.user.id);
     }),
+  }),
+
+  // Testimonials
+  testimonials: router({
+    // Public: Get approved testimonials for homepage
+    list: publicProcedure.query(async () => {
+      return await db.getApprovedTestimonials();
+    }),
+
+    // Protected: Submit feedback
+    submit: protectedProcedure
+      .input(z.object({
+        type: z.enum(["session", "course"]),
+        relatedId: z.number(),
+        rating: z.number().min(1).max(5),
+        review: z.string().min(10),
+        photoUrl: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Check if user already submitted feedback for this item
+        const existing = await db.getUserTestimonialForItem(
+          ctx.user.id,
+          input.type,
+          input.relatedId
+        );
+
+        if (existing) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'You have already submitted feedback for this item',
+          });
+        }
+
+        const testimonial = await db.createTestimonial({
+          userId: ctx.user.id,
+          userName: ctx.user.name || 'Anonymous',
+          userEmail: ctx.user.email || undefined,
+          rating: input.rating,
+          review: input.review,
+          photoUrl: input.photoUrl,
+          type: input.type,
+          relatedId: input.relatedId,
+          status: 'pending',
+        });
+
+        return testimonial;
+      }),
+
+    // Protected: Check if user can submit feedback
+    canSubmit: protectedProcedure
+      .input(z.object({
+        type: z.enum(["session", "course"]),
+        relatedId: z.number(),
+      }))
+      .query(async ({ ctx, input }) => {
+        const existing = await db.getUserTestimonialForItem(
+          ctx.user.id,
+          input.type,
+          input.relatedId
+        );
+        return { canSubmit: !existing };
+      }),
   }),
 });
 

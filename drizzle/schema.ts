@@ -124,3 +124,25 @@ export const bookings = mysqlTable("bookings", {
 
 export type Booking = typeof bookings.$inferSelect;
 export type InsertBooking = typeof bookings.$inferInsert;
+
+/**
+ * Testimonials table - stores user feedback and reviews
+ */
+export const testimonials = mysqlTable("testimonials", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  userName: varchar("userName", { length: 255 }).notNull(),
+  userEmail: varchar("userEmail", { length: 320 }),
+  rating: int("rating").notNull(), // 1-5 stars
+  review: text("review").notNull(),
+  photoUrl: text("photoUrl"),
+  type: mysqlEnum("type", ["session", "course"]).notNull(), // session or course feedback
+  relatedId: int("relatedId"), // booking ID or course ID
+  status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
+  isFeatured: boolean("isFeatured").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Testimonial = typeof testimonials.$inferSelect;
+export type InsertTestimonial = typeof testimonials.$inferInsert;

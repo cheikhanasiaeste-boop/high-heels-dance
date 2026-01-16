@@ -4,15 +4,18 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from "@/components/ui/badge";
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { Instagram, Youtube, Facebook, MessageCircle } from "lucide-react";
+import { Instagram, Youtube, Facebook, MessageCircle, Star } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
 import ChatWidget from "@/components/ChatWidget";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import Autoplay from "embla-carousel-autoplay";
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
   const { data: courses, isLoading } = trpc.courses.list.useQuery();
   const { data: banner } = trpc.banner.get.useQuery();
+  const { data: testimonials } = trpc.testimonials.list.useQuery();
   const [showChat, setShowChat] = useState(false);
 
   return (
@@ -145,6 +148,56 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* Testimonials Section */}
+      {testimonials && testimonials.length > 0 && (
+        <section className="py-16 bg-gradient-to-br from-purple-50 to-pink-50">
+          <div className="container">
+            <h3 className="text-3xl font-bold mb-12 text-center">What Students Say</h3>
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              plugins={[
+                Autoplay({
+                  delay: 5000,
+                }),
+              ]}
+              className="w-full max-w-5xl mx-auto"
+            >
+              <CarouselContent>
+                {testimonials.map((testimonial) => (
+                  <CarouselItem key={testimonial.id} className="md:basis-1/2 lg:basis-1/3">
+                    <Card className="h-full">
+                      <CardHeader>
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-pink-200 to-purple-200 flex items-center justify-center font-bold text-primary">
+                            {testimonial.userName.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1">
+                            <CardTitle className="text-base">{testimonial.userName}</CardTitle>
+                            <div className="flex gap-0.5 mt-1">
+                              {Array.from({ length: testimonial.rating }).map((_, i) => (
+                                <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        <p className="text-sm text-muted-foreground italic">"{testimonial.review}"</p>
+                      </CardContent>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
+        </section>
+      )}
 
       {/* Footer */}
       <footer className="border-t py-8 bg-card">

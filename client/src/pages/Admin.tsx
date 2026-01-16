@@ -56,6 +56,11 @@ export default function Admin() {
     undefined,
     { enabled: isAuthenticated && user?.role === 'admin' }
   );
+  
+  const { data: testimonials } = trpc.admin.testimonials.list.useQuery(
+    undefined,
+    { enabled: isAuthenticated && user?.role === 'admin' }
+  );
 
   const createCourseMutation = trpc.admin.courses.create.useMutation({
     onSuccess: () => {
@@ -146,6 +151,48 @@ export default function Admin() {
       toast.success("Booking cancelled successfully!");
       utils.admin.bookings.list.invalidate();
       utils.admin.availability.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to cancel booking");
+    },
+  });
+  
+  const approveTestimonialMutation = trpc.admin.testimonials.approve.useMutation({
+    onSuccess: () => {
+      toast.success("Testimonial approved!");
+      utils.admin.testimonials.list.invalidate();
+      utils.testimonials.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to approve testimonial");
+    },
+  });
+  
+  const rejectTestimonialMutation = trpc.admin.testimonials.reject.useMutation({
+    onSuccess: () => {
+      toast.success("Testimonial rejected");
+      utils.admin.testimonials.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to reject testimonial");
+    },
+  });
+  
+  const toggleFeaturedMutation = trpc.admin.testimonials.toggleFeatured.useMutation({
+    onSuccess: () => {
+      toast.success("Featured status updated!");
+      utils.admin.testimonials.list.invalidate();
+      utils.testimonials.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update featured status");
+    },
+  });
+  
+  const deleteTestimonialMutation = trpc.admin.testimonials.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Testimonial deleted");
+      utils.admin.testimonials.list.invalidate();
     },
     onError: (error) => {
       toast.error(error.message || "Failed to cancel booking");
@@ -562,6 +609,102 @@ export default function Admin() {
                 <AlertDescription>
                   No availability slots yet. Click "Add Time Slot" to create your first slot.
                 </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Testimonial Management */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Testimonials</CardTitle>
+            <CardDescription>Review and manage user feedback</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {testimonials && testimonials.length > 0 ? (
+              <div className="space-y-4">
+                {testimonials.map((testimonial) => (
+                  <div key={testimonial.id} className="p-4 border rounded-lg space-y-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold">{testimonial.userName}</p>
+                          <div className="flex">
+                            {Array.from({ length: testimonial.rating }).map((_, i) => (
+                              <span key={i} className="text-yellow-400">★</span>
+                            ))}
+                          </div>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {testimonial.type === 'session' ? 'Session' : 'Course'} Feedback
+                        </p>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          testimonial.status === 'approved' ? 'bg-green-100 text-green-700' :
+                          testimonial.status === 'rejected' ? 'bg-red-100 text-red-700' :
+                          'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {testimonial.status}
+                        </span>
+                        {testimonial.isFeatured && (
+                          <span className="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-700">
+                            Featured
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-sm">{testimonial.review}</p>
+                    <div className="flex gap-2 flex-wrap">
+                      {testimonial.status === 'pending' && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => approveTestimonialMutation.mutate({ id: testimonial.id })}
+                          >
+                            Approve
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => rejectTestimonialMutation.mutate({ id: testimonial.id })}
+                          >
+                            Reject
+                          </Button>
+                        </>
+                      )}
+                      {testimonial.status === 'approved' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => toggleFeaturedMutation.mutate({ 
+                            id: testimonial.id, 
+                            isFeatured: !testimonial.isFeatured 
+                          })}
+                        >
+                          {testimonial.isFeatured ? 'Unfeature' : 'Feature'}
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => {
+                          if (confirm("Delete this testimonial?")) {
+                            deleteTestimonialMutation.mutate({ id: testimonial.id });
+                          }
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>No testimonials yet.</AlertDescription>
               </Alert>
             )}
           </CardContent>

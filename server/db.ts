@@ -20,7 +20,10 @@ import {
   InsertAvailabilitySlot,
   bookings,
   Booking,
-  InsertBooking
+  InsertBooking,
+  testimonials,
+  Testimonial,
+  InsertTestimonial
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -390,4 +393,85 @@ export async function cancelBooking(id: number): Promise<void> {
   if (!db) throw new Error("Database not available");
   
   await db.update(bookings).set({ status: "cancelled" }).where(eq(bookings.id, id));
+}
+
+// ==================== Testimonials ====================
+
+export async function createTestimonial(testimonial: InsertTestimonial): Promise<Testimonial> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(testimonials).values(testimonial);
+  const insertedId = Number(result[0].insertId);
+  
+  const newTestimonial = await db.select().from(testimonials).where(eq(testimonials.id, insertedId)).limit(1);
+  if (!newTestimonial[0]) throw new Error("Failed to retrieve created testimonial");
+  
+  return newTestimonial[0];
+}
+
+export async function getApprovedTestimonials(): Promise<Testimonial[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select()
+    .from(testimonials)
+    .where(eq(testimonials.status, "approved"))
+    .orderBy(desc(testimonials.isFeatured), desc(testimonials.createdAt));
+  
+  return result;
+}
+
+export async function getAllTestimonials(): Promise<Testimonial[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select()
+    .from(testimonials)
+    .orderBy(desc(testimonials.createdAt));
+  
+  return result;
+}
+
+export async function getTestimonialById(id: number): Promise<Testimonial | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(testimonials).where(eq(testimonials.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updateTestimonial(id: number, updates: Partial<InsertTestimonial>): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(testimonials).set(updates).where(eq(testimonials.id, id));
+}
+
+export async function deleteTestimonial(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(testimonials).where(eq(testimonials.id, id));
+}
+
+export async function getUserTestimonialForItem(userId: number, type: "session" | "course", relatedId: number): Promise<Testimonial | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db
+    .select()
+    .from(testimonials)
+    .where(
+      and(
+        eq(testimonials.userId, userId),
+        eq(testimonials.type, type),
+        eq(testimonials.relatedId, relatedId)
+      )
+    )
+    .limit(1);
+  
+  return result[0];
 }
