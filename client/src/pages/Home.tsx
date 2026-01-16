@@ -18,6 +18,12 @@ export default function Home() {
   const { data: banner } = trpc.banner.get.useQuery();
   const { data: textTestimonials } = trpc.testimonials.list.useQuery();
   const { data: videoTestimonials } = trpc.testimonials.videoTestimonials.useQuery();
+  
+  // Fetch editable content
+  const { data: heroTitle } = trpc.admin.content.get.useQuery({ key: 'hero_title' });
+  const { data: heroTagline } = trpc.admin.content.get.useQuery({ key: 'hero_tagline' });
+  const { data: coursesHeading } = trpc.admin.content.get.useQuery({ key: 'courses_heading' });
+  const { data: testimonialsHeading } = trpc.admin.content.get.useQuery({ key: 'testimonials_heading' });
   const { data: heroVideoUrl } = trpc.admin.settings.get.useQuery(
     { key: "heroVideoUrl" },
     { enabled: true }
@@ -115,14 +121,14 @@ export default function Home() {
               ? 'text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]' 
               : 'bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent'
           }`}>
-            Elizabeth Zolotova
+            {heroTitle || 'Elizabeth Zolotova'}
           </h2>
           <p className={`text-xl mb-8 max-w-2xl mx-auto leading-relaxed ${
             heroVideoUrl
               ? 'text-white/95 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]'
               : 'text-muted-foreground'
           }`}>
-            I'm a Pro dancer and dance teacher who can make you fall in love with dance...
+            {heroTagline || "I'm a Pro dancer and dance teacher who can make you fall in love with dance..."}
           </p>
           <div className="flex justify-center gap-4 mb-8">
             <Button variant="outline" size="icon" className="rounded-full hover:bg-pink-100 transition-colors">
@@ -158,7 +164,7 @@ export default function Home() {
         <div className="container relative z-10">
           <div className="text-center mb-16">
             <h3 className="text-5xl font-bold mb-4 bg-gradient-to-r from-pink-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-              Dance Courses
+              {coursesHeading || 'Dance Courses'}
             </h3>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
               Transform your dance skills with professionally designed courses for all levels
@@ -329,7 +335,7 @@ export default function Home() {
         <section className="py-20 bg-gradient-to-br from-purple-50 via-pink-50 to-lavender-50">
           <div className="container">
             <div className="text-center mb-12">
-              <h3 className="text-4xl font-bold mb-4">Student Success Stories</h3>
+              <h3 className="text-4xl font-bold mb-4">{testimonialsHeading || 'Student Success Stories'}</h3>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
                 Hear from our amazing students about their dance journey
               </p>

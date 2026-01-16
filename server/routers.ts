@@ -329,6 +329,52 @@ export const appRouter = router({
           return { success: true };
         }),
     }),
+
+    // User management
+    users: router({
+      list: adminProcedure.query(async () => {
+        return await db.getAllUsers();
+      }),
+
+      updateRole: adminProcedure
+        .input(z.object({
+          userId: z.number(),
+          role: z.enum(['admin', 'user']),
+        }))
+        .mutation(async ({ input }) => {
+          await db.updateUserRole(input.userId, input.role);
+          return { success: true };
+        }),
+
+      getById: adminProcedure
+        .input(z.object({ userId: z.number() }))
+        .query(async ({ input }) => {
+          const user = await db.getUserById(input.userId);
+          if (!user) {
+            throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+          }
+          return user;
+        }),
+    }),
+
+    // Site content management
+    content: router({
+      get: adminProcedure
+        .input(z.object({ key: z.string() }))
+        .query(async ({ input }) => {
+          return await db.getSetting(input.key);
+        }),
+
+      update: adminProcedure
+        .input(z.object({
+          key: z.string(),
+          value: z.string(),
+        }))
+        .mutation(async ({ input }) => {
+          await db.setSetting(input.key, input.value);
+          return { success: true };
+        }),
+    }),
   }),
 
   // Public banner status

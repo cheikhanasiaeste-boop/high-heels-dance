@@ -13,6 +13,8 @@ import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 import { useState } from "react";
 import { toast } from "sonner";
+import { ContentEditor } from "@/components/ContentEditor";
+import { UserManagement } from "@/components/UserManagement";
 
 
 export default function Admin() {
@@ -814,6 +816,12 @@ export default function Admin() {
             )}
           </CardContent>
         </Card>
+
+        {/* Content Editor */}
+        <ContentEditor />
+
+        {/* User Management */}
+        <UserManagement />
 
         {/* Banner Management */}
         <Card>

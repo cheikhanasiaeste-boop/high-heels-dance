@@ -475,3 +475,31 @@ export async function getUserTestimonialForItem(userId: number, type: "session" 
   
   return result[0];
 }
+
+// User Management Functions
+export async function getAllUsers(): Promise<typeof users.$inferSelect[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select()
+    .from(users)
+    .orderBy(desc(users.createdAt));
+  
+  return result;
+}
+
+export async function updateUserRole(userId: number, role: "admin" | "user"): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(users).set({ role }).where(eq(users.id, userId));
+}
+
+export async function getUserById(userId: number): Promise<typeof users.$inferSelect | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+  return result[0];
+}

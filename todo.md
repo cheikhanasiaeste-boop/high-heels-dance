@@ -183,3 +183,21 @@
 - [x] Add video overlay for text readability
 - [x] Configure auto-play, loop, and mute
 - [x] Test video performance and responsiveness
+
+## Admin Content Management
+- [x] Add site content settings to database (hero title, tagline, section headings)
+- [x] Create API endpoints for editing site content
+- [x] Add course edit functionality (currently only create/delete)
+- [x] Implement course video upload for lessons
+- [x] Add rich text editor for course descriptions
+- [x] Build admin UI for editing homepage text
+- [x] Build admin UI for editing courses
+
+## Admin User Management
+- [x] Create API endpoint to list all users
+- [x] Create API endpoint to promote user to admin
+- [x] Create API endpoint to demote admin to user
+- [x] Add user search and filter functionality
+- [x] Build admin UI for user list with role management
+- [ ] Add user activity display (purchases, bookings)
+- [x] Test role management and permissions
