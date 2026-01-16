@@ -94,7 +94,10 @@ export const availabilitySlots = mysqlTable("availabilitySlots", {
   price: varchar("price", { length: 20 }), // Price in EUR (e.g., "50.00")
   title: varchar("title", { length: 200 }).default("One-on-One Dance Session").notNull(),
   description: text("description"),
-  isBooked: boolean("isBooked").default(false).notNull(),
+  sessionType: mysqlEnum("sessionType", ["private", "group"]).default("private").notNull(),
+  capacity: int("capacity").default(1).notNull(), // Max participants (1 for private, >1 for group)
+  currentBookings: int("currentBookings").default(0).notNull(), // Number of current bookings
+  isBooked: boolean("isBooked").default(false).notNull(), // For private sessions only
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

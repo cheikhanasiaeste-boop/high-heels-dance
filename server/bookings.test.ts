@@ -45,6 +45,203 @@ function createAdminUser(): AuthenticatedUser {
   });
 }
 
+describe("Enhanced Booking System with Group Sessions", () => {
+  describe("Group session capacity management", () => {
+    it("allows multiple users to book the same group session", async () => {
+      const admin = createAdminUser();
+      const adminCtx = createMockContext(admin);
+      const adminCaller = appRouter.createCaller(adminCtx);
+      
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 20);
+      tomorrow.setHours(14, 0, 0, 0);
+      
+      const endTime = new Date(tomorrow);
+      endTime.setHours(15, 0, 0, 0);
+      
+      // Create group session with capacity 3
+      const slot = await adminCaller.admin.availability.create({
+        startTime: tomorrow.toISOString(),
+        endTime: endTime.toISOString(),
+        eventType: 'online',
+        isFree: true,
+        title: 'Group Dance Class',
+        sessionType: 'group',
+        capacity: 3,
+      });
+
+      // First user books
+      const user1 = createTestUser();
+      const ctx1 = createMockContext(user1);
+      const caller1 = appRouter.createCaller(ctx1);
+      const booking1 = await caller1.bookings.create({ slotId: slot.id });
+      expect(booking1).toBeDefined();
+
+      // Second user books
+      const user2 = createTestUser();
+      const ctx2 = createMockContext(user2);
+      const caller2 = appRouter.createCaller(ctx2);
+      const booking2 = await caller2.bookings.create({ slotId: slot.id });
+      expect(booking2).toBeDefined();
+
+      // Check currentBookings
+      const updatedSlot = await db.getAvailabilitySlotById(slot.id);
+      expect(updatedSlot?.currentBookings).toBe(2);
+
+      // Third user books (should fill capacity)
+      const user3 = createTestUser();
+      const ctx3 = createMockContext(user3);
+      const caller3 = appRouter.createCaller(ctx3);
+      const booking3 = await caller3.bookings.create({ slotId: slot.id });
+      expect(booking3).toBeDefined();
+
+      const fullSlot = await db.getAvailabilitySlotById(slot.id);
+      expect(fullSlot?.currentBookings).toBe(3);
+
+      // Fourth user should fail (capacity reached)
+      const user4 = createTestUser();
+      const ctx4 = createMockContext(user4);
+      const caller4 = appRouter.createCaller(ctx4);
+      await expect(caller4.bookings.create({ slotId: slot.id })).rejects.toThrow("fully booked");
+    });
+
+    it("prevents double booking for private sessions", async () => {
+      const admin = createAdminUser();
+      const adminCtx = createMockContext(admin);
+      const adminCaller = appRouter.createCaller(adminCtx);
+      
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 21);
+      tomorrow.setHours(10, 0, 0, 0);
+      
+      const endTime = new Date(tomorrow);
+      endTime.setHours(11, 0, 0, 0);
+      
+      // Create private session
+      const slot = await adminCaller.admin.availability.create({
+        startTime: tomorrow.toISOString(),
+        endTime: endTime.toISOString(),
+        eventType: 'online',
+        isFree: true,
+        title: 'Private Session',
+        sessionType: 'private',
+        capacity: 1,
+      });
+
+      // First user books
+      const user1 = createTestUser();
+      const ctx1 = createMockContext(user1);
+      const caller1 = appRouter.createCaller(ctx1);
+      await caller1.bookings.create({ slotId: slot.id });
+
+      // Second user should fail
+      const user2 = createTestUser();
+      const ctx2 = createMockContext(user2);
+      const caller2 = appRouter.createCaller(ctx2);
+      await expect(caller2.bookings.create({ slotId: slot.id })).rejects.toThrow("already booked");
+    });
+
+    it("decrements currentBookings when group session booking is cancelled", async () => {
+      const admin = createAdminUser();
+      const adminCtx = createMockContext(admin);
+      const adminCaller = appRouter.createCaller(adminCtx);
+      
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 22);
+      tomorrow.setHours(16, 0, 0, 0);
+      
+      const endTime = new Date(tomorrow);
+      endTime.setHours(17, 0, 0, 0);
+      
+      const slot = await adminCaller.admin.availability.create({
+        startTime: tomorrow.toISOString(),
+        endTime: endTime.toISOString(),
+        eventType: 'online',
+        isFree: true,
+        title: 'Group Session Cancel Test',
+        sessionType: 'group',
+        capacity: 5,
+      });
+
+      // Two users book
+      const user1 = createTestUser();
+      const ctx1 = createMockContext(user1);
+      const caller1 = appRouter.createCaller(ctx1);
+      const booking1 = await caller1.bookings.create({ slotId: slot.id });
+
+      const user2 = createTestUser();
+      const ctx2 = createMockContext(user2);
+      const caller2 = appRouter.createCaller(ctx2);
+      await caller2.bookings.create({ slotId: slot.id });
+
+      // Check currentBookings is 2
+      let updatedSlot = await db.getAvailabilitySlotById(slot.id);
+      expect(updatedSlot?.currentBookings).toBe(2);
+
+      // First user cancels
+      await caller1.bookings.cancel({ id: booking1.id });
+
+      // Check currentBookings is decremented to 1
+      updatedSlot = await db.getAvailabilitySlotById(slot.id);
+      expect(updatedSlot?.currentBookings).toBe(1);
+    });
+  });
+
+  describe("Session type filtering", () => {
+    it("filters by session type", async () => {
+      const admin = createAdminUser();
+      const adminCtx = createMockContext(admin);
+      const adminCaller = appRouter.createCaller(adminCtx);
+      
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 23);
+      
+      // Create private session
+      const privateTime = new Date(tomorrow);
+      privateTime.setHours(10, 0, 0, 0);
+      const privateEnd = new Date(privateTime);
+      privateEnd.setHours(11, 0, 0, 0);
+      
+      await adminCaller.admin.availability.create({
+        startTime: privateTime.toISOString(),
+        endTime: privateEnd.toISOString(),
+        eventType: 'online',
+        isFree: true,
+        title: 'Private Filter Test',
+        sessionType: 'private',
+        capacity: 1,
+      });
+
+      // Create group session
+      const groupTime = new Date(tomorrow);
+      groupTime.setHours(14, 0, 0, 0);
+      const groupEnd = new Date(groupTime);
+      groupEnd.setHours(15, 0, 0, 0);
+      
+      await adminCaller.admin.availability.create({
+        startTime: groupTime.toISOString(),
+        endTime: groupEnd.toISOString(),
+        eventType: 'online',
+        isFree: true,
+        title: 'Group Filter Test',
+        sessionType: 'group',
+        capacity: 5,
+      });
+
+      const ctx = createMockContext();
+      const caller = appRouter.createCaller(ctx);
+
+      // Test private filter
+      const privateSlots = await caller.bookings.availableSlots({ sessionType: 'private' });
+      expect(privateSlots.every((s: any) => s.sessionType === 'private')).toBe(true);
+
+      // Test group filter
+      const groupSlots = await caller.bookings.availableSlots({ sessionType: 'group' });
+      expect(groupSlots.every((s: any) => s.sessionType === 'group')).toBe(true);
+    });
+  });
+});
+
 describe("Enhanced Booking System", () => {
   describe("bookings.availableSlots", () => {
     it("returns available slots for public access", async () => {

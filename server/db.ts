@@ -288,27 +288,21 @@ export async function getAvailableSlots(startDate?: Date, endDate?: Date): Promi
   const db = await getDb();
   if (!db) return [];
   
-  let query = db.select().from(availabilitySlots).where(eq(availabilitySlots.isBooked, false));
+  // Get all slots (we'll filter by availability logic below)
+  const allSlots = await db.select().from(availabilitySlots).orderBy(availabilitySlots.startTime);
   
-  // Filter by date range if provided
-  if (startDate && endDate) {
-    const result = await db
-      .select()
-      .from(availabilitySlots)
-      .where(
-        and(
-          eq(availabilitySlots.isBooked, false),
-          and(
-            eq(availabilitySlots.startTime, startDate), // This needs proper comparison
-            eq(availabilitySlots.endTime, endDate)
-          )
-        )
-      );
-    return result;
-  }
+  // Filter slots based on availability:
+  // - Private sessions: not booked (isBooked = false)
+  // - Group sessions: current bookings < capacity
+  const availableSlots = allSlots.filter(slot => {
+    if (slot.sessionType === 'group') {
+      return slot.currentBookings < slot.capacity;
+    } else {
+      return !slot.isBooked;
+    }
+  });
   
-  const result = await query.orderBy(availabilitySlots.startTime);
-  return result;
+  return availableSlots;
 }
 
 export async function getAllAvailabilitySlots(): Promise<AvailabilitySlot[]> {

@@ -95,3 +95,15 @@
 - [x] Allow users to select dates from calendar
 - [x] Display available time slots for selected date
 - [x] Add navigation between months
+
+## Group Session Support
+- [x] Add sessionType field (private/group) to availability slots
+- [x] Add capacity field for group sessions
+- [x] Add currentBookings counter to track spots taken
+- [x] Update booking logic to check capacity before allowing bookings
+- [x] Add session type filter to booking page
+- [x] Display remaining spots for group sessions
+- [x] Update admin panel to configure session type and capacity
+- [x] Prevent booking when group session is at capacity
+- [x] Show visual indicators for private vs group sessions
+- [x] Test multiple users booking same group session

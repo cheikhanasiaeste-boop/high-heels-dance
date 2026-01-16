@@ -32,7 +32,9 @@ export default function Admin() {
     isFree: true,
     price: '',
     title: 'One-on-One Dance Session',
-    description: ''
+    description: '',
+    sessionType: 'private' as 'private' | 'group',
+    capacity: 1
   });
 
   const { data: courses, isLoading: coursesLoading } = trpc.admin.courses.list.useQuery(
@@ -118,7 +120,9 @@ export default function Admin() {
         isFree: true,
         price: '',
         title: 'One-on-One Dance Session',
-        description: ''
+        description: '',
+        sessionType: 'private',
+        capacity: 1
       });
     },
     onError: (error) => {
@@ -399,6 +403,38 @@ export default function Admin() {
                       </div>
                     )}
                     <div className="space-y-2">
+                      <Label htmlFor="slot-session-type">Session Type</Label>
+                      <select
+                        id="slot-session-type"
+                        className="w-full p-2 border rounded-md"
+                        value={newSlot.sessionType}
+                        onChange={(e) => {
+                          const sessionType = e.target.value as 'private' | 'group';
+                          setNewSlot({ 
+                            ...newSlot, 
+                            sessionType,
+                            capacity: sessionType === 'private' ? 1 : 5
+                          });
+                        }}
+                      >
+                        <option value="private">Private (1-on-1)</option>
+                        <option value="group">Group Session</option>
+                      </select>
+                    </div>
+                    {newSlot.sessionType === 'group' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="slot-capacity">Capacity (Max Participants)</Label>
+                        <Input
+                          id="slot-capacity"
+                          type="number"
+                          min="2"
+                          value={newSlot.capacity}
+                          onChange={(e) => setNewSlot({ ...newSlot, capacity: parseInt(e.target.value) || 2 })}
+                          placeholder="5"
+                        />
+                      </div>
+                    )}
+                    <div className="space-y-2">
                       <Label htmlFor="slot-pricing">Pricing</Label>
                       <select
                         id="slot-pricing"
@@ -453,6 +489,8 @@ export default function Admin() {
                           price: !newSlot.isFree ? newSlot.price : undefined,
                           title: newSlot.title,
                           description: newSlot.description || undefined,
+                          sessionType: newSlot.sessionType,
+                          capacity: newSlot.capacity,
                         });
                       }}
                       disabled={createSlotMutation.isPending}
@@ -476,15 +514,26 @@ export default function Admin() {
                         {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} to 
                         {new Date(slot.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
-                      <div className="flex items-center gap-2 mt-2">
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
                         <span className="text-xs px-2 py-1 bg-muted rounded">
                           {slot.eventType === 'online' ? '💻 Online' : '📍 In-Person'}
                         </span>
                         <span className="text-xs px-2 py-1 bg-muted rounded">
+                          {slot.sessionType === 'private' ? '👤 Private' : '👥 Group'}
+                        </span>
+                        {slot.sessionType === 'group' && (
+                          <span className="text-xs px-2 py-1 bg-muted rounded">
+                            {slot.currentBookings}/{slot.capacity} booked
+                          </span>
+                        )}
+                        <span className="text-xs px-2 py-1 bg-muted rounded">
                           {slot.isFree ? '🆓 Free' : `💰 €${slot.price}`}
                         </span>
                         <span className="text-xs px-2 py-1 bg-muted rounded">
-                          {slot.isBooked ? '🔒 Booked' : '✅ Available'}
+                          {slot.sessionType === 'group' 
+                            ? (slot.currentBookings >= slot.capacity ? '🔒 Full' : '✅ Available')
+                            : (slot.isBooked ? '🔒 Booked' : '✅ Available')
+                          }
                         </span>
                       </div>
                       {slot.location && (

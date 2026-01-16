@@ -194,7 +194,7 @@ export const appRouter = router({
       
       create: adminProcedure
         .input(z.object({
-          startTime: z.string(), // ISO datetime string
+          startTime: z.string(),
           endTime: z.string(),
           eventType: z.enum(["online", "in-person"]),
           location: z.string().optional(),
@@ -202,6 +202,8 @@ export const appRouter = router({
           price: z.string().optional(),
           title: z.string(),
           description: z.string().optional(),
+          sessionType: z.enum(["private", "group"]).default("private"),
+          capacity: z.number().min(1).default(1),
         }))
         .mutation(async ({ input }) => {
           return await db.createAvailabilitySlot({
@@ -213,6 +215,9 @@ export const appRouter = router({
             price: input.price,
             title: input.title,
             description: input.description,
+            sessionType: input.sessionType,
+            capacity: input.capacity,
+            currentBookings: 0,
             isBooked: false,
           });
         }),
@@ -288,15 +293,22 @@ export const appRouter = router({
     availableSlots: publicProcedure
       .input(z.object({
         eventType: z.enum(["online", "in-person", "all"]).optional(),
+        sessionType: z.enum(["private", "group", "all"]).optional(),
       }).optional())
       .query(async ({ input }) => {
-        const allSlots = await db.getAvailableSlots();
+        let slots = await db.getAvailableSlots();
         
-        if (!input?.eventType || input.eventType === "all") {
-          return allSlots;
+        // Filter by event type
+        if (input?.eventType && input.eventType !== "all") {
+          slots = slots.filter(slot => slot.eventType === input.eventType);
         }
         
-        return allSlots.filter(slot => slot.eventType === input.eventType);
+        // Filter by session type
+        if (input?.sessionType && input.sessionType !== "all") {
+          slots = slots.filter(slot => slot.sessionType === input.sessionType);
+        }
+        
+        return slots;
       }),
     
     // Create a booking (free sessions only)
@@ -311,11 +323,20 @@ export const appRouter = router({
         if (!slot) {
           throw new TRPCError({ code: 'NOT_FOUND', message: 'Time slot not found' });
         }
-        if (slot.isBooked) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'This time slot is already booked' });
-        }
         if (!slot.isFree) {
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'This session requires payment. Use the payment flow instead.' });
+        }
+        
+        // Check capacity for group sessions
+        if (slot.sessionType === 'group') {
+          if (slot.currentBookings >= slot.capacity) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'This session is fully booked' });
+          }
+        } else {
+          // Private session - check if already booked
+          if (slot.isBooked) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'This time slot is already booked' });
+          }
         }
         
         // Generate Zoom link for online sessions
@@ -335,8 +356,16 @@ export const appRouter = router({
           paymentStatus: 'not_required',
         });
         
-        // Mark slot as booked
-        await db.updateAvailabilitySlot(input.slotId, { isBooked: true });
+        // Update slot booking status
+        if (slot.sessionType === 'group') {
+          // Increment current bookings for group sessions
+          await db.updateAvailabilitySlot(input.slotId, { 
+            currentBookings: slot.currentBookings + 1 
+          });
+        } else {
+          // Mark private session as booked
+          await db.updateAvailabilitySlot(input.slotId, { isBooked: true });
+        }
         
         return booking;
       }),
@@ -352,14 +381,23 @@ export const appRouter = router({
         if (!slot) {
           throw new TRPCError({ code: 'NOT_FOUND', message: 'Time slot not found' });
         }
-        if (slot.isBooked) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'This time slot is already booked' });
-        }
         if (slot.isFree) {
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'This session is free. Use the free booking flow.' });
         }
         if (!slot.price) {
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'Session price not configured' });
+        }
+        
+        // Check capacity
+        if (slot.sessionType === 'group') {
+          if (slot.currentBookings >= slot.capacity) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'This session is fully booked' });
+          }
+        } else {
+          // Private session
+          if (slot.isBooked) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'This time slot is already booked' });
+          }
         }
 
         const Stripe = (await import('stripe')).default;
@@ -418,9 +456,21 @@ export const appRouter = router({
           throw new TRPCError({ code: 'FORBIDDEN', message: 'Not your booking' });
         }
         
-        // Cancel booking and free up the slot
+        // Cancel booking and update slot availability
         await db.cancelBooking(input.id);
-        await db.updateAvailabilitySlot(booking.slotId, { isBooked: false });
+        
+        const slot = await db.getAvailabilitySlotById(booking.slotId);
+        if (slot) {
+          if (slot.sessionType === 'group') {
+            // Decrement current bookings for group sessions
+            await db.updateAvailabilitySlot(booking.slotId, { 
+              currentBookings: Math.max(0, slot.currentBookings - 1) 
+            });
+          } else {
+            // Free up private session
+            await db.updateAvailabilitySlot(booking.slotId, { isBooked: false });
+          }
+        }
         
         return { success: true };
       }),

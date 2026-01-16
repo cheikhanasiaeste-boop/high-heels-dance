@@ -23,12 +23,14 @@ export default function BookSession() {
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [notes, setNotes] = useState("");
   const [eventFilter, setEventFilter] = useState<"all" | "online" | "in-person">("all");
+  const [sessionTypeFilter, setSessionTypeFilter] = useState<"all" | "private" | "group">("all");
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
 
   const { data: availableSlots, isLoading: slotsLoading } = trpc.bookings.availableSlots.useQuery({
     eventType: eventFilter,
+    sessionType: sessionTypeFilter,
   });
   
   const { data: myBookings } = trpc.bookings.myBookings.useQuery(
@@ -293,6 +295,13 @@ export default function BookSession() {
                       <TabsTrigger value="in-person">In-Person</TabsTrigger>
                     </TabsList>
                   </Tabs>
+                  <Tabs value={sessionTypeFilter} onValueChange={(v) => setSessionTypeFilter(v as any)} className="w-auto">
+                    <TabsList>
+                      <TabsTrigger value="all">All</TabsTrigger>
+                      <TabsTrigger value="private">Private</TabsTrigger>
+                      <TabsTrigger value="group">Group</TabsTrigger>
+                    </TabsList>
+                  </Tabs>
                   <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="w-auto">
                     <TabsList>
                       <TabsTrigger value="calendar">Calendar</TabsTrigger>
@@ -397,6 +406,14 @@ export default function BookSession() {
                                     <Badge variant="secondary" className="flex items-center gap-1">
                                       <MapPin className="h-3 w-3" />
                                       In-Person
+                                    </Badge>
+                                  )}
+                                  <Badge variant="outline">
+                                    {slot.sessionType === 'private' ? '👤 Private' : '👥 Group'}
+                                  </Badge>
+                                  {slot.sessionType === 'group' && (
+                                    <Badge variant="secondary">
+                                      {slot.currentBookings}/{slot.capacity} booked
                                     </Badge>
                                   )}
                                   {slot.isFree ? (
