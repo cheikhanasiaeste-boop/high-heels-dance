@@ -7,8 +7,9 @@ import { trpc } from "@/lib/trpc";
 import { ArrowLeft, Star } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { getLoginUrl } from "@/const";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
+import { Upload, Video } from "lucide-react";
 
 export default function Feedback() {
   const { user, isAuthenticated, loading } = useAuth();
@@ -23,6 +24,9 @@ export default function Feedback() {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [review, setReview] = useState("");
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const { data: canSubmitData } = trpc.testimonials.canSubmit.useQuery(
     { type: type!, relatedId: relatedId! },
@@ -39,7 +43,9 @@ export default function Feedback() {
     },
   });
 
-  const handleSubmit = () => {
+  const uploadVideoMutation = trpc.testimonials.uploadVideo.useMutation();
+
+  const handleSubmit = async () => {
     if (!type || !relatedId) {
       toast.error("Invalid feedback request");
       return;
@@ -55,12 +61,66 @@ export default function Feedback() {
       return;
     }
 
+    let videoUrl: string | undefined;
+
+    // Upload video if provided
+    if (videoFile) {
+      setUploading(true);
+      try {
+        toast.info("Uploading video...");
+        const reader = new FileReader();
+        const base64Promise = new Promise<string>((resolve, reject) => {
+          reader.onload = () => {
+            const base64 = reader.result as string;
+            resolve(base64.split(',')[1]);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(videoFile);
+        });
+
+        const base64Data = await base64Promise;
+        const uploadResult = await uploadVideoMutation.mutateAsync({
+          filename: videoFile.name,
+          contentType: videoFile.type,
+          data: base64Data,
+        });
+
+        videoUrl = uploadResult.url;
+        toast.success("Video uploaded successfully!");
+      } catch (error) {
+        toast.error("Failed to upload video. Please try again.");
+        setUploading(false);
+        return;
+      }
+      setUploading(false);
+    }
+
     submitMutation.mutate({
       type,
       relatedId,
       rating,
       review: review.trim(),
+      videoUrl,
     });
+  };
+
+  const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (max 50MB)
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error("Video file must be less than 50MB");
+      return;
+    }
+
+    // Check file type
+    if (!file.type.startsWith('video/')) {
+      toast.error("Please select a valid video file");
+      return;
+    }
+
+    setVideoFile(file);
   };
 
   if (loading) {
@@ -197,6 +257,49 @@ export default function Feedback() {
               </p>
             </div>
 
+            {/* Video Upload (Optional) */}
+            <div className="space-y-2">
+              <Label htmlFor="video">Video Testimonial (Optional)</Label>
+              <div className="border-2 border-dashed border-pink-200 rounded-lg p-6 text-center">
+                <input
+                  ref={videoInputRef}
+                  type="file"
+                  accept="video/*"
+                  onChange={handleVideoSelect}
+                  className="hidden"
+                />
+                {videoFile ? (
+                  <div className="space-y-2">
+                    <Video className="h-12 w-12 mx-auto text-pink-500" />
+                    <p className="text-sm font-medium">{videoFile.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {(videoFile.size / (1024 * 1024)).toFixed(2)} MB
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setVideoFile(null)}
+                    >
+                      Remove Video
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Upload className="h-12 w-12 mx-auto text-muted-foreground" />
+                    <p className="text-sm font-medium">Upload a video testimonial</p>
+                    <p className="text-xs text-muted-foreground">MP4, WebM (max 50MB)</p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => videoInputRef.current?.click()}
+                    >
+                      Select Video
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Privacy Notice */}
             <div className="bg-pink-50/50 border border-pink-100 rounded-lg p-4">
               <p className="text-sm text-muted-foreground">
@@ -215,7 +318,7 @@ export default function Feedback() {
               </Link>
               <Button
                 onClick={handleSubmit}
-                disabled={submitMutation.isPending || rating === 0 || review.trim().length < 10}
+                disabled={submitMutation.isPending || uploading || rating === 0 || review.trim().length < 10}
                 className="flex-1"
               >
                 {submitMutation.isPending ? "Submitting..." : "Submit Feedback"}

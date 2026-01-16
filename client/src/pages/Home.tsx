@@ -35,6 +35,9 @@ export default function Home() {
             <Link href="/book-session">
               <Button variant="default">Book a Session</Button>
             </Link>
+            <Link href="/video-gallery">
+              <Button variant="ghost">Video Gallery</Button>
+            </Link>
             {isAuthenticated ? (
               <>
                 <Link href="/my-courses">

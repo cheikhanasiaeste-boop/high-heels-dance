@@ -43,6 +43,13 @@
       "when": 1768581943096,
       "tag": "0005_smiling_ogun",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1768582620248,
+      "tag": "0006_far_puppet_master",
+      "breakpoints": true
     }
   ]
 }

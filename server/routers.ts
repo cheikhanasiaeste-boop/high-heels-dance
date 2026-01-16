@@ -592,6 +592,12 @@ Be friendly, professional, and helpful. If you don't know something specific, of
     list: publicProcedure.query(async () => {
       return await db.getApprovedTestimonials();
     }),
+    
+    // Public: Get approved video testimonials for gallery
+    videoTestimonials: publicProcedure.query(async () => {
+      const testimonials = await db.getApprovedTestimonials();
+      return testimonials.filter(t => t.videoUrl);
+    }),
 
     // Protected: Submit feedback
     submit: protectedProcedure
@@ -601,6 +607,7 @@ Be friendly, professional, and helpful. If you don't know something specific, of
         rating: z.number().min(1).max(5),
         review: z.string().min(10),
         photoUrl: z.string().optional(),
+        videoUrl: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         // Check if user already submitted feedback for this item
@@ -624,6 +631,7 @@ Be friendly, professional, and helpful. If you don't know something specific, of
           rating: input.rating,
           review: input.review,
           photoUrl: input.photoUrl,
+          videoUrl: input.videoUrl,
           type: input.type,
           relatedId: input.relatedId,
           status: 'pending',
@@ -645,6 +653,30 @@ Be friendly, professional, and helpful. If you don't know something specific, of
           input.relatedId
         );
         return { canSubmit: !existing };
+      }),
+
+    // Protected: Upload video file
+    uploadVideo: protectedProcedure
+      .input(z.object({
+        filename: z.string(),
+        contentType: z.string(),
+        data: z.string(), // base64 encoded
+      }))
+      .mutation(async ({ input }) => {
+        const { storagePut } = await import('./storage');
+        
+        // Decode base64 data
+        const buffer = Buffer.from(input.data, 'base64');
+        
+        // Generate unique filename
+        const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(7);
+        const fileKey = `testimonials/${timestamp}-${randomSuffix}-${input.filename}`;
+        
+        // Upload to S3
+        const result = await storagePut(fileKey, buffer, input.contentType);
+        
+        return { url: result.url, key: fileKey };
       }),
   }),
 });

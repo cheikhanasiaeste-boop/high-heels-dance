@@ -136,6 +136,7 @@ export const testimonials = mysqlTable("testimonials", {
   rating: int("rating").notNull(), // 1-5 stars
   review: text("review").notNull(),
   photoUrl: text("photoUrl"),
+  videoUrl: text("videoUrl"),
   type: mysqlEnum("type", ["session", "course"]).notNull(), // session or course feedback
   relatedId: int("relatedId"), // booking ID or course ID
   status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),

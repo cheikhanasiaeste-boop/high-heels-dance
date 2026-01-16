@@ -137,3 +137,19 @@
 - [x] Create testimonials carousel for homepage
 - [x] Add responsive design for testimonial display
 - [x] Test complete feedback workflow
+
+## Video Testimonials
+- [x] Add videoUrl field to testimonials table
+- [x] Implement video file upload to S3
+- [x] Add video upload input to feedback form
+- [x] Create video testimonials gallery page
+- [x] Add video player with modal view
+- [x] Link gallery from homepage
+- [ ] Add featured video section on homepage
+- [ ] Test video upload and playback
+
+## S3 Video Upload Implementation
+- [x] Create video upload endpoint in backend
+- [x] Integrate S3 storage for video files
+- [x] Connect frontend feedback form to upload endpoint
+- [x] Test complete video upload flow
