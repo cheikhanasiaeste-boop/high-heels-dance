@@ -9,6 +9,7 @@ import { Instagram, Youtube, Facebook, MessageCircle, Star, Play } from "lucide-
 import { Link } from "wouter";
 import { useState } from "react";
 import ChatWidget from "@/components/ChatWidget";
+import { WebsitePopup } from "@/components/WebsitePopup";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 
@@ -18,6 +19,9 @@ export default function Home() {
   const { data: banner } = trpc.banner.get.useQuery();
   const { data: textTestimonials } = trpc.testimonials.list.useQuery();
   const { data: videoTestimonials } = trpc.testimonials.videoTestimonials.useQuery();
+  const { data: popupSettings } = trpc.popup.get.useQuery();
+  
+  const recordInteractionMutation = trpc.popup.recordInteraction.useMutation();
   
   // Fetch editable content
   const { data: heroTitle } = trpc.admin.content.get.useQuery({ key: 'hero_title' });
@@ -52,6 +56,24 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
+      {/* Website Popup */}
+      <WebsitePopup
+        settings={popupSettings || null}
+        onDismiss={(popupId) => {
+          recordInteractionMutation.mutate({
+            popupId,
+            action: 'dismissed',
+          });
+        }}
+        onEmailSubmit={(popupId, email) => {
+          recordInteractionMutation.mutate({
+            popupId,
+            email,
+            action: 'email_submitted',
+          });
+        }}
+      />
+      
       {/* Discount Banner */}
       {banner?.enabled && banner.text && (
         <div className="bg-primary text-primary-foreground py-3 px-4 text-center font-medium">

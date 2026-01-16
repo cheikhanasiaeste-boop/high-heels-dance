@@ -11,6 +11,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ContentEditor } from "@/components/ContentEditor";
 import { UserManagement } from "@/components/UserManagement";
+import { PopupSettings } from "@/components/PopupSettings";
+import { SectionHeadingsEditor } from "@/components/SectionHeadingsEditor";
 
 export default function AdminSettings() {
   const { user, isAuthenticated } = useAuth();
@@ -60,6 +62,28 @@ export default function AdminSettings() {
           <h1 className="text-3xl font-bold">Site Settings</h1>
           <p className="text-muted-foreground mt-2">Manage your website configuration</p>
         </div>
+
+        {/* Popup Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Website Popup</CardTitle>
+            <CardDescription>Configure popup for email collection or announcements</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <PopupSettings />
+          </CardContent>
+        </Card>
+
+        {/* Section Headings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Section Headings</CardTitle>
+            <CardDescription>Manage headings for different sections of your website</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <SectionHeadingsEditor />
+          </CardContent>
+        </Card>
 
         {/* Banner Settings */}
         <Card>

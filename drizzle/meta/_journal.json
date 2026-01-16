@@ -50,6 +50,13 @@
       "when": 1768582620248,
       "tag": "0006_far_puppet_master",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1768594105451,
+      "tag": "0007_conscious_leper_queen",
+      "breakpoints": true
     }
   ]
 }

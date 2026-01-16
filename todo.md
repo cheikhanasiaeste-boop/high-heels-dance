@@ -267,3 +267,33 @@
 - [x] Test real-time notifications for user registrations
 - [x] Add notification sound/visual indicator
 - [x] Handle reconnection on connection loss
+
+## Website Popup Management
+- [x] Create database schema for popup settings (enabled, title, message, type)
+- [x] Add backend endpoints for popup CRUD operations
+- [x] Create popup configuration UI in Site Settings
+- [x] Add popup type options (email collection, announcement, custom)
+- [x] Implement frontend popup display logic
+- [x] Add popup dismiss/close functionality
+- [x] Store user popup interactions (dismissed, email submitted)
+- [x] Test popup on homepage
+
+## Section Headings Management
+- [x] Create database schema for section headings
+- [x] Add backend endpoints for heading CRUD operations
+- [x] Create section heading editor UI in Site Settings
+- [x] Add ability to add new section headings
+- [x] Add ability to edit existing headings
+- [x] Add ability to delete headings
+- [ ] Add ability to reorder headings
+- [ ] Update frontend to dynamically render section headings
+
+## User Management Submenu
+- [x] Add User Management to admin side menu
+- [x] Create User Management page component
+- [x] Display user list with search and filters
+- [x] Add user role management (admin/user)
+- [ ] Add user status management (active/inactive)
+- [ ] Add user details view
+- [ ] Add pagination for user list
+- [x] Test all user management features

@@ -427,6 +427,74 @@ export const appRouter = router({
         }),
     }),
 
+    // Popup settings management
+    popup: router({
+      get: adminProcedure.query(async () => {
+        return await db.getPopupSettings();
+      }),
+      
+      upsert: adminProcedure
+        .input(z.object({
+          enabled: z.boolean(),
+          type: z.enum(['email_collection', 'announcement', 'custom']),
+          title: z.string(),
+          message: z.string(),
+          buttonText: z.string(),
+          showEmailInput: z.boolean(),
+          emailPlaceholder: z.string().optional(),
+          backgroundColor: z.string().optional(),
+          textColor: z.string().optional(),
+        }))
+        .mutation(async ({ input }) => {
+          return await db.upsertPopupSettings(input);
+        }),
+    }),
+    
+    // Section headings management
+    sectionHeadings: router({
+      list: adminProcedure.query(async () => {
+        return await db.getAllSectionHeadings();
+      }),
+      
+      get: adminProcedure
+        .input(z.object({ section: z.string() }))
+        .query(async ({ input }) => {
+          return await db.getSectionHeading(input.section);
+        }),
+      
+      create: adminProcedure
+        .input(z.object({
+          section: z.string(),
+          heading: z.string(),
+          subheading: z.string().optional(),
+          displayOrder: z.number().default(0),
+          isVisible: z.boolean().default(true),
+        }))
+        .mutation(async ({ input }) => {
+          return await db.createSectionHeading(input);
+        }),
+      
+      update: adminProcedure
+        .input(z.object({
+          section: z.string(),
+          heading: z.string().optional(),
+          subheading: z.string().optional(),
+          displayOrder: z.number().optional(),
+          isVisible: z.boolean().optional(),
+        }))
+        .mutation(async ({ input }) => {
+          const { section, ...updates } = input;
+          return await db.updateSectionHeading(section, updates);
+        }),
+      
+      delete: adminProcedure
+        .input(z.object({ section: z.string() }))
+        .mutation(async ({ input }) => {
+          await db.deleteSectionHeading(input.section);
+          return { success: true };
+        }),
+    }),
+    
     // Site content management
     content: router({
       get: adminProcedure
@@ -457,6 +525,29 @@ export const appRouter = router({
         text: text || '',
       };
     }),
+  }),
+
+  // Public popup
+  popup: router({
+    get: publicProcedure.query(async () => {
+      return await db.getPopupSettings();
+    }),
+    
+    recordInteraction: publicProcedure
+      .input(z.object({
+        popupId: z.number(),
+        email: z.string().email().optional(),
+        action: z.enum(['dismissed', 'email_submitted']),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        await db.recordPopupInteraction({
+          userId: ctx.user?.id || null,
+          popupId: input.popupId,
+          email: input.email,
+          action: input.action,
+        });
+        return { success: true };
+      }),
   }),
 
   // Booking system

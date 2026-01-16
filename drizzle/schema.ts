@@ -147,3 +147,56 @@ export const testimonials = mysqlTable("testimonials", {
 
 export type Testimonial = typeof testimonials.$inferSelect;
 export type InsertTestimonial = typeof testimonials.$inferInsert;
+
+/**
+ * Website popup settings - for email collection or announcements
+ */
+export const popupSettings = mysqlTable("popup_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  enabled: boolean("enabled").default(false).notNull(),
+  type: mysqlEnum("type", ["email_collection", "announcement", "custom"]).default("announcement").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  message: text("message").notNull(),
+  buttonText: varchar("buttonText", { length: 100 }).default("Got it").notNull(),
+  showEmailInput: boolean("showEmailInput").default(false).notNull(),
+  emailPlaceholder: varchar("emailPlaceholder", { length: 255 }).default("Enter your email"),
+  backgroundColor: varchar("backgroundColor", { length: 50 }).default("#ffffff"),
+  textColor: varchar("textColor", { length: 50 }).default("#000000"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PopupSettings = typeof popupSettings.$inferSelect;
+export type InsertPopupSettings = typeof popupSettings.$inferInsert;
+
+/**
+ * Popup interactions - track which users have seen/dismissed the popup
+ */
+export const popupInteractions = mysqlTable("popup_interactions", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  popupId: int("popupId").notNull(),
+  email: varchar("email", { length: 320 }), // If user submitted email
+  action: mysqlEnum("action", ["dismissed", "email_submitted"]).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PopupInteraction = typeof popupInteractions.$inferSelect;
+export type InsertPopupInteraction = typeof popupInteractions.$inferInsert;
+
+/**
+ * Section headings - customizable headings for homepage sections
+ */
+export const sectionHeadings = mysqlTable("section_headings", {
+  id: int("id").autoincrement().primaryKey(),
+  section: varchar("section", { length: 100 }).notNull().unique(), // e.g., "courses", "testimonials", "about"
+  heading: varchar("heading", { length: 255 }).notNull(),
+  subheading: text("subheading"),
+  displayOrder: int("displayOrder").default(0).notNull(),
+  isVisible: boolean("isVisible").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type SectionHeading = typeof sectionHeadings.$inferSelect;
+export type InsertSectionHeading = typeof sectionHeadings.$inferInsert;

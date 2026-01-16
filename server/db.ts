@@ -689,3 +689,145 @@ export async function getUserGrowthTimeSeries(startDate: Date, endDate: Date) {
     return { date: item.date, users: cumulative };
   });
 }
+
+
+// ============================================================================
+// Popup Settings
+// ============================================================================
+
+export async function getPopupSettings() {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { popupSettings } = await import("../drizzle/schema");
+  const [popup] = await db.select().from(popupSettings).limit(1);
+  return popup || null;
+}
+
+export async function upsertPopupSettings(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { popupSettings } = await import("../drizzle/schema");
+  const existing = await getPopupSettings();
+  
+  if (existing) {
+    await db.update(popupSettings)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(popupSettings.id, existing.id));
+    return getPopupSettings();
+  } else {
+    await db.insert(popupSettings).values(data);
+    return getPopupSettings();
+  }
+}
+
+export async function recordPopupInteraction(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { popupInteractions } = await import("../drizzle/schema");
+  await db.insert(popupInteractions).values(data);
+}
+
+export async function hasUserSeenPopup(userId: number | null, popupId: number) {
+  if (!userId) return false;
+  
+  const db = await getDb();
+  if (!db) return false;
+  
+  const { popupInteractions } = await import("../drizzle/schema");
+  const [interaction] = await db.select()
+    .from(popupInteractions)
+    .where(and(
+      eq(popupInteractions.userId, userId),
+      eq(popupInteractions.popupId, popupId)
+    ))
+    .limit(1);
+  
+  return !!interaction;
+}
+
+// ============================================================================
+// Section Headings
+// ============================================================================
+
+export async function getAllSectionHeadings() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { sectionHeadings } = await import("../drizzle/schema");
+  const { asc } = await import("drizzle-orm");
+  return db.select()
+    .from(sectionHeadings)
+    .orderBy(asc(sectionHeadings.displayOrder));
+}
+
+export async function getSectionHeading(section: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { sectionHeadings } = await import("../drizzle/schema");
+  const [heading] = await db.select()
+    .from(sectionHeadings)
+    .where(eq(sectionHeadings.section, section))
+    .limit(1);
+  return heading || null;
+}
+
+export async function createSectionHeading(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { sectionHeadings } = await import("../drizzle/schema");
+  await db.insert(sectionHeadings).values(data);
+  return getSectionHeading(data.section);
+}
+
+export async function updateSectionHeading(section: string, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { sectionHeadings } = await import("../drizzle/schema");
+  await db.update(sectionHeadings)
+    .set({ ...data, updatedAt: new Date() })
+    .where(eq(sectionHeadings.section, section));
+  return getSectionHeading(section);
+}
+
+export async function deleteSectionHeading(section: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const { sectionHeadings } = await import("../drizzle/schema");
+  await db.delete(sectionHeadings)
+    .where(eq(sectionHeadings.section, section));
+}
+
+// ============================================================================
+// User Management (Extended)
+// ============================================================================
+
+export async function getUsersCount() {
+  const db = await getDb();
+  if (!db) return 0;
+  
+  const { sql } = await import("drizzle-orm");
+  const [result] = await db.select({ count: sql<number>`count(*)` })
+    .from(users);
+  return result.count;
+}
+
+export async function searchUsers(query: string, limit: number = 50) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const { sql, or } = await import("drizzle-orm");
+  return db.select()
+    .from(users)
+    .where(or(
+      sql`${users.name} LIKE ${`%${query}%`}`,
+      sql`${users.email} LIKE ${`%${query}%`}`
+    ))
+    .limit(limit);
+}

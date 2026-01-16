@@ -14,6 +14,7 @@ import AdminBookings from "./pages/admin/Bookings";
 import AdminAvailability from "./pages/admin/Availability";
 import AdminTestimonials from "./pages/admin/Testimonials";
 import AdminSettings from "./pages/admin/Settings";
+import AdminUsers from "./pages/admin/Users";
 import BookSession from "./pages/BookSession";
 import Feedback from "./pages/Feedback";
 
@@ -32,6 +33,7 @@ function Router() {
       <Route path="/admin/bookings" component={AdminBookings} />
       <Route path="/admin/availability" component={AdminAvailability} />
       <Route path="/admin/testimonials" component={AdminTestimonials} />
+      <Route path="/admin/users" component={AdminUsers} />
       <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
