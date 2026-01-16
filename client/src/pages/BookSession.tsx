@@ -696,9 +696,15 @@ function SlotCard({ slot, onBook, showDate = false }: { slot: any; onBook: (slot
   const isFullyBooked = slot.sessionType === 'group' 
     ? slot.currentBookings >= slot.capacity 
     : slot.isBooked;
+  
+  const isPremium = !slot.isFree;
 
   return (
-    <div className="p-4 border rounded-lg hover:border-primary transition-colors bg-card">
+    <div className={`p-4 border rounded-lg hover:border-primary transition-colors ${
+      isPremium 
+        ? 'border-yellow-500 bg-gradient-to-br from-yellow-50/50 via-amber-50/30 to-orange-50/20' 
+        : 'border-border bg-card'
+    }`}>
       <div className="flex justify-between items-start gap-4">
         <div className="flex-1 space-y-2">
           <h4 className="font-semibold text-lg">{slot.title}</h4>

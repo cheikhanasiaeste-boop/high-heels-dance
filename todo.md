@@ -120,3 +120,8 @@
 ## Filter Terminology Update
 - [x] Change "Paid" filter label to "Premium"
 - [x] Update filter variable naming for consistency
+
+## Premium Session Visual Styling
+- [x] Add gold border to premium session cards
+- [x] Add subtle gradient background to premium sessions
+- [x] Apply styling in both calendar and list views
