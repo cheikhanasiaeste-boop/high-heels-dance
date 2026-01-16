@@ -11,6 +11,7 @@ import { useState } from "react";
 import ChatWidget from "@/components/ChatWidget";
 import { WebsitePopup } from "@/components/WebsitePopup";
 import { UserProfileDropdown } from "@/components/UserProfileDropdown";
+import { MobileNav } from "@/components/MobileNav";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 
@@ -90,7 +91,12 @@ export default function Home() {
       <header className="border-b bg-card sticky top-0 z-50 backdrop-blur-sm bg-white/95">
         <div className="container py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-primary">High Heels Dance</h1>
-          <div className="flex items-center gap-4">
+          
+          {/* Mobile Navigation */}
+          <MobileNav />
+          
+          {/* Desktop Navigation */}
+          <div className="hidden lg:flex items-center gap-4">
             <Link href="/book-session">
               <Button variant="default">Book a Session</Button>
             </Link>
