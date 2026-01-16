@@ -4,6 +4,10 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { WelcomeModal } from "./components/WelcomeModal";
+import { useAuth } from "./_core/hooks/useAuth";
+import { trpc } from "./lib/trpc";
+import { useState, useEffect } from "react";
 import Home from "./pages/Home";
 import CourseDetail from "./pages/CourseDetail";
 import MyCourses from "./pages/MyCourses";
@@ -48,12 +52,33 @@ function Router() {
 }
 
 function App() {
+  const { user, isAuthenticated } = useAuth();
+  const [showWelcome, setShowWelcome] = useState(false);
+  const markWelcomeMutation = trpc.auth.markWelcomeSeen.useMutation();
+
+  // Check if user should see welcome modal
+  useEffect(() => {
+    if (isAuthenticated && user && !user.hasSeenWelcome) {
+      setShowWelcome(true);
+    }
+  }, [isAuthenticated, user]);
+
+  const handleCloseWelcome = () => {
+    setShowWelcome(false);
+    markWelcomeMutation.mutate();
+  };
+
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
         <TooltipProvider>
           <Toaster />
           <Router />
+          <WelcomeModal
+            isOpen={showWelcome}
+            onClose={handleCloseWelcome}
+            userName={user?.name || undefined}
+          />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

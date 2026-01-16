@@ -414,3 +414,11 @@
 - [x] Auto-resume booking/purchase flow after authentication
 - [x] Remove any aggressive login prompts from public pages
 - [x] Test complete user journey from browsing to authenticated action
+
+## First-Time User Welcome Modal
+- [x] Create WelcomeModal component with key features overview
+- [x] Add database field to track if user has seen welcome modal
+- [x] Create backend procedure to mark welcome modal as seen
+- [x] Integrate welcome modal into app layout (show once after first sign-up)
+- [x] Add smooth animations and engaging visuals
+- [x] Test welcome modal flow for new users

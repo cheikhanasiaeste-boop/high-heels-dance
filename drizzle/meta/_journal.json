@@ -71,6 +71,13 @@
       "when": 1768598547343,
       "tag": "0009_tan_silhouette",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1768603716930,
+      "tag": "0010_round_power_man",
+      "breakpoints": true
     }
   ]
 }

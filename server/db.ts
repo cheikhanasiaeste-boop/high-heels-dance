@@ -944,3 +944,11 @@ export async function getAnalytics(startDate: Date, endDate: Date) {
     bounceRate: Math.round(bounceRate * 10) / 10, // Round to 1 decimal
   };
 }
+
+// Mark user as having seen the welcome modal
+export async function markUserWelcomeSeen(userId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(users).set({ hasSeenWelcome: true }).where(eq(users.id, userId));
+}

@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD `hasSeenWelcome` boolean DEFAULT false NOT NULL;

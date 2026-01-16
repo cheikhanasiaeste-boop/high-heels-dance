@@ -33,6 +33,10 @@ export const appRouter = router({
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return { success: true } as const;
     }),
+    markWelcomeSeen: protectedProcedure.mutation(async ({ ctx }) => {
+      await db.markUserWelcomeSeen(ctx.user.id);
+      return { success: true };
+    }),
   }),
 
   // Public course procedures
