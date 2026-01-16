@@ -34,11 +34,11 @@ export function UpcomingSessionsWidget() {
         <button
           onClick={() => setIsExpanded(true)}
           className="group relative flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 animate-gentle-pulse overflow-hidden"
-          aria-label="View upcoming sessions"
+          aria-label="View sessions happening soon"
         >
           <div className="absolute inset-0 animate-shimmer" />
           <Calendar className="w-5 h-5" />
-          <span className="font-semibold">Upcoming Sessions</span>
+          <span className="font-semibold">Happening Soon</span>
           <span className="px-2 py-0.5 bg-white/30 rounded-full text-xs font-bold animate-badge-bounce">
             {events.length}
           </span>
@@ -52,7 +52,7 @@ export function UpcomingSessionsWidget() {
           <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <Calendar className="w-4 h-4" />
-              <h3 className="font-semibold text-base">Upcoming Sessions</h3>
+              <h3 className="font-semibold text-base">Happening Soon</h3>
             </div>
             <button
               onClick={() => setIsExpanded(false)}

@@ -468,3 +468,6 @@
 ## Reduce Upcoming Sessions Widget Size
 - [x] Make widget more compact and less overwhelming
 - [x] Optimize spacing and font sizes for better readability
+
+## Rename Widget Text
+- [x] Change "Upcoming Sessions" to "Happening Soon" in widget
