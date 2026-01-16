@@ -439,3 +439,13 @@
 - [x] Integrate event cards into homepage layout
 - [x] Test booking flow with authentication
 - [x] Verify accessibility compliance
+
+## Floating Upcoming Sessions Widget
+- [x] Remove full-width UpcomingEventsSection from homepage
+- [x] Create floating hover box widget for top-right corner
+- [x] Add icon/button trigger for expanding widget
+- [x] Display compact list of upcoming sessions
+- [x] Integrate with existing EventCard or create compact variant
+- [x] Add smooth expand/collapse animations
+- [x] Ensure widget doesn't obstruct navigation
+- [x] Test on mobile and desktop

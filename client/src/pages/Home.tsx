@@ -11,7 +11,7 @@ import { useState } from "react";
 import ChatWidget from "@/components/ChatWidget";
 import { WebsitePopup } from "@/components/WebsitePopup";
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
-import { UpcomingEventsSection } from '@/components/UpcomingEventsSection';
+import { UpcomingSessionsWidget } from '@/components/UpcomingSessionsWidget';
 import { MobileNav } from "@/components/MobileNav";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
@@ -384,8 +384,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Upcoming Events Section */}
-      <UpcomingEventsSection />
+      {/* Floating Upcoming Sessions Widget */}
+      <UpcomingSessionsWidget />
 
       {/* Testimonials Section - Mixed Text & Video */}
       {allTestimonials.length > 0 && (
