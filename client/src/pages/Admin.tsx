@@ -110,6 +110,22 @@ export default function Admin() {
     },
   });
   
+  const { data: heroVideoUrl } = trpc.admin.settings.get.useQuery(
+    { key: "heroVideoUrl" },
+    { enabled: isAuthenticated && user?.role === 'admin' }
+  );
+  
+  const uploadVideoMutation = trpc.testimonials.uploadVideo.useMutation();
+  
+  const updateSettingMutation = trpc.admin.settings.update.useMutation({
+    onSuccess: () => {
+      utils.admin.settings.get.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update setting");
+    },
+  });
+  
   const createSlotMutation = trpc.admin.availability.create.useMutation({
     onSuccess: () => {
       toast.success("Time slot added successfully!");
@@ -706,6 +722,95 @@ export default function Admin() {
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>No testimonials yet.</AlertDescription>
               </Alert>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Hero Video Background */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Hero Background Video</CardTitle>
+            <CardDescription>Upload a dance video to display in the hero section background</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="hero-video">Background Video</Label>
+              <Input
+                id="hero-video"
+                type="file"
+                accept="video/mp4,video/webm"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  
+                  // Check file size (max 50MB)
+                  if (file.size > 50 * 1024 * 1024) {
+                    toast.error("Video file must be less than 50MB");
+                    return;
+                  }
+                  
+                  try {
+                    toast.info("Uploading video...");
+                    
+                    // Convert file to base64
+                    const reader = new FileReader();
+                    reader.onload = async (e) => {
+                      const base64 = e.target?.result as string;
+                      const data = base64.split(',')[1]; // Remove data:video/mp4;base64, prefix
+                      
+                      try {
+                        const result = await uploadVideoMutation.mutateAsync({
+                          filename: file.name,
+                          contentType: file.type,
+                          data,
+                        });
+                        
+                        // Save video URL to settings
+                        await updateSettingMutation.mutateAsync({
+                          key: "heroVideoUrl",
+                          value: result.url,
+                        });
+                        
+                        toast.success("Hero video updated successfully!");
+                      } catch (error) {
+                        toast.error("Failed to upload video");
+                      }
+                    };
+                    reader.readAsDataURL(file);
+                  } catch (error) {
+                    toast.error("Failed to process video");
+                  }
+                }}
+              />
+              <p className="text-sm text-muted-foreground">
+                Recommended: MP4 format, 1920x1080 resolution, max 50MB
+              </p>
+            </div>
+            
+            {heroVideoUrl && (
+              <div className="space-y-2">
+                <Label>Current Video Preview</Label>
+                <div className="relative aspect-video bg-black rounded-lg overflow-hidden">
+                  <video
+                    src={heroVideoUrl}
+                    className="w-full h-full object-cover"
+                    controls
+                  />
+                </div>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => {
+                    updateSettingMutation.mutate({
+                      key: "heroVideoUrl",
+                      value: "",
+                    });
+                    toast.success("Hero video removed");
+                  }}
+                >
+                  Remove Video
+                </Button>
+              </div>
             )}
           </CardContent>
         </Card>

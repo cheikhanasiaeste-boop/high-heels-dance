@@ -251,6 +251,22 @@ export const appRouter = router({
         }),
     }),
 
+    // Settings management
+    settings: router({
+      get: adminProcedure
+        .input(z.object({ key: z.string() }))
+        .query(async ({ input }) => {
+          return await db.getSetting(input.key);
+        }),
+      
+      update: adminProcedure
+        .input(z.object({ key: z.string(), value: z.string() }))
+        .mutation(async ({ input }) => {
+          await db.setSetting(input.key, input.value);
+          return { success: true };
+        }),
+    }),
+
     // Testimonial management
     testimonials: router({
       // List all testimonials

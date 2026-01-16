@@ -174,3 +174,12 @@
 - [x] Add animated gradient overlays on hover
 - [x] Enhance premium badge styling with shimmer effect
 - [x] Improve section background and typography
+
+## Hero Background Video
+- [x] Add heroVideoUrl field to site settings
+- [x] Create video upload endpoint for hero background
+- [x] Add admin UI to upload/change hero video
+- [x] Implement video background in hero section
+- [x] Add video overlay for text readability
+- [x] Configure auto-play, loop, and mute
+- [x] Test video performance and responsiveness

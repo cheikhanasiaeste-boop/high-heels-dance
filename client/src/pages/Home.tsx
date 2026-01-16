@@ -18,6 +18,10 @@ export default function Home() {
   const { data: banner } = trpc.banner.get.useQuery();
   const { data: textTestimonials } = trpc.testimonials.list.useQuery();
   const { data: videoTestimonials } = trpc.testimonials.videoTestimonials.useQuery();
+  const { data: heroVideoUrl } = trpc.admin.settings.get.useQuery(
+    { key: "heroVideoUrl" },
+    { enabled: true }
+  );
   const [showChat, setShowChat] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [courseFilter, setCourseFilter] = useState<'all' | 'free' | 'premium'>('all');
@@ -79,17 +83,45 @@ export default function Home() {
       </header>
 
       {/* Hero/Profile Section */}
-      <section className="py-20 bg-gradient-to-br from-pink-50 via-lavender-50 to-purple-50">
-        <div className="container text-center">
+      <section className="relative py-20 overflow-hidden">
+        {/* Video Background */}
+        {heroVideoUrl ? (
+          <>
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover"
+            >
+              <source src={heroVideoUrl} type="video/mp4" />
+            </video>
+            {/* Overlay for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-br from-pink-900/70 via-purple-900/60 to-pink-900/70 backdrop-blur-[2px]"></div>
+          </>
+        ) : (
+          // Fallback gradient background
+          <div className="absolute inset-0 bg-gradient-to-br from-pink-50 via-lavender-50 to-purple-50"></div>
+        )}
+        
+        <div className="container text-center relative z-10">
           <div className="flex justify-center mb-6">
             <div className="w-40 h-40 rounded-full bg-gradient-to-br from-pink-300 to-purple-300 flex items-center justify-center text-5xl font-bold text-white shadow-xl">
               EZ
             </div>
           </div>
-          <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+          <h2 className={`text-5xl font-bold mb-4 ${
+            heroVideoUrl 
+              ? 'text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]' 
+              : 'bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent'
+          }`}>
             Elizabeth Zolotova
           </h2>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
+          <p className={`text-xl mb-8 max-w-2xl mx-auto leading-relaxed ${
+            heroVideoUrl
+              ? 'text-white/95 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]'
+              : 'text-muted-foreground'
+          }`}>
             I'm a Pro dancer and dance teacher who can make you fall in love with dance...
           </p>
           <div className="flex justify-center gap-4 mb-8">
