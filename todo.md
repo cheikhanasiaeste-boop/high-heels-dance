@@ -459,3 +459,8 @@
 
 ## Fix Widget Book Button Navigation
 - [x] Update Book button to navigate to specific event page with event ID
+
+## Update Widget Book Button to Confirm Booking Page
+- [x] Fix HTML nesting errors in BookSession page (<p> cannot contain <div> or <p>)
+- [x] Investigate current booking flow and page structure
+- [x] Update Book button to navigate to Confirm Booking page with event details

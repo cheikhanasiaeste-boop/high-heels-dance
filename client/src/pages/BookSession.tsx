@@ -108,6 +108,20 @@ export default function BookSession() {
     }
   }, []);
 
+  // Auto-open booking dialog if eventId is provided
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const eventId = params.get('eventId');
+    if (eventId && availableSlots) {
+      const slot = availableSlots.find(s => s.id === parseInt(eventId));
+      if (slot) {
+        handleBookSlot(slot);
+        // Clean up URL
+        window.history.replaceState({}, '', '/book-session');
+      }
+    }
+  }, [availableSlots]);
+
   // Apply price filter to slots
   const filteredSlots = useMemo(() => {
     if (!availableSlots) return [];
@@ -630,38 +644,39 @@ export default function BookSession() {
           <DialogHeader>
             <DialogTitle>Confirm Booking</DialogTitle>
             <DialogDescription>
-              {selectedSlot && (
-                <div className="space-y-2 mt-4">
-                  <p className="font-semibold text-lg">{selectedSlot.title}</p>
-                  <p className="text-sm">
-                    {format(new Date(selectedSlot.startTime), 'EEEE, MMMM d, yyyy')} at {format(new Date(selectedSlot.startTime), 'h:mm a')}
-                  </p>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {selectedSlot.eventType === 'online' ? (
-                      <Badge variant="secondary" className="flex items-center gap-1">
-                        <Video className="h-3 w-3" />
-                        Online
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        In-Person
-                      </Badge>
-                    )}
-                    <Badge variant="outline">
-                      {selectedSlot.sessionType === 'private' ? '👤 Private' : `👥 Group (${selectedSlot.currentBookings}/${selectedSlot.capacity})`}
-                    </Badge>
-                  </div>
-                  {selectedSlot.location && selectedSlot.eventType === 'in-person' && (
-                    <p className="text-sm">📍 {selectedSlot.location}</p>
-                  )}
-                  <p className="text-lg font-bold text-primary mt-2">
-                    {selectedSlot.isFree ? 'Free Session' : `€${selectedSlot.price}`}
-                  </p>
-                </div>
-              )}
+              Review your booking details below
             </DialogDescription>
           </DialogHeader>
+          {selectedSlot && (
+            <div className="space-y-2 mt-4">
+              <p className="font-semibold text-lg">{selectedSlot.title}</p>
+              <p className="text-sm">
+                {format(new Date(selectedSlot.startTime), 'EEEE, MMMM d, yyyy')} at {format(new Date(selectedSlot.startTime), 'h:mm a')}
+              </p>
+              <div className="flex items-center gap-2 flex-wrap">
+                {selectedSlot.eventType === 'online' ? (
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <Video className="h-3 w-3" />
+                    Online
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary" className="flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    In-Person
+                  </Badge>
+                )}
+                <Badge variant="outline">
+                  {selectedSlot.sessionType === 'private' ? '👤 Private' : '👥 Group'}
+                </Badge>
+              </div>
+              {selectedSlot.location && selectedSlot.eventType === 'in-person' && (
+                <p className="text-sm">📍 {selectedSlot.location}</p>
+              )}
+              <p className="text-lg font-bold text-primary mt-2">
+                {selectedSlot.isFree ? 'Free Session' : `€${selectedSlot.price}`}
+              </p>
+            </div>
+          )}
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="notes">Notes (Optional)</Label>
