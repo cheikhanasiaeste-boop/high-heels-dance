@@ -5,18 +5,31 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Calendar as CalendarIcon, Clock, Video, MapPin, Euro, ChevronLeft, ChevronRight } from "lucide-react";
-import { Link, useLocation } from "wouter";
+import { ArrowLeft, Calendar as CalendarIcon, Clock, Video, MapPin, Euro, ChevronLeft, ChevronRight, X, Filter } from "lucide-react";
+import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from "date-fns";
 
+type FilterPreset = {
+  label: string;
+  eventType: "all" | "online" | "in-person";
+  sessionType: "all" | "private" | "group";
+  priceFilter: "all" | "free" | "paid";
+};
+
+const FILTER_PRESETS: FilterPreset[] = [
+  { label: "All Sessions", eventType: "all", sessionType: "all", priceFilter: "all" },
+  { label: "Free Online", eventType: "online", sessionType: "all", priceFilter: "free" },
+  { label: "Group Classes", eventType: "all", sessionType: "group", priceFilter: "all" },
+  { label: "Private 1-on-1", eventType: "all", sessionType: "private", priceFilter: "all" },
+  { label: "In-Person", eventType: "in-person", sessionType: "all", priceFilter: "all" },
+];
+
 export default function BookSession() {
   const { user, isAuthenticated, loading } = useAuth();
-  const [, setLocation] = useLocation();
   const utils = trpc.useUtils();
   
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
@@ -24,9 +37,11 @@ export default function BookSession() {
   const [notes, setNotes] = useState("");
   const [eventFilter, setEventFilter] = useState<"all" | "online" | "in-person">("all");
   const [sessionTypeFilter, setSessionTypeFilter] = useState<"all" | "private" | "group">("all");
+  const [priceFilter, setPriceFilter] = useState<"all" | "free" | "paid">("all");
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
+  const [showFilters, setShowFilters] = useState(true);
 
   const { data: availableSlots, isLoading: slotsLoading } = trpc.bookings.availableSlots.useQuery({
     eventType: eventFilter,
@@ -90,6 +105,15 @@ export default function BookSession() {
     }
   }, []);
 
+  // Apply price filter to slots
+  const filteredSlots = useMemo(() => {
+    if (!availableSlots) return [];
+    if (priceFilter === "all") return availableSlots;
+    if (priceFilter === "free") return availableSlots.filter(s => s.isFree);
+    if (priceFilter === "paid") return availableSlots.filter(s => !s.isFree);
+    return availableSlots;
+  }, [availableSlots, priceFilter]);
+
   const handleBookSlot = (slot: any) => {
     if (!isAuthenticated) {
       window.location.href = getLoginUrl();
@@ -121,17 +145,39 @@ export default function BookSession() {
     }
   };
 
+  const applyPreset = (preset: FilterPreset) => {
+    setEventFilter(preset.eventType);
+    setSessionTypeFilter(preset.sessionType);
+    setPriceFilter(preset.priceFilter);
+  };
+
+  const clearAllFilters = () => {
+    setEventFilter("all");
+    setSessionTypeFilter("all");
+    setPriceFilter("all");
+  };
+
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (eventFilter !== "all") count++;
+    if (sessionTypeFilter !== "all") count++;
+    if (priceFilter !== "all") count++;
+    return count;
+  }, [eventFilter, sessionTypeFilter, priceFilter]);
+
+  const hasActiveFilters = activeFilterCount > 0;
+
   // Calendar calculations
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
-  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 }); // Monday
+  const calendarStart = startOfWeek(monthStart, { weekStartsOn: 1 });
   const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 1 });
   const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
   // Group slots by date
   const slotsByDate = useMemo(() => {
-    if (!availableSlots) return {};
-    return availableSlots.reduce((acc: any, slot: any) => {
+    if (!filteredSlots) return {};
+    return filteredSlots.reduce((acc: any, slot: any) => {
       const date = format(new Date(slot.startTime), 'yyyy-MM-dd');
       if (!acc[date]) {
         acc[date] = [];
@@ -139,14 +185,12 @@ export default function BookSession() {
       acc[date].push(slot);
       return acc;
     }, {});
-  }, [availableSlots]);
+  }, [filteredSlots]);
 
-  // Get dates with availability
   const datesWithSlots = useMemo(() => {
     return new Set(Object.keys(slotsByDate));
   }, [slotsByDate]);
 
-  // Get slots for selected date
   const selectedDateSlots = useMemo(() => {
     if (!selectedDate) return [];
     const dateKey = format(selectedDate, 'yyyy-MM-dd');
@@ -177,17 +221,19 @@ export default function BookSession() {
   }
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b bg-card">
-        <div className="container py-4 flex justify-between items-center">
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-lavender-50 to-purple-50">
+      <header className="bg-white/80 backdrop-blur-sm border-b border-pink-100 sticky top-0 z-50">
+        <div className="container py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/">
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Home
+                Back
               </Button>
             </Link>
-            <h1 className="text-2xl font-bold">Book a Session</h1>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+              Book a Session
+            </h1>
           </div>
           {isAuthenticated && (
             <span className="text-sm text-muted-foreground">{user?.name || user?.email}</span>
@@ -195,415 +241,526 @@ export default function BookSession() {
         </div>
       </header>
 
-      <div className="container py-8">
-        <div className="max-w-6xl mx-auto space-y-8">
-          {/* Session Info */}
+      <div className="container py-8 space-y-6">
+        {/* Session Info */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Dance Sessions with Elizabeth</CardTitle>
+            <CardDescription>
+              Choose from private 1-on-1 sessions or group classes - available online via Zoom or in-person at the studio.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+
+        {/* My Bookings */}
+        {isAuthenticated && myBookings && myBookings.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle>Private Dance Sessions</CardTitle>
-              <CardDescription>
-                Book private dance sessions with Elizabeth Zolotova - available online via Zoom or in-person at the studio.
-              </CardDescription>
+              <CardTitle>My Upcoming Sessions</CardTitle>
             </CardHeader>
-          </Card>
-
-          {/* My Bookings */}
-          {isAuthenticated && myBookings && myBookings.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>My Upcoming Sessions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {myBookings
-                    .filter((booking: any) => booking.status !== 'cancelled')
-                    .map((booking: any) => {
-                      const slot = availableSlots?.find((s: any) => s.id === booking.slotId);
-                      if (!slot) return null;
-                      
-                      return (
-                        <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div className="flex-1">
-                            <p className="font-semibold">{slot.title}</p>
-                            <p className="text-sm text-muted-foreground">
-                              {format(new Date(slot.startTime), 'EEEE, MMMM d, yyyy')} at {format(new Date(slot.startTime), 'h:mm a')}
-                            </p>
-                            <div className="flex items-center gap-4 mt-2">
-                              {slot.eventType === 'online' ? (
-                                <Badge variant="secondary" className="flex items-center gap-1">
-                                  <Video className="h-3 w-3" />
-                                  Online
-                                </Badge>
-                              ) : (
-                                <Badge variant="secondary" className="flex items-center gap-1">
-                                  <MapPin className="h-3 w-3" />
-                                  In-Person
-                                </Badge>
-                              )}
-                              {booking.paymentRequired && (
-                                <Badge variant="outline" className="flex items-center gap-1">
-                                  <Euro className="h-3 w-3" />
-                                  Paid
-                                </Badge>
-                              )}
-                            </div>
-                            {booking.zoomLink && (
-                              <a 
-                                href={booking.zoomLink} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-sm text-primary hover:underline mt-2 inline-block"
-                              >
-                                Join Zoom Meeting →
-                              </a>
+            <CardContent>
+              <div className="space-y-3">
+                {myBookings
+                  .filter((booking: any) => booking.status !== 'cancelled')
+                  .map((booking: any) => {
+                    const slot = availableSlots?.find((s: any) => s.id === booking.slotId);
+                    if (!slot) return null;
+                    
+                    return (
+                      <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg bg-pink-50/30">
+                        <div className="flex-1">
+                          <p className="font-semibold">{slot.title}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {format(new Date(slot.startTime), 'EEEE, MMMM d, yyyy')} at {format(new Date(slot.startTime), 'h:mm a')}
+                          </p>
+                          <div className="flex items-center gap-2 mt-2 flex-wrap">
+                            {slot.eventType === 'online' ? (
+                              <Badge variant="secondary" className="flex items-center gap-1">
+                                <Video className="h-3 w-3" />
+                                Online
+                              </Badge>
+                            ) : (
+                              <Badge variant="secondary" className="flex items-center gap-1">
+                                <MapPin className="h-3 w-3" />
+                                In-Person
+                              </Badge>
                             )}
-                            {slot.location && slot.eventType === 'in-person' && (
-                              <p className="text-sm text-muted-foreground mt-1">
-                                📍 {slot.location}
-                              </p>
+                            <Badge variant="outline">
+                              {slot.sessionType === 'private' ? '👤 Private' : '👥 Group'}
+                            </Badge>
+                            {booking.paymentRequired && (
+                              <Badge variant="outline" className="flex items-center gap-1">
+                                <Euro className="h-3 w-3" />
+                                Paid
+                              </Badge>
                             )}
                           </div>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleCancelBooking(booking.id)}
-                            disabled={cancelMutation.isPending}
-                          >
-                            Cancel
-                          </Button>
+                          {booking.zoomLink && (
+                            <a 
+                              href={booking.zoomLink} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="text-sm text-primary hover:underline mt-2 inline-block"
+                            >
+                              Join Zoom Meeting →
+                            </a>
+                          )}
+                          {slot.location && slot.eventType === 'in-person' && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              📍 {slot.location}
+                            </p>
+                          )}
                         </div>
-                      );
-                    })}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleCancelBooking(booking.id)}
+                          disabled={cancelMutation.isPending}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                    );
+                  })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Filter Section */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  <Filter className="h-5 w-5" />
+                  Filter Sessions
+                  {hasActiveFilters && (
+                    <Badge variant="secondary" className="ml-2">
+                      {activeFilterCount} active
+                    </Badge>
+                  )}
+                </CardTitle>
+                <CardDescription>
+                  {filteredSlots.length} session{filteredSlots.length !== 1 ? 's' : ''} available
+                </CardDescription>
+              </div>
+              <div className="flex gap-2">
+                {hasActiveFilters && (
+                  <Button variant="ghost" size="sm" onClick={clearAllFilters}>
+                    <X className="h-4 w-4 mr-1" />
+                    Clear all
+                  </Button>
+                )}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowFilters(!showFilters)}
+                >
+                  {showFilters ? 'Hide' : 'Show'} Filters
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          {showFilters && (
+            <CardContent className="space-y-6">
+              {/* Quick Presets */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">Quick Filters</Label>
+                <div className="flex flex-wrap gap-2">
+                  {FILTER_PRESETS.map((preset) => {
+                    const isActive = 
+                      preset.eventType === eventFilter &&
+                      preset.sessionType === sessionTypeFilter &&
+                      preset.priceFilter === priceFilter;
+                    
+                    return (
+                      <Button
+                        key={preset.label}
+                        variant={isActive ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => applyPreset(preset)}
+                        className="transition-all"
+                      >
+                        {preset.label}
+                      </Button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Individual Filters */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Location Type */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">Location</Label>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant={eventFilter === "all" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setEventFilter("all")}
+                    >
+                      All
+                    </Button>
+                    <Button
+                      variant={eventFilter === "online" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setEventFilter("online")}
+                      className="flex items-center gap-1"
+                    >
+                      <Video className="h-3 w-3" />
+                      Online
+                    </Button>
+                    <Button
+                      variant={eventFilter === "in-person" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setEventFilter("in-person")}
+                      className="flex items-center gap-1"
+                    >
+                      <MapPin className="h-3 w-3" />
+                      In-Person
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Session Type */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">Session Type</Label>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant={sessionTypeFilter === "all" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSessionTypeFilter("all")}
+                    >
+                      All
+                    </Button>
+                    <Button
+                      variant={sessionTypeFilter === "private" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSessionTypeFilter("private")}
+                    >
+                      👤 Private
+                    </Button>
+                    <Button
+                      variant={sessionTypeFilter === "group" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSessionTypeFilter("group")}
+                    >
+                      👥 Group
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Price */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">Price</Label>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant={priceFilter === "all" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setPriceFilter("all")}
+                    >
+                      All
+                    </Button>
+                    <Button
+                      variant={priceFilter === "free" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setPriceFilter("free")}
+                    >
+                      Free
+                    </Button>
+                    <Button
+                      variant={priceFilter === "paid" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setPriceFilter("paid")}
+                      className="flex items-center gap-1"
+                    >
+                      <Euro className="h-3 w-3" />
+                      Paid
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          )}
+        </Card>
+
+        {/* View Toggle */}
+        <div className="flex justify-center gap-2">
+          <Button
+            variant={viewMode === "calendar" ? "default" : "outline"}
+            onClick={() => setViewMode("calendar")}
+            className="flex items-center gap-2"
+          >
+            <CalendarIcon className="h-4 w-4" />
+            Calendar View
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "default" : "outline"}
+            onClick={() => setViewMode("list")}
+          >
+            List View
+          </Button>
+        </div>
+
+        {/* Available Sessions */}
+        {slotsLoading ? (
+          <Card>
+            <CardContent className="py-8">
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-24 bg-muted rounded animate-pulse"></div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        ) : viewMode === "calendar" ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Calendar */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <Button variant="outline" size="sm" onClick={previousMonth}>
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <CardTitle className="text-lg">
+                    {format(currentMonth, 'MMMM yyyy')}
+                  </CardTitle>
+                  <Button variant="outline" size="sm" onClick={nextMonth}>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+                <CardDescription>Select a date to view available times</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-7 gap-2">
+                  {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
+                    <div key={day} className="text-center text-sm font-semibold text-muted-foreground p-2">
+                      {day}
+                    </div>
+                  ))}
+                  
+                  {calendarDays.map((day) => {
+                    const dateKey = format(day, 'yyyy-MM-dd');
+                    const hasSlots = datesWithSlots.has(dateKey);
+                    const isSelected = selectedDate && isSameDay(day, selectedDate);
+                    const isCurrentMonth = isSameMonth(day, currentMonth);
+                    
+                    return (
+                      <button
+                        key={day.toISOString()}
+                        onClick={() => handleDateClick(day)}
+                        disabled={!hasSlots}
+                        className={`
+                          aspect-square p-2 rounded-lg border transition-all
+                          ${!isCurrentMonth ? 'text-muted-foreground/40' : ''}
+                          ${hasSlots ? 'cursor-pointer hover:border-primary hover:bg-primary/5' : 'cursor-not-allowed opacity-50'}
+                          ${isSelected ? 'border-primary bg-primary/10 font-semibold' : 'border-border'}
+                        `}
+                      >
+                        <div className="text-sm">{format(day, 'd')}</div>
+                        {hasSlots && (
+                          <div className="mt-1 flex justify-center">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
-          )}
 
-          {/* Available Sessions with Calendar/List Toggle */}
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-start flex-wrap gap-4">
-                <div>
-                  <CardTitle>Available Sessions</CardTitle>
-                  <CardDescription>Select a date to view available time slots</CardDescription>
-                </div>
-                <div className="flex gap-2 items-center flex-wrap">
-                  <Tabs value={eventFilter} onValueChange={(v) => setEventFilter(v as any)} className="w-auto">
-                    <TabsList>
-                      <TabsTrigger value="all">All</TabsTrigger>
-                      <TabsTrigger value="online">Online</TabsTrigger>
-                      <TabsTrigger value="in-person">In-Person</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                  <Tabs value={sessionTypeFilter} onValueChange={(v) => setSessionTypeFilter(v as any)} className="w-auto">
-                    <TabsList>
-                      <TabsTrigger value="all">All</TabsTrigger>
-                      <TabsTrigger value="private">Private</TabsTrigger>
-                      <TabsTrigger value="group">Group</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                  <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="w-auto">
-                    <TabsList>
-                      <TabsTrigger value="calendar">Calendar</TabsTrigger>
-                      <TabsTrigger value="list">List</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {slotsLoading ? (
-                <div className="space-y-4">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="h-24 bg-muted rounded animate-pulse"></div>
-                  ))}
-                </div>
-              ) : viewMode === "calendar" ? (
-                <div className="space-y-6">
-                  {/* Calendar Header */}
-                  <div className="flex items-center justify-between">
-                    <Button variant="outline" size="sm" onClick={previousMonth}>
-                      <ChevronLeft className="h-4 w-4" />
-                    </Button>
-                    <h3 className="text-lg font-semibold">
-                      {format(currentMonth, 'MMMM yyyy')}
-                    </h3>
-                    <Button variant="outline" size="sm" onClick={nextMonth}>
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-
-                  {/* Calendar Grid */}
-                  <div className="grid grid-cols-7 gap-2">
-                    {/* Day headers */}
-                    {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-                      <div key={day} className="text-center text-sm font-semibold text-muted-foreground p-2">
-                        {day}
-                      </div>
-                    ))}
-                    
-                    {/* Calendar days */}
-                    {calendarDays.map((day) => {
-                      const dateKey = format(day, 'yyyy-MM-dd');
-                      const hasSlots = datesWithSlots.has(dateKey);
-                      const isSelected = selectedDate && isSameDay(day, selectedDate);
-                      const isCurrentMonth = isSameMonth(day, currentMonth);
-                      
-                      return (
-                        <button
-                          key={day.toISOString()}
-                          onClick={() => handleDateClick(day)}
-                          disabled={!hasSlots}
-                          className={`
-                            aspect-square p-2 rounded-lg border transition-all
-                            ${!isCurrentMonth ? 'text-muted-foreground/40' : ''}
-                            ${hasSlots ? 'cursor-pointer hover:border-primary hover:bg-primary/5' : 'cursor-not-allowed opacity-50'}
-                            ${isSelected ? 'border-primary bg-primary/10 font-semibold' : 'border-border'}
-                          `}
-                        >
-                          <div className="text-sm">{format(day, 'd')}</div>
-                          {hasSlots && (
-                            <div className="mt-1 flex justify-center">
-                              <div className="w-1.5 h-1.5 rounded-full bg-primary"></div>
-                            </div>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {/* Selected Date Slots */}
-                  {selectedDate && selectedDateSlots.length > 0 && (
-                    <div className="mt-6 space-y-4">
-                      <h4 className="font-semibold flex items-center gap-2">
-                        <CalendarIcon className="h-4 w-4" />
-                        {format(selectedDate, 'EEEE, MMMM d, yyyy')}
-                      </h4>
-                      <div className="grid grid-cols-1 gap-3">
-                        {selectedDateSlots.map((slot: any) => (
-                          <div
-                            key={slot.id}
-                            className="p-4 border rounded-lg hover:border-primary transition-colors cursor-pointer"
-                            onClick={() => handleBookSlot(slot)}
-                          >
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <p className="font-semibold">{slot.title}</p>
-                                {slot.description && (
-                                  <p className="text-sm text-muted-foreground mt-1">{slot.description}</p>
-                                )}
-                                <div className="flex items-center gap-4 mt-2 flex-wrap">
-                                  <span className="text-sm flex items-center gap-1">
-                                    <Clock className="h-4 w-4" />
-                                    {format(new Date(slot.startTime), 'h:mm a')} - {format(new Date(slot.endTime), 'h:mm a')}
-                                  </span>
-                                  {slot.eventType === 'online' ? (
-                                    <Badge variant="secondary" className="flex items-center gap-1">
-                                      <Video className="h-3 w-3" />
-                                      Online
-                                    </Badge>
-                                  ) : (
-                                    <Badge variant="secondary" className="flex items-center gap-1">
-                                      <MapPin className="h-3 w-3" />
-                                      In-Person
-                                    </Badge>
-                                  )}
-                                  <Badge variant="outline">
-                                    {slot.sessionType === 'private' ? '👤 Private' : '👥 Group'}
-                                  </Badge>
-                                  {slot.sessionType === 'group' && (
-                                    <Badge variant="secondary">
-                                      {slot.currentBookings}/{slot.capacity} booked
-                                    </Badge>
-                                  )}
-                                  {slot.isFree ? (
-                                    <Badge variant="outline">Free</Badge>
-                                  ) : (
-                                    <Badge variant="default" className="flex items-center gap-1">
-                                      <Euro className="h-3 w-3" />
-                                      €{slot.price}
-                                    </Badge>
-                                  )}
-                                </div>
-                                {slot.location && slot.eventType === 'in-person' && (
-                                  <p className="text-sm text-muted-foreground mt-2">
-                                    📍 {slot.location}
-                                  </p>
-                                )}
-                              </div>
-                              <Button size="sm">Book</Button>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedDate && selectedDateSlots.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>No available slots for this date.</p>
-                    </div>
-                  )}
-
-                  {!selectedDate && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <CalendarIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                      <p>Select a date with availability (marked with a dot) to view time slots.</p>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                // List View
-                availableSlots && availableSlots.length > 0 ? (
-                  <div className="space-y-6">
-                    {Object.entries(slotsByDate).map(([date, slots]: [string, any]) => (
-                      <div key={date}>
-                        <h3 className="font-semibold mb-3 flex items-center gap-2">
-                          <CalendarIcon className="h-4 w-4" />
-                          {format(new Date(date), 'EEEE, MMMM d, yyyy')}
-                        </h3>
-                        <div className="grid grid-cols-1 gap-3">
-                          {slots.map((slot: any) => (
-                            <div
-                              key={slot.id}
-                              className="p-4 border rounded-lg hover:border-primary transition-colors cursor-pointer"
-                              onClick={() => handleBookSlot(slot)}
-                            >
-                              <div className="flex justify-between items-start">
-                                <div className="flex-1">
-                                  <p className="font-semibold">{slot.title}</p>
-                                  {slot.description && (
-                                    <p className="text-sm text-muted-foreground mt-1">{slot.description}</p>
-                                  )}
-                                  <div className="flex items-center gap-4 mt-2 flex-wrap">
-                                    <span className="text-sm flex items-center gap-1">
-                                      <Clock className="h-4 w-4" />
-                                      {format(new Date(slot.startTime), 'h:mm a')} - {format(new Date(slot.endTime), 'h:mm a')}
-                                    </span>
-                                    {slot.eventType === 'online' ? (
-                                      <Badge variant="secondary" className="flex items-center gap-1">
-                                        <Video className="h-3 w-3" />
-                                        Online
-                                      </Badge>
-                                    ) : (
-                                      <Badge variant="secondary" className="flex items-center gap-1">
-                                        <MapPin className="h-3 w-3" />
-                                        In-Person
-                                      </Badge>
-                                    )}
-                                    {slot.isFree ? (
-                                      <Badge variant="outline">Free</Badge>
-                                    ) : (
-                                      <Badge variant="default" className="flex items-center gap-1">
-                                        <Euro className="h-3 w-3" />
-                                        €{slot.price}
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  {slot.location && slot.eventType === 'in-person' && (
-                                    <p className="text-sm text-muted-foreground mt-2">
-                                      📍 {slot.location}
-                                    </p>
-                                  )}
-                                </div>
-                                <Button size="sm">Book</Button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
+            {/* Selected Date Slots */}
+            <Card>
+              <CardHeader>
+                <CardTitle>
+                  {selectedDate ? format(selectedDate, 'EEEE, MMMM d') : 'Select a Date'}
+                </CardTitle>
+                <CardDescription>
+                  {selectedDateSlots.length} session{selectedDateSlots.length !== 1 ? 's' : ''} available
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {selectedDateSlots.length > 0 ? (
+                  <div className="space-y-3 max-h-[500px] overflow-y-auto">
+                    {selectedDateSlots.map((slot: any) => (
+                      <SlotCard key={slot.id} slot={slot} onBook={handleBookSlot} />
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <CalendarIcon className="h-12 w-12 mx-auto mb-3 opacity-50" />
-                    <p>No available time slots at the moment.</p>
-                    <p className="text-sm">Please check back later or try a different filter.</p>
-                  </div>
-                )
+                  <p className="text-center text-muted-foreground py-8">
+                    {selectedDate ? 'No sessions available for this date' : 'Select a date to view available sessions'}
+                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>All Available Sessions</CardTitle>
+              <CardDescription>
+                {filteredSlots.length} session{filteredSlots.length !== 1 ? 's' : ''} found
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {filteredSlots.length > 0 ? (
+                <div className="space-y-4">
+                  {filteredSlots.map((slot: any) => (
+                    <SlotCard key={slot.id} slot={slot} onBook={handleBookSlot} showDate />
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-muted-foreground py-8">
+                  No sessions match your filters. Try adjusting your selection.
+                </p>
               )}
             </CardContent>
           </Card>
-        </div>
+        )}
       </div>
 
-      {/* Booking Confirmation Dialog */}
+      {/* Booking Dialog */}
       <Dialog open={bookingDialogOpen} onOpenChange={setBookingDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Confirm Booking</DialogTitle>
             <DialogDescription>
-              {selectedSlot?.isFree 
-                ? "You're about to book a free session (account required)"
-                : `Payment of €${selectedSlot?.price} required to confirm booking`
-              }
+              {selectedSlot && (
+                <div className="space-y-2 mt-4">
+                  <p className="font-semibold text-lg">{selectedSlot.title}</p>
+                  <p className="text-sm">
+                    {format(new Date(selectedSlot.startTime), 'EEEE, MMMM d, yyyy')} at {format(new Date(selectedSlot.startTime), 'h:mm a')}
+                  </p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {selectedSlot.eventType === 'online' ? (
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <Video className="h-3 w-3" />
+                        Online
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        In-Person
+                      </Badge>
+                    )}
+                    <Badge variant="outline">
+                      {selectedSlot.sessionType === 'private' ? '👤 Private' : `👥 Group (${selectedSlot.currentBookings}/${selectedSlot.capacity})`}
+                    </Badge>
+                  </div>
+                  {selectedSlot.location && selectedSlot.eventType === 'in-person' && (
+                    <p className="text-sm">📍 {selectedSlot.location}</p>
+                  )}
+                  <p className="text-lg font-bold text-primary mt-2">
+                    {selectedSlot.isFree ? 'Free Session' : `€${selectedSlot.price}`}
+                  </p>
+                </div>
+              )}
             </DialogDescription>
           </DialogHeader>
-          {selectedSlot && (
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <p className="font-semibold">{selectedSlot.title}</p>
-                <p className="text-sm">
-                  {format(new Date(selectedSlot.startTime), 'EEEE, MMMM d, yyyy')}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {format(new Date(selectedSlot.startTime), 'h:mm a')} - {format(new Date(selectedSlot.endTime), 'h:mm a')}
-                </p>
-                <div className="flex items-center gap-2 mt-2">
-                  {selectedSlot.eventType === 'online' ? (
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      <Video className="h-3 w-3" />
-                      Online (Zoom)
-                    </Badge>
-                  ) : (
-                    <Badge variant="secondary" className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3" />
-                      In-Person
-                    </Badge>
-                  )}
-                  {!selectedSlot.isFree && (
-                    <Badge variant="default" className="flex items-center gap-1">
-                      <Euro className="h-3 w-3" />
-                      €{selectedSlot.price}
-                    </Badge>
-                  )}
-                </div>
-                {selectedSlot.location && selectedSlot.eventType === 'in-person' && (
-                  <p className="text-sm text-muted-foreground">
-                    📍 {selectedSlot.location}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="notes">Notes (Optional)</Label>
-                <Textarea
-                  id="notes"
-                  placeholder="Any specific topics or questions you'd like to cover?"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={3}
-                />
-              </div>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes (Optional)</Label>
+              <Textarea
+                id="notes"
+                placeholder="Any special requests or information..."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+              />
             </div>
-          )}
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setBookingDialogOpen(false)}>
               Cancel
             </Button>
-            <Button 
-              onClick={confirmBooking} 
+            <Button
+              onClick={confirmBooking}
               disabled={bookMutation.isPending || checkoutMutation.isPending}
             >
-              {bookMutation.isPending || checkoutMutation.isPending 
-                ? "Processing..." 
-                : selectedSlot?.isFree 
-                  ? "Confirm Booking" 
-                  : "Proceed to Payment"
-              }
+              {bookMutation.isPending || checkoutMutation.isPending
+                ? "Processing..."
+                : selectedSlot?.isFree
+                ? "Confirm Booking"
+                : "Proceed to Payment"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+// Slot Card Component
+function SlotCard({ slot, onBook, showDate = false }: { slot: any; onBook: (slot: any) => void; showDate?: boolean }) {
+  const isFullyBooked = slot.sessionType === 'group' 
+    ? slot.currentBookings >= slot.capacity 
+    : slot.isBooked;
+
+  return (
+    <div className="p-4 border rounded-lg hover:border-primary transition-colors bg-card">
+      <div className="flex justify-between items-start gap-4">
+        <div className="flex-1 space-y-2">
+          <h4 className="font-semibold text-lg">{slot.title}</h4>
+          {slot.description && (
+            <p className="text-sm text-muted-foreground">{slot.description}</p>
+          )}
+          <div className="flex items-center gap-2 flex-wrap">
+            {showDate && (
+              <span className="text-sm flex items-center gap-1">
+                <CalendarIcon className="h-4 w-4" />
+                {format(new Date(slot.startTime), 'MMM d, yyyy')}
+              </span>
+            )}
+            <span className="text-sm flex items-center gap-1">
+              <Clock className="h-4 w-4" />
+              {format(new Date(slot.startTime), 'h:mm a')} - {format(new Date(slot.endTime), 'h:mm a')}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {slot.eventType === 'online' ? (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <Video className="h-3 w-3" />
+                Online
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <MapPin className="h-3 w-3" />
+                In-Person
+              </Badge>
+            )}
+            <Badge variant="outline">
+              {slot.sessionType === 'private' ? '👤 Private' : '👥 Group'}
+            </Badge>
+            {slot.sessionType === 'group' && (
+              <Badge variant="secondary">
+                {slot.currentBookings}/{slot.capacity} booked
+              </Badge>
+            )}
+            {slot.isFree ? (
+              <Badge variant="outline">Free</Badge>
+            ) : (
+              <Badge variant="default" className="flex items-center gap-1">
+                <Euro className="h-3 w-3" />
+                €{slot.price}
+              </Badge>
+            )}
+          </div>
+          {slot.location && slot.eventType === 'in-person' && (
+            <p className="text-sm text-muted-foreground">
+              📍 {slot.location}
+            </p>
+          )}
+        </div>
+        <Button
+          onClick={() => onBook(slot)}
+          disabled={isFullyBooked}
+          size="sm"
+        >
+          {isFullyBooked ? 'Full' : 'Book Now'}
+        </Button>
+      </div>
     </div>
   );
 }
