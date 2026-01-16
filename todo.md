@@ -464,3 +464,7 @@
 - [x] Fix HTML nesting errors in BookSession page (<p> cannot contain <div> or <p>)
 - [x] Investigate current booking flow and page structure
 - [x] Update Book button to navigate to Confirm Booking page with event details
+
+## Reduce Upcoming Sessions Widget Size
+- [x] Make widget more compact and less overwhelming
+- [x] Optimize spacing and font sizes for better readability

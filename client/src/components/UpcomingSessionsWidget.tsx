@@ -47,24 +47,24 @@ export function UpcomingSessionsWidget() {
       
       {/* Expanded Widget */}
       {isExpanded && (
-        <div className="w-96 max-h-[600px] bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden animate-fade-in">
+        <div className="w-80 max-h-[480px] bg-white rounded-xl shadow-2xl border border-gray-200 overflow-hidden animate-fade-in">
           {/* Header */}
-          <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Calendar className="w-5 h-5" />
-              <h3 className="font-bold text-lg">Upcoming Sessions</h3>
+          <div className="bg-gradient-to-r from-purple-600 to-pink-600 text-white p-3 flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <Calendar className="w-4 h-4" />
+              <h3 className="font-semibold text-base">Upcoming Sessions</h3>
             </div>
             <button
               onClick={() => setIsExpanded(false)}
               className="p-1 hover:bg-white/20 rounded-full transition-colors"
               aria-label="Close"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
           
           {/* Sessions List */}
-          <div className="overflow-y-auto max-h-[500px]">
+          <div className="overflow-y-auto max-h-[400px]">
             {events.map((event: any) => {
               const spotsLeft = event.capacity - event.currentBookings;
               const startTime = new Date(event.startTime);
@@ -74,11 +74,11 @@ export function UpcomingSessionsWidget() {
               return (
                 <div
                   key={event.id}
-                  className="p-4 border-b border-gray-100 hover:bg-purple-50/50 transition-colors group"
+                  className="p-3 border-b border-gray-100 hover:bg-purple-50/50 transition-colors group"
                 >
                   {/* Event Type Badge */}
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full ${
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium rounded-full ${
                       event.eventType === 'online' 
                         ? 'bg-blue-100 text-blue-900' 
                         : 'bg-purple-100 text-purple-900'
@@ -91,30 +91,30 @@ export function UpcomingSessionsWidget() {
                   </div>
                   
                   {/* Title */}
-                  <h4 className="font-semibold text-gray-900 mb-2 line-clamp-2">
+                  <h4 className="font-semibold text-sm text-gray-900 mb-1.5 line-clamp-2">
                     {event.title}
                   </h4>
                   
                   {/* Date & Time */}
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                    <Calendar className="w-3.5 h-3.5 flex-shrink-0" />
+                  <div className="flex items-center gap-1.5 text-xs text-gray-600 mb-0.5">
+                    <Calendar className="w-3 h-3 flex-shrink-0" />
                     <span>{format(startTime, 'MMM d, yyyy')}</span>
                   </div>
                   
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                    <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+                  <div className="flex items-center gap-1.5 text-xs text-gray-600 mb-2">
+                    <Clock className="w-3 h-3 flex-shrink-0" />
                     <span>{format(startTime, 'p')} • {duration} min</span>
                   </div>
                   
                   {/* Footer */}
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className={`text-sm font-medium ${
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs font-medium ${
                         spotsLeft <= 2 ? 'text-amber-600' : 'text-gray-700'
                       }`}>
-                        {spotsLeft} {spotsLeft === 1 ? 'spot' : 'spots'} left
+                        {spotsLeft} {spotsLeft === 1 ? 'spot' : 'spots'}
                       </span>
-                      <span className="text-sm font-semibold text-gray-900">
+                      <span className="text-xs font-semibold text-gray-900">
                         {event.isFree ? 'Free' : `€${event.price}`}
                       </span>
                     </div>
@@ -122,7 +122,7 @@ export function UpcomingSessionsWidget() {
                     <Button
                       size="sm"
                       onClick={() => handleBookClick(event.id)}
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-xs px-3 py-1"
                     >
                       Book
                     </Button>
