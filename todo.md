@@ -449,3 +449,10 @@
 - [x] Add smooth expand/collapse animations
 - [x] Ensure widget doesn't obstruct navigation
 - [x] Test on mobile and desktop
+
+## Animate Upcoming Sessions Widget
+- [x] Add subtle pulse animation to widget button
+- [x] Add shimmer/glow effect to draw attention
+- [x] Implement smooth entrance animation on page load
+- [x] Add badge bounce animation for session count
+- [x] Ensure animations are elegant and not distracting
