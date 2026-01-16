@@ -1,0 +1,411 @@
+import { useAuth } from "@/_core/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { trpc } from "@/lib/trpc";
+import { ArrowLeft, Plus, Pencil, Trash2, AlertCircle } from "lucide-react";
+import { Link } from "wouter";
+import { getLoginUrl } from "@/const";
+import { useState } from "react";
+import { toast } from "sonner";
+
+
+export default function Admin() {
+  const { user, isAuthenticated, loading } = useAuth();
+  const utils = trpc.useUtils();
+  
+  const [courseDialogOpen, setCourseDialogOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<any>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const { data: courses, isLoading: coursesLoading } = trpc.admin.courses.list.useQuery(
+    undefined,
+    { enabled: isAuthenticated && user?.role === 'admin' }
+  );
+  
+  const { data: bannerData } = trpc.admin.banner.get.useQuery(
+    undefined,
+    { enabled: isAuthenticated && user?.role === 'admin' }
+  );
+
+  const createCourseMutation = trpc.admin.courses.create.useMutation({
+    onSuccess: () => {
+      toast.success("Course created successfully!");
+      utils.admin.courses.list.invalidate();
+      utils.courses.list.invalidate();
+      setCourseDialogOpen(false);
+      setEditingCourse(null);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to create course");
+    },
+  });
+
+  const updateCourseMutation = trpc.admin.courses.update.useMutation({
+    onSuccess: () => {
+      toast.success("Course updated successfully!");
+      utils.admin.courses.list.invalidate();
+      utils.courses.list.invalidate();
+      setCourseDialogOpen(false);
+      setEditingCourse(null);
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update course");
+    },
+  });
+
+  const deleteCourseMutation = trpc.admin.courses.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Course deleted successfully!");
+      utils.admin.courses.list.invalidate();
+      utils.courses.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete course");
+    },
+  });
+
+  const updateBannerMutation = trpc.admin.banner.update.useMutation({
+    onSuccess: () => {
+      toast.success("Banner updated successfully!");
+      utils.admin.banner.get.invalidate();
+      utils.banner.get.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update banner");
+    },
+  });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || user?.role !== 'admin') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="max-w-md">
+          <CardHeader>
+            <CardTitle>Access Denied</CardTitle>
+            <CardDescription>You need admin privileges to access this page.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link href="/">
+              <Button className="w-full">Go to Home</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const uploadMutation = trpc.upload.useMutation({
+    onSuccess: (data) => {
+      setEditingCourse((prev: any) => ({
+        ...prev,
+        imageUrl: data.url,
+        imageKey: data.key,
+      }));
+      toast.success("Image uploaded successfully!");
+      setUploading(false);
+    },
+    onError: (error) => {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload image");
+      setUploading(false);
+    },
+  });
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      const buffer = new Uint8Array(arrayBuffer);
+      
+      // Convert to base64
+      const binary = Array.from(buffer).map(b => String.fromCharCode(b)).join('');
+      const base64Data = btoa(binary);
+      
+      const randomSuffix = Math.random().toString(36).substring(7);
+      const fileKey = `courses/${Date.now()}-${randomSuffix}-${file.name}`;
+      
+      uploadMutation.mutate({
+        key: fileKey,
+        data: base64Data,
+        contentType: file.type,
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Failed to process image");
+      setUploading(false);
+    }
+  };
+
+  const handleSaveCourse = () => {
+    if (!editingCourse) return;
+
+    const courseData = {
+      title: editingCourse.title,
+      description: editingCourse.description,
+      price: editingCourse.price || "0",
+      originalPrice: editingCourse.originalPrice || undefined,
+      imageUrl: editingCourse.imageUrl || undefined,
+      imageKey: editingCourse.imageKey || undefined,
+      isFree: editingCourse.isFree || false,
+      isPublished: editingCourse.isPublished !== false,
+    };
+
+    if (editingCourse.id) {
+      updateCourseMutation.mutate({ id: editingCourse.id, ...courseData });
+    } else {
+      createCourseMutation.mutate(courseData);
+    }
+  };
+
+  return (
+    <div className="min-h-screen">
+      <header className="border-b bg-card">
+        <div className="container py-4 flex justify-between items-center">
+          <div className="flex items-center gap-4">
+            <Link href="/">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Back to Home
+              </Button>
+            </Link>
+            <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+          </div>
+          <span className="text-sm text-muted-foreground">{user?.name || user?.email}</span>
+        </div>
+      </header>
+
+      <div className="container py-8 space-y-8">
+        {/* Banner Management */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Discount Banner</CardTitle>
+            <CardDescription>Control the promotional banner shown on the homepage</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="banner-toggle">Show Banner</Label>
+              <Switch
+                id="banner-toggle"
+                checked={bannerData?.enabled || false}
+                onCheckedChange={(checked) => {
+                  updateBannerMutation.mutate({
+                    enabled: checked,
+                    text: bannerData?.text || "",
+                  });
+                }}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="banner-text">Banner Text</Label>
+              <Textarea
+                id="banner-text"
+                placeholder="Enter promotional message..."
+                value={bannerData?.text || ""}
+                onChange={(e) => {
+                  // Update locally, save on blur
+                }}
+                onBlur={(e) => {
+                  updateBannerMutation.mutate({
+                    enabled: bannerData?.enabled || false,
+                    text: e.target.value,
+                  });
+                }}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Course Management */}
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>Course Management</CardTitle>
+                <CardDescription>Add, edit, or remove dance courses</CardDescription>
+              </div>
+              <Dialog open={courseDialogOpen} onOpenChange={setCourseDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={() => setEditingCourse({})}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Course
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle>{editingCourse?.id ? 'Edit Course' : 'Add New Course'}</DialogTitle>
+                    <DialogDescription>
+                      Fill in the course details below
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="title">Course Title *</Label>
+                      <Input
+                        id="title"
+                        value={editingCourse?.title || ""}
+                        onChange={(e) => setEditingCourse({ ...editingCourse, title: e.target.value })}
+                        placeholder="e.g., CHOREO 'Mon Demon' 😈"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="description">Description *</Label>
+                      <Textarea
+                        id="description"
+                        value={editingCourse?.description || ""}
+                        onChange={(e) => setEditingCourse({ ...editingCourse, description: e.target.value })}
+                        placeholder="Describe the course content..."
+                        rows={4}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="price">Price (€) *</Label>
+                        <Input
+                          id="price"
+                          type="number"
+                          step="0.01"
+                          value={editingCourse?.price || ""}
+                          onChange={(e) => setEditingCourse({ ...editingCourse, price: e.target.value })}
+                          placeholder="29.00"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="originalPrice">Original Price (€)</Label>
+                        <Input
+                          id="originalPrice"
+                          type="number"
+                          step="0.01"
+                          value={editingCourse?.originalPrice || ""}
+                          onChange={(e) => setEditingCourse({ ...editingCourse, originalPrice: e.target.value })}
+                          placeholder="79.00"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="image">Course Image</Label>
+                      <Input
+                        id="image"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageUpload}
+                        disabled={uploading}
+                      />
+                      {editingCourse?.imageUrl && (
+                        <img src={editingCourse.imageUrl} alt="Preview" className="mt-2 h-32 object-cover rounded" />
+                      )}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="isFree"
+                        checked={editingCourse?.isFree || false}
+                        onCheckedChange={(checked) => setEditingCourse({ ...editingCourse, isFree: checked })}
+                      />
+                      <Label htmlFor="isFree">Free Course</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="isPublished"
+                        checked={editingCourse?.isPublished !== false}
+                        onCheckedChange={(checked) => setEditingCourse({ ...editingCourse, isPublished: checked })}
+                      />
+                      <Label htmlFor="isPublished">Published</Label>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setCourseDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button 
+                      onClick={handleSaveCourse}
+                      disabled={!editingCourse?.title || !editingCourse?.description || createCourseMutation.isPending || updateCourseMutation.isPending}
+                    >
+                      {createCourseMutation.isPending || updateCourseMutation.isPending ? "Saving..." : "Save Course"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {coursesLoading ? (
+              <div className="space-y-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-20 bg-muted rounded animate-pulse"></div>
+                ))}
+              </div>
+            ) : courses && courses.length > 0 ? (
+              <div className="space-y-4">
+                {courses.map((course) => (
+                  <div key={course.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 bg-gradient-to-br from-pink-100 to-purple-100 rounded flex items-center justify-center overflow-hidden">
+                        {course.imageUrl ? (
+                          <img src={course.imageUrl} alt={course.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-2xl">💃</span>
+                        )}
+                      </div>
+                      <div>
+                        <h4 className="font-semibold">{course.title}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {course.isFree ? 'Free' : `€${course.price}`}
+                          {!course.isPublished && <span className="ml-2 text-orange-600">(Unpublished)</span>}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setEditingCourse(course);
+                          setCourseDialogOpen(true);
+                        }}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (confirm("Are you sure you want to delete this course?")) {
+                            deleteCourseMutation.mutate({ id: course.id });
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  No courses yet. Click "Add Course" to create your first course.
+                </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

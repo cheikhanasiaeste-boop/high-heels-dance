@@ -1,11 +1,25 @@
-import { eq } from "drizzle-orm";
+import { eq, and, desc, isNull } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { 
+  InsertUser, 
+  users, 
+  courses, 
+  Course,
+  InsertCourse,
+  purchases,
+  Purchase,
+  InsertPurchase,
+  siteSettings,
+  SiteSetting,
+  InsertSiteSetting,
+  chatMessages,
+  ChatMessage,
+  InsertChatMessage
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
@@ -89,4 +103,163 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Course queries
+export async function getAllPublishedCourses(): Promise<Course[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select()
+    .from(courses)
+    .where(eq(courses.isPublished, true))
+    .orderBy(desc(courses.createdAt));
+  
+  return result;
+}
+
+export async function getAllCourses(): Promise<Course[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select()
+    .from(courses)
+    .orderBy(desc(courses.createdAt));
+  
+  return result;
+}
+
+export async function getCourseById(id: number): Promise<Course | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(courses).where(eq(courses.id, id)).limit(1);
+  return result[0];
+}
+
+export async function createCourse(course: InsertCourse): Promise<Course> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(courses).values(course);
+  const insertedId = Number(result[0].insertId);
+  
+  const newCourse = await getCourseById(insertedId);
+  if (!newCourse) throw new Error("Failed to retrieve created course");
+  
+  return newCourse;
+}
+
+export async function updateCourse(id: number, course: Partial<InsertCourse>): Promise<Course | undefined> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(courses).set(course).where(eq(courses.id, id));
+  return getCourseById(id);
+}
+
+export async function deleteCourse(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(courses).where(eq(courses.id, id));
+}
+
+// Purchase queries
+export async function createPurchase(purchase: InsertPurchase): Promise<Purchase> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(purchases).values(purchase);
+  const insertedId = Number(result[0].insertId);
+  
+  const newPurchase = await db.select().from(purchases).where(eq(purchases.id, insertedId)).limit(1);
+  if (!newPurchase[0]) throw new Error("Failed to retrieve created purchase");
+  
+  return newPurchase[0];
+}
+
+export async function getUserPurchases(userId: number): Promise<Purchase[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select()
+    .from(purchases)
+    .where(eq(purchases.userId, userId))
+    .orderBy(desc(purchases.purchasedAt));
+  
+  return result;
+}
+
+export async function hasUserPurchasedCourse(userId: number, courseId: number): Promise<boolean> {
+  const db = await getDb();
+  if (!db) return false;
+  
+  const result = await db
+    .select()
+    .from(purchases)
+    .where(
+      and(
+        eq(purchases.userId, userId),
+        eq(purchases.courseId, courseId),
+        eq(purchases.status, "completed")
+      )
+    )
+    .limit(1);
+  
+  return result.length > 0;
+}
+
+export async function updatePurchaseStatus(id: number, status: "pending" | "completed" | "failed"): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(purchases).set({ status }).where(eq(purchases.id, id));
+}
+
+// Site settings queries
+export async function getSetting(key: string): Promise<string | null> {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const result = await db.select().from(siteSettings).where(eq(siteSettings.key, key)).limit(1);
+  return result[0]?.value ?? null;
+}
+
+export async function setSetting(key: string, value: string): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .insert(siteSettings)
+    .values({ key, value })
+    .onDuplicateKeyUpdate({ set: { value } });
+}
+
+// Chat message queries
+export async function createChatMessage(message: InsertChatMessage): Promise<ChatMessage> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(chatMessages).values(message);
+  const insertedId = Number(result[0].insertId);
+  
+  const newMessage = await db.select().from(chatMessages).where(eq(chatMessages.id, insertedId)).limit(1);
+  if (!newMessage[0]) throw new Error("Failed to retrieve created message");
+  
+  return newMessage[0];
+}
+
+export async function getChatHistory(userId: number | null, limit: number = 50): Promise<ChatMessage[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const query = userId !== null
+    ? db.select().from(chatMessages).where(eq(chatMessages.userId, userId))
+    : db.select().from(chatMessages).where(isNull(chatMessages.userId));
+  
+  const result = await query.orderBy(desc(chatMessages.createdAt)).limit(limit);
+  
+  return result.reverse(); // Return in chronological order
+}
