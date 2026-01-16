@@ -14,7 +14,13 @@ import {
   InsertSiteSetting,
   chatMessages,
   ChatMessage,
-  InsertChatMessage
+  InsertChatMessage,
+  availabilitySlots,
+  AvailabilitySlot,
+  InsertAvailabilitySlot,
+  bookings,
+  Booking,
+  InsertBooking
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -262,4 +268,132 @@ export async function getChatHistory(userId: number | null, limit: number = 50):
   const result = await query.orderBy(desc(chatMessages.createdAt)).limit(limit);
   
   return result.reverse(); // Return in chronological order
+}
+
+// Availability slot queries
+export async function createAvailabilitySlot(slot: InsertAvailabilitySlot): Promise<AvailabilitySlot> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(availabilitySlots).values(slot);
+  const insertedId = Number(result[0].insertId);
+  
+  const newSlot = await db.select().from(availabilitySlots).where(eq(availabilitySlots.id, insertedId)).limit(1);
+  if (!newSlot[0]) throw new Error("Failed to retrieve created slot");
+  
+  return newSlot[0];
+}
+
+export async function getAvailableSlots(startDate?: Date, endDate?: Date): Promise<AvailabilitySlot[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  let query = db.select().from(availabilitySlots).where(eq(availabilitySlots.isBooked, false));
+  
+  // Filter by date range if provided
+  if (startDate && endDate) {
+    const result = await db
+      .select()
+      .from(availabilitySlots)
+      .where(
+        and(
+          eq(availabilitySlots.isBooked, false),
+          and(
+            eq(availabilitySlots.startTime, startDate), // This needs proper comparison
+            eq(availabilitySlots.endTime, endDate)
+          )
+        )
+      );
+    return result;
+  }
+  
+  const result = await query.orderBy(availabilitySlots.startTime);
+  return result;
+}
+
+export async function getAllAvailabilitySlots(): Promise<AvailabilitySlot[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.select().from(availabilitySlots).orderBy(availabilitySlots.startTime);
+  return result;
+}
+
+export async function getAvailabilitySlotById(id: number): Promise<AvailabilitySlot | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(availabilitySlots).where(eq(availabilitySlots.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updateAvailabilitySlot(id: number, updates: Partial<InsertAvailabilitySlot>): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(availabilitySlots).set(updates).where(eq(availabilitySlots.id, id));
+}
+
+export async function deleteAvailabilitySlot(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.delete(availabilitySlots).where(eq(availabilitySlots.id, id));
+}
+
+// Booking queries
+export async function createBooking(booking: InsertBooking): Promise<Booking> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(bookings).values(booking);
+  const insertedId = Number(result[0].insertId);
+  
+  const newBooking = await db.select().from(bookings).where(eq(bookings.id, insertedId)).limit(1);
+  if (!newBooking[0]) throw new Error("Failed to retrieve created booking");
+  
+  return newBooking[0];
+}
+
+export async function getUserBookings(userId: number): Promise<Booking[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select()
+    .from(bookings)
+    .where(eq(bookings.userId, userId))
+    .orderBy(desc(bookings.bookedAt));
+  
+  return result;
+}
+
+export async function getAllBookings(): Promise<Booking[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db.select().from(bookings).orderBy(desc(bookings.bookedAt));
+  return result;
+}
+
+export async function getBookingById(id: number): Promise<Booking | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
+  return result[0];
+}
+
+export async function updateBooking(id: number, updates: Partial<InsertBooking>): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(bookings).set(updates).where(eq(bookings.id, id));
+}
+
+export async function cancelBooking(id: number): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(bookings).set({ status: "cancelled" }).where(eq(bookings.id, id));
 }

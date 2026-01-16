@@ -22,6 +22,8 @@ export default function Admin() {
   const [courseDialogOpen, setCourseDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
+  const [availabilityDialogOpen, setAvailabilityDialogOpen] = useState(false);
+  const [newSlot, setNewSlot] = useState({ date: '', startTime: '', endTime: '' });
 
   const { data: courses, isLoading: coursesLoading } = trpc.admin.courses.list.useQuery(
     undefined,
@@ -29,6 +31,16 @@ export default function Admin() {
   );
   
   const { data: bannerData } = trpc.admin.banner.get.useQuery(
+    undefined,
+    { enabled: isAuthenticated && user?.role === 'admin' }
+  );
+  
+  const { data: availabilitySlots } = trpc.admin.availability.list.useQuery(
+    undefined,
+    { enabled: isAuthenticated && user?.role === 'admin' }
+  );
+  
+  const { data: allBookings } = trpc.admin.bookings.list.useQuery(
     undefined,
     { enabled: isAuthenticated && user?.role === 'admin' }
   );
@@ -78,6 +90,41 @@ export default function Admin() {
     },
     onError: (error) => {
       toast.error(error.message || "Failed to update banner");
+    },
+  });
+  
+  const createSlotMutation = trpc.admin.availability.create.useMutation({
+    onSuccess: () => {
+      toast.success("Time slot added successfully!");
+      utils.admin.availability.list.invalidate();
+      utils.bookings.availableSlots.invalidate();
+      setAvailabilityDialogOpen(false);
+      setNewSlot({ date: '', startTime: '', endTime: '' });
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to add time slot");
+    },
+  });
+  
+  const deleteSlotMutation = trpc.admin.availability.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Time slot deleted successfully!");
+      utils.admin.availability.list.invalidate();
+      utils.bookings.availableSlots.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete time slot");
+    },
+  });
+  
+  const cancelBookingMutation = trpc.admin.bookings.cancel.useMutation({
+    onSuccess: () => {
+      toast.success("Booking cancelled successfully!");
+      utils.admin.bookings.list.invalidate();
+      utils.admin.availability.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to cancel booking");
     },
   });
 
@@ -191,6 +238,171 @@ export default function Admin() {
       </header>
 
       <div className="container py-8 space-y-8">
+        {/* Session Bookings Management */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Session Bookings</CardTitle>
+            <CardDescription>View and manage all session bookings</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {allBookings && allBookings.length > 0 ? (
+              <div className="space-y-4">
+                {allBookings.map((booking) => {
+                  const slot = availabilitySlots?.find(s => s.id === booking.slotId);
+                  return (
+                    <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <p className="font-semibold">
+                          {slot ? new Date(slot.startTime).toLocaleDateString() : 'N/A'} - 
+                          {slot ? new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'N/A'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">User ID: {booking.userId}</p>
+                        <p className="text-sm text-muted-foreground">Status: {booking.status}</p>
+                        {booking.notes && <p className="text-sm mt-1">Notes: {booking.notes}</p>}
+                      </div>
+                      {booking.status !== 'cancelled' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (confirm("Cancel this booking?")) {
+                              cancelBookingMutation.mutate({ id: booking.id });
+                            }
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>No bookings yet.</AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Availability Management */}
+        <Card>
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle>Availability Slots</CardTitle>
+                <CardDescription>Manage your available time slots for bookings</CardDescription>
+              </div>
+              <Dialog open={availabilityDialogOpen} onOpenChange={setAvailabilityDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Time Slot
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add Availability Slot</DialogTitle>
+                    <DialogDescription>Create a new time slot for session bookings</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="slot-date">Date</Label>
+                      <Input
+                        id="slot-date"
+                        type="date"
+                        value={newSlot.date}
+                        onChange={(e) => setNewSlot({ ...newSlot, date: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="slot-start">Start Time</Label>
+                      <Input
+                        id="slot-start"
+                        type="time"
+                        value={newSlot.startTime}
+                        onChange={(e) => setNewSlot({ ...newSlot, startTime: e.target.value })}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="slot-end">End Time</Label>
+                      <Input
+                        id="slot-end"
+                        type="time"
+                        value={newSlot.endTime}
+                        onChange={(e) => setNewSlot({ ...newSlot, endTime: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setAvailabilityDialogOpen(false)}>
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        if (!newSlot.date || !newSlot.startTime || !newSlot.endTime) {
+                          toast.error("Please fill in all fields");
+                          return;
+                        }
+                        const startTime = new Date(`${newSlot.date}T${newSlot.startTime}`);
+                        const endTime = new Date(`${newSlot.date}T${newSlot.endTime}`);
+                        createSlotMutation.mutate({
+                          startTime: startTime.toISOString(),
+                          endTime: endTime.toISOString(),
+                        });
+                      }}
+                      disabled={createSlotMutation.isPending}
+                    >
+                      {createSlotMutation.isPending ? "Adding..." : "Add Slot"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {availabilitySlots && availabilitySlots.length > 0 ? (
+              <div className="space-y-4">
+                {availabilitySlots.map((slot) => (
+                  <div key={slot.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
+                      <p className="font-semibold">
+                        {new Date(slot.startTime).toLocaleDateString()} - 
+                        {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} to 
+                        {new Date(slot.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {slot.isBooked ? '🔒 Booked' : '✅ Available'}
+                      </p>
+                    </div>
+                    {!slot.isBooked && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (confirm("Delete this time slot?")) {
+                            deleteSlotMutation.mutate({ id: slot.id });
+                          }
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <Alert>
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  No availability slots yet. Click "Add Time Slot" to create your first slot.
+                </AlertDescription>
+              </Alert>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Banner Management */}
         <Card>
           <CardHeader>

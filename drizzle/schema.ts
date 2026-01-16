@@ -80,3 +80,34 @@ export const chatMessages = mysqlTable("chatMessages", {
 
 export type ChatMessage = typeof chatMessages.$inferSelect;
 export type InsertChatMessage = typeof chatMessages.$inferInsert;
+
+/**
+ * Availability slots table - stores instructor's available time slots
+ */
+export const availabilitySlots = mysqlTable("availabilitySlots", {
+  id: int("id").autoincrement().primaryKey(),
+  startTime: timestamp("startTime").notNull(),
+  endTime: timestamp("endTime").notNull(),
+  isBooked: boolean("isBooked").default(false).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AvailabilitySlot = typeof availabilitySlots.$inferSelect;
+export type InsertAvailabilitySlot = typeof availabilitySlots.$inferInsert;
+
+/**
+ * Bookings table - stores user session bookings
+ */
+export const bookings = mysqlTable("bookings", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  slotId: int("slotId").notNull(),
+  sessionType: varchar("sessionType", { length: 100 }).notNull(), // e.g., "One-on-One Dance Session"
+  zoomLink: text("zoomLink"),
+  status: mysqlEnum("status", ["pending", "confirmed", "cancelled"]).default("confirmed").notNull(),
+  notes: text("notes"), // User notes for the session
+  bookedAt: timestamp("bookedAt").defaultNow().notNull(),
+});
+
+export type Booking = typeof bookings.$inferSelect;
+export type InsertBooking = typeof bookings.$inferInsert;

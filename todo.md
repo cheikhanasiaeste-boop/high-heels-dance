@@ -60,4 +60,18 @@
 - [x] Write vitest tests for critical procedures
 - [x] Test all user flows (browse, purchase, access)
 - [x] Test admin flows (course management, banner toggle)
-- [ ] Create deployment checkpoint
+- [x] Create deployment checkpoint
+
+## Calendar Booking System
+- [x] Design availability slots table in database
+- [x] Design bookings table with user and session details
+- [x] Create API endpoints for viewing availability
+- [x] Create API endpoints for booking sessions
+- [x] Build calendar UI component
+- [x] Implement booking form with date/time selection
+- [x] Add Zoom meeting link generation
+- [x] Create admin panel for managing availability
+- [x] Add booking management for admin (view/cancel)
+- [ ] Implement email notifications for bookings
+- [x] Add booking confirmation page
+- [x] Test complete booking flow

@@ -29,6 +29,9 @@ export default function Home() {
         <div className="container py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-primary">High Heels Dance</h1>
           <div className="flex items-center gap-4">
+            <Link href="/book-session">
+              <Button variant="default">Book a Session</Button>
+            </Link>
             {isAuthenticated ? (
               <>
                 <Link href="/my-courses">

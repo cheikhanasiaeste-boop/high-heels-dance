@@ -186,6 +186,54 @@ export const appRouter = router({
         }),
     }),
     
+    // Availability management
+    availability: router({
+      list: adminProcedure.query(async () => {
+        return await db.getAllAvailabilitySlots();
+      }),
+      
+      create: adminProcedure
+        .input(z.object({
+          startTime: z.string(), // ISO datetime string
+          endTime: z.string(),
+        }))
+        .mutation(async ({ input }) => {
+          return await db.createAvailabilitySlot({
+            startTime: new Date(input.startTime),
+            endTime: new Date(input.endTime),
+            isBooked: false,
+          });
+        }),
+      
+      delete: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          await db.deleteAvailabilitySlot(input.id);
+          return { success: true };
+        }),
+    }),
+    
+    // Booking management
+    bookings: router({
+      list: adminProcedure.query(async () => {
+        return await db.getAllBookings();
+      }),
+      
+      cancel: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          const booking = await db.getBookingById(input.id);
+          if (!booking) {
+            throw new TRPCError({ code: 'NOT_FOUND', message: 'Booking not found' });
+          }
+          
+          await db.cancelBooking(input.id);
+          await db.updateAvailabilitySlot(booking.slotId, { isBooked: false });
+          
+          return { success: true };
+        }),
+    }),
+
     // Banner management
     banner: router({
       get: adminProcedure.query(async () => {
@@ -220,6 +268,73 @@ export const appRouter = router({
         text: text || '',
       };
     }),
+  }),
+
+  // Booking system
+  bookings: router({
+    // Get available slots for booking
+    availableSlots: publicProcedure.query(async () => {
+      return await db.getAvailableSlots();
+    }),
+    
+    // Create a booking
+    create: protectedProcedure
+      .input(z.object({
+        slotId: z.number(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Check if slot exists and is available
+        const slot = await db.getAvailabilitySlotById(input.slotId);
+        if (!slot) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Time slot not found' });
+        }
+        if (slot.isBooked) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'This time slot is already booked' });
+        }
+        
+        // Generate Zoom link (placeholder for now)
+        const zoomLink = `https://zoom.us/j/${Math.random().toString().slice(2, 12)}`;
+        
+        // Create booking
+        const booking = await db.createBooking({
+          userId: ctx.user.id,
+          slotId: input.slotId,
+          sessionType: 'One-on-One Dance Session',
+          zoomLink,
+          status: 'confirmed',
+          notes: input.notes,
+        });
+        
+        // Mark slot as booked
+        await db.updateAvailabilitySlot(input.slotId, { isBooked: true });
+        
+        return booking;
+      }),
+    
+    // Get user's bookings
+    myBookings: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getUserBookings(ctx.user.id);
+    }),
+    
+    // Cancel a booking
+    cancel: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const booking = await db.getBookingById(input.id);
+        if (!booking) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Booking not found' });
+        }
+        if (booking.userId !== ctx.user.id) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Not your booking' });
+        }
+        
+        // Cancel booking and free up the slot
+        await db.cancelBooking(input.id);
+        await db.updateAvailabilitySlot(booking.slotId, { isBooked: false });
+        
+        return { success: true };
+      }),
   }),
 
   // AI Chat support

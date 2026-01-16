@@ -251,7 +251,7 @@ describe("Chat Support", () => {
       expect(response.message).toBeDefined();
       expect(typeof response.message).toBe("string");
       expect(response.message.length).toBeGreaterThan(0);
-    });
+    }, 10000); // 10 second timeout for LLM call
 
     it("maintains conversation history", async () => {
       const ctx = createMockContext();
