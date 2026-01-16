@@ -1,4 +1,4 @@
-import { eq, and, desc, isNull } from "drizzle-orm";
+import { eq, and, desc, isNull, gte, lte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, 
@@ -621,4 +621,71 @@ export async function getRevenueByPeriod() {
     month: calculateRevenue(monthStart, now),
     lastMonth: calculateRevenue(lastMonthStart, monthStart),
   };
+}
+
+// Time-series analytics for charts
+export async function getRevenueTimeSeries(startDate: Date, endDate: Date) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const allPurchases = await db.select().from(purchases)
+    .where(and(
+      gte(purchases.purchasedAt, startDate),
+      lte(purchases.purchasedAt, endDate)
+    ));
+  
+  const allBookings = await db.select().from(bookings)
+    .where(and(
+      gte(bookings.bookedAt, startDate),
+      lte(bookings.bookedAt, endDate)
+    ));
+
+  // Group by date
+  const revenueByDate = new Map<string, number>();
+  
+  allPurchases.forEach(p => {
+    const date = new Date(p.purchasedAt).toISOString().split('T')[0];
+    revenueByDate.set(date, (revenueByDate.get(date) || 0) + parseFloat(p.amount));
+  });
+  
+  allBookings.forEach(b => {
+    const date = new Date(b.bookedAt).toISOString().split('T')[0];
+    const amount = b.amountPaid ? parseFloat(b.amountPaid) : 0;
+    revenueByDate.set(date, (revenueByDate.get(date) || 0) + amount);
+  });
+
+  // Convert to array and sort by date
+  return Array.from(revenueByDate.entries())
+    .map(([date, revenue]) => ({ date, revenue }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+export async function getUserGrowthTimeSeries(startDate: Date, endDate: Date) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const allUsers = await db.select().from(users)
+    .where(and(
+      gte(users.createdAt, startDate),
+      lte(users.createdAt, endDate)
+    ));
+
+  // Group by date and calculate cumulative count
+  const usersByDate = new Map<string, number>();
+  
+  allUsers.forEach(u => {
+    const date = new Date(u.createdAt).toISOString().split('T')[0];
+    usersByDate.set(date, (usersByDate.get(date) || 0) + 1);
+  });
+
+  // Convert to array, sort, and make cumulative
+  const sorted = Array.from(usersByDate.entries())
+    .map(([date, count]) => ({ date, count }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+
+  let cumulative = 0;
+  return sorted.map(item => {
+    cumulative += item.count;
+    return { date: item.date, users: cumulative };
+  });
 }

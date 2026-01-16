@@ -10,6 +10,7 @@ import {
   TrendingDown
 } from "lucide-react";
 import { AdminLayout } from "@/components/AdminLayout";
+import { AnalyticsChart } from "@/components/AnalyticsChart";
 
 export default function AdminDashboard() {
   const { user, isAuthenticated } = useAuth();
@@ -111,89 +112,8 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Revenue by Period */}
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>Today's Revenue</CardTitle>
-              <CardDescription>Sales from the last 24 hours</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{formatCurrency(revenue.today)}</div>
-              {revenue.yesterday !== undefined && (
-                <div className="flex items-center gap-2 mt-2">
-                  {calculateChange(revenue.today, revenue.yesterday) >= 0 ? (
-                    <TrendingUp className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <TrendingDown className="h-4 w-4 text-red-600" />
-                  )}
-                  <span className={`text-sm ${
-                    calculateChange(revenue.today, revenue.yesterday) >= 0 
-                      ? 'text-green-600' 
-                      : 'text-red-600'
-                  }`}>
-                    {Math.abs(calculateChange(revenue.today, revenue.yesterday)).toFixed(1)}%
-                  </span>
-                  <span className="text-sm text-muted-foreground">vs yesterday</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>This Week</CardTitle>
-              <CardDescription>Last 7 days revenue</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{formatCurrency(revenue.week)}</div>
-              {revenue.lastWeek !== undefined && (
-                <div className="flex items-center gap-2 mt-2">
-                  {calculateChange(revenue.week, revenue.lastWeek) >= 0 ? (
-                    <TrendingUp className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <TrendingDown className="h-4 w-4 text-red-600" />
-                  )}
-                  <span className={`text-sm ${
-                    calculateChange(revenue.week, revenue.lastWeek) >= 0 
-                      ? 'text-green-600' 
-                      : 'text-red-600'
-                  }`}>
-                    {Math.abs(calculateChange(revenue.week, revenue.lastWeek)).toFixed(1)}%
-                  </span>
-                  <span className="text-sm text-muted-foreground">vs last week</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>This Month</CardTitle>
-              <CardDescription>Last 30 days revenue</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{formatCurrency(revenue.month)}</div>
-              {revenue.lastMonth !== undefined && (
-                <div className="flex items-center gap-2 mt-2">
-                  {calculateChange(revenue.month, revenue.lastMonth) >= 0 ? (
-                    <TrendingUp className="h-4 w-4 text-green-600" />
-                  ) : (
-                    <TrendingDown className="h-4 w-4 text-red-600" />
-                  )}
-                  <span className={`text-sm ${
-                    calculateChange(revenue.month, revenue.lastMonth) >= 0 
-                      ? 'text-green-600' 
-                      : 'text-red-600'
-                  }`}>
-                    {Math.abs(calculateChange(revenue.month, revenue.lastMonth)).toFixed(1)}%
-                  </span>
-                  <span className="text-sm text-muted-foreground">vs last month</span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+        {/* Analytics Chart with Period Filtering */}
+        <AnalyticsChart />
 
         {/* Revenue Breakdown */}
         <div className="grid gap-4 md:grid-cols-2">

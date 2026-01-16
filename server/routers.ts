@@ -149,6 +149,28 @@ export const appRouter = router({
       revenue: adminProcedure.query(async () => {
         return await db.getRevenueByPeriod();
       }),
+      
+      revenueTimeSeries: adminProcedure
+        .input(z.object({
+          startDate: z.string(),
+          endDate: z.string(),
+        }))
+        .query(async ({ input }) => {
+          const start = new Date(input.startDate);
+          const end = new Date(input.endDate);
+          return await db.getRevenueTimeSeries(start, end);
+        }),
+      
+      userGrowthTimeSeries: adminProcedure
+        .input(z.object({
+          startDate: z.string(),
+          endDate: z.string(),
+        }))
+        .query(async ({ input }) => {
+          const start = new Date(input.startDate);
+          const end = new Date(input.endDate);
+          return await db.getUserGrowthTimeSeries(start, end);
+        }),
     }),
     
     courses: router({
