@@ -88,3 +88,10 @@
 - [x] Add session details display (location, price, type)
 - [x] Test free booking flow (account required)
 - [x] Test paid booking flow (payment + account required)
+
+## Monthly Calendar View
+- [x] Add monthly calendar component to booking page
+- [x] Show availability indicators on calendar dates
+- [x] Allow users to select dates from calendar
+- [x] Display available time slots for selected date
+- [x] Add navigation between months
