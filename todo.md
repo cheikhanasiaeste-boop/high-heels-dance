@@ -230,3 +230,18 @@
 - [x] Add popular courses/sessions statistics
 - [x] Add user growth metrics
 - [x] Test all analytics calculations
+
+## Bulk Operations for All Admin Sections
+- [x] Add checkbox selection to Courses page
+- [x] Implement bulk delete for courses
+- [x] Add "Select All" button for courses
+- [x] Add checkbox selection to Bookings page
+- [x] Implement bulk cancel for bookings
+- [x] Add "Select All" button for bookings
+- [x] Add checkbox selection to Testimonials page
+- [x] Implement bulk approve/reject/delete for testimonials
+- [x] Add "Select All" button for testimonials
+- [x] Create backend bulk delete endpoint for courses
+- [x] Create backend bulk cancel endpoint for bookings
+- [x] Create backend bulk operations endpoints for testimonials
+- [x] Test all bulk operations

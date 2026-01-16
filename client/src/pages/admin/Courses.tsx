@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { trpc } from "@/lib/trpc";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 export default function AdminCourses() {
@@ -19,6 +20,7 @@ export default function AdminCourses() {
   const [courseDialogOpen, setCourseDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
+  const [selectedCourses, setSelectedCourses] = useState<number[]>([]);
 
   const { data: courses, isLoading } = trpc.admin.courses.list.useQuery(
     undefined,
@@ -253,10 +255,58 @@ export default function AdminCourses() {
           </Dialog>
         </div>
 
+        {/* Bulk Actions */}
+        {selectedCourses.length > 0 && (
+          <Card className="bg-primary/5 border-primary">
+            <CardContent className="flex items-center justify-between py-4">
+              <p className="text-sm font-medium">{selectedCourses.length} course(s) selected</p>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => setSelectedCourses([])}>Clear Selection</Button>
+                <Button variant="destructive" size="sm" onClick={() => {
+                  if (confirm(`Delete ${selectedCourses.length} selected course(s)?`)) {
+                    selectedCourses.forEach(id => deleteMutation.mutate({ id }));
+                    setSelectedCourses([]);
+                  }
+                }}>Delete Selected</Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Select All Button */}
+        {courses && courses.length > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (selectedCourses.length === courses.length) {
+                setSelectedCourses([]);
+              } else {
+                setSelectedCourses(courses.map((c: any) => c.id));
+              }
+            }}
+          >
+            {selectedCourses.length === courses.length ? 'Deselect All' : 'Select All'}
+          </Button>
+        )}
+
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {courses && courses.length > 0 ? (
             courses.map((course: any) => (
-              <Card key={course.id}>
+              <Card key={course.id} className="relative">
+                <div className="absolute top-2 left-2 z-10">
+                  <Checkbox
+                    checked={selectedCourses.includes(course.id)}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedCourses([...selectedCourses, course.id]);
+                      } else {
+                        setSelectedCourses(selectedCourses.filter(id => id !== course.id));
+                      }
+                    }}
+                    className="bg-white"
+                  />
+                </div>
                 {course.imageUrl && (
                   <img src={course.imageUrl} alt={course.title} className="w-full h-48 object-cover rounded-t-lg" />
                 )}
