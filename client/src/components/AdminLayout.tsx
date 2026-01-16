@@ -32,11 +32,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <aside className="w-64 bg-card border-r border-border flex flex-col">
         {/* Header */}
         <div className="p-6 border-b border-border">
-          <Link href="/">
-            <a className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Home
-            </a>
+          <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Home
           </Link>
           <h1 className="text-2xl font-bold mt-4 bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
             Admin Panel
@@ -52,18 +50,17 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               
               return (
                 <li key={item.path}>
-                  <Link href={item.path}>
-                    <a
-                      className={cn(
-                        "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-                        isActive
-                          ? "bg-primary text-primary-foreground"
-                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      )}
-                    >
-                      <Icon className="h-5 w-5" />
-                      <span className="font-medium">{item.label}</span>
-                    </a>
+                  <Link 
+                    href={item.path}
+                    className={cn(
+                      "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                      isActive
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span className="font-medium">{item.label}</span>
                   </Link>
                 </li>
               );
