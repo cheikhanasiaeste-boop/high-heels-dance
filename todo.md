@@ -390,3 +390,6 @@
 
 ## My Courses Button Styling
 - [x] Update My Courses button color to match page's elegant pink-purple theme
+
+## Match Button Styling
+- [x] Update My Courses button to match Explore Courses button styling

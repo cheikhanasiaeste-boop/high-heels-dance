@@ -95,7 +95,7 @@ export default function Home() {
               <Button variant="default">Book a Session</Button>
             </Link>
             <a href="https://elizabethzolotova.manus.space/my-courses">
-              <Button variant="outline" className="border-2 border-purple-400 text-purple-600 hover:bg-purple-50 hover:border-purple-500 hover:text-purple-700 transition-all">My Courses</Button>
+              <Button variant="outline" className="shadow-lg border-2 border-primary hover:bg-primary hover:text-primary-foreground">My Courses</Button>
             </a>
             {isAuthenticated ? (
               <>
