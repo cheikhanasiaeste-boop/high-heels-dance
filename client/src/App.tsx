@@ -8,6 +8,12 @@ import Home from "./pages/Home";
 import CourseDetail from "./pages/CourseDetail";
 import MyCourses from "./pages/MyCourses";
 import Admin from "./pages/Admin";
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminCourses from "./pages/admin/Courses";
+import AdminBookings from "./pages/admin/Bookings";
+import AdminAvailability from "./pages/admin/Availability";
+import AdminTestimonials from "./pages/admin/Testimonials";
+import AdminSettings from "./pages/admin/Settings";
 import BookSession from "./pages/BookSession";
 import Feedback from "./pages/Feedback";
 
@@ -21,7 +27,12 @@ function Router() {
       <Route path="/book-session" component={BookSession} />
       <Route path="/feedback" component={Feedback} />
 
-      <Route path="/admin" component={Admin} />
+      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/admin/courses" component={AdminCourses} />
+      <Route path="/admin/bookings" component={AdminBookings} />
+      <Route path="/admin/availability" component={AdminAvailability} />
+      <Route path="/admin/testimonials" component={AdminTestimonials} />
+      <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

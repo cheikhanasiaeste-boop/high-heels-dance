@@ -141,6 +141,16 @@ export const appRouter = router({
 
   // Admin course management
   admin: router({
+    dashboard: router({
+      stats: adminProcedure.query(async () => {
+        return await db.getDashboardStats();
+      }),
+      
+      revenue: adminProcedure.query(async () => {
+        return await db.getRevenueByPeriod();
+      }),
+    }),
+    
     courses: router({
       list: adminProcedure.query(async () => {
         return await db.getAllCourses();

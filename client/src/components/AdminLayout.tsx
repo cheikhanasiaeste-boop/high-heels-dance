@@ -1,0 +1,90 @@
+import { Link, useLocation } from "wouter";
+import { 
+  LayoutDashboard, 
+  BookOpen, 
+  Calendar, 
+  Clock, 
+  MessageSquare,
+  Settings,
+  ArrowLeft
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface AdminLayoutProps {
+  children: React.ReactNode;
+}
+
+const menuItems = [
+  { path: "/admin", icon: LayoutDashboard, label: "Dashboard" },
+  { path: "/admin/courses", icon: BookOpen, label: "Courses" },
+  { path: "/admin/bookings", icon: Calendar, label: "Session Bookings" },
+  { path: "/admin/availability", icon: Clock, label: "Available Sessions" },
+  { path: "/admin/testimonials", icon: MessageSquare, label: "Testimonials" },
+  { path: "/admin/settings", icon: Settings, label: "Site Settings" },
+];
+
+export function AdminLayout({ children }: AdminLayoutProps) {
+  const [location] = useLocation();
+
+  return (
+    <div className="min-h-screen bg-background flex">
+      {/* Side Menu */}
+      <aside className="w-64 bg-card border-r border-border flex flex-col">
+        {/* Header */}
+        <div className="p-6 border-b border-border">
+          <Link href="/">
+            <a className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Home
+            </a>
+          </Link>
+          <h1 className="text-2xl font-bold mt-4 bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+            Admin Panel
+          </h1>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-4">
+          <ul className="space-y-2">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = location === item.path;
+              
+              return (
+                <li key={item.path}>
+                  <Link href={item.path}>
+                    <a
+                      className={cn(
+                        "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                        isActive
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                      )}
+                    >
+                      <Icon className="h-5 w-5" />
+                      <span className="font-medium">{item.label}</span>
+                    </a>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        {/* Footer */}
+        <div className="p-4 border-t border-border">
+          <p className="text-xs text-muted-foreground text-center">
+            High Heels Dance Admin
+          </p>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <main className="flex-1 overflow-auto">
+        <div className="container max-w-7xl py-8">
+          {children}
+        </div>
+      </main>
+    </div>
+  );
+}

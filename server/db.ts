@@ -503,3 +503,122 @@ export async function getUserById(userId: number): Promise<typeof users.$inferSe
   const result = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   return result[0];
 }
+
+// Dashboard Statistics
+export async function getDashboardStats() {
+  const db = await getDb();
+  if (!db) return null;
+
+  // Get total users
+  const allUsers = await db.select().from(users);
+  const totalUsers = allUsers.length;
+
+  // Get all courses
+  const allCourses = await db.select().from(courses);
+  const totalCourses = allCourses.length;
+  const paidCourses = allCourses.filter(c => !c.isFree).length;
+  const freeCourses = allCourses.filter(c => c.isFree).length;
+
+  // Get all purchases
+  const allPurchases = await db.select().from(purchases);
+  const coursePurchases = allPurchases.length;
+  const courseRevenue = allPurchases.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+
+  // Get all bookings
+  const allBookings = await db.select().from(bookings);
+  const totalBookings = allBookings.length;
+  const confirmedBookings = allBookings.filter(b => b.status === 'confirmed').length;
+  const paidBookings = allBookings.filter(b => b.amountPaid && parseFloat(b.amountPaid) > 0).length;
+  const sessionRevenue = allBookings
+    .filter(b => b.amountPaid)
+    .reduce((sum, b) => sum + parseFloat(b.amountPaid!), 0);
+
+  // Total revenue
+  const totalRevenue = courseRevenue + sessionRevenue;
+
+  // Popular courses (top 5 by purchase count)
+  const courseSales = allPurchases.reduce((acc, p) => {
+    acc[p.courseId] = (acc[p.courseId] || 0) + 1;
+    return acc;
+  }, {} as Record<number, number>);
+
+  const popularCourses = allCourses
+    .map(course => {
+      const purchaseCount = courseSales[course.id] || 0;
+      const revenue = allPurchases
+        .filter(p => p.courseId === course.id)
+        .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+      return {
+        id: course.id,
+        title: course.title,
+        purchaseCount,
+        revenue,
+      };
+    })
+    .sort((a, b) => b.purchaseCount - a.purchaseCount)
+    .slice(0, 5);
+
+  return {
+    totalUsers,
+    totalCourses,
+    paidCourses,
+    freeCourses,
+    totalRevenue,
+    courseRevenue,
+    sessionRevenue,
+    coursePurchases,
+    paidBookings,
+    totalBookings,
+    confirmedBookings,
+    popularCourses,
+  };
+}
+
+export async function getRevenueByPeriod() {
+  const db = await getDb();
+  if (!db) return null;
+
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterdayStart = new Date(todayStart);
+  yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+  const weekStart = new Date(todayStart);
+  weekStart.setDate(weekStart.getDate() - 7);
+  const lastWeekStart = new Date(weekStart);
+  lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+  const monthStart = new Date(todayStart);
+  monthStart.setDate(monthStart.getDate() - 30);
+  const lastMonthStart = new Date(monthStart);
+  lastMonthStart.setDate(lastMonthStart.getDate() - 30);
+
+  const allPurchases = await db.select().from(purchases);
+  const allBookings = await db.select().from(bookings);
+
+  // Calculate revenue for different periods
+  const calculateRevenue = (startDate: Date, endDate: Date) => {
+    const purchaseRevenue = allPurchases
+      .filter(p => {
+        const pDate = new Date(p.purchasedAt);
+        return pDate >= startDate && pDate < endDate;
+      })
+      .reduce((sum, p) => sum + parseFloat(p.amount), 0);
+
+    const bookingRevenue = allBookings
+      .filter(b => {
+        const bDate = new Date(b.bookedAt);
+        return b.amountPaid && bDate >= startDate && bDate < endDate;
+      })
+      .reduce((sum, b) => sum + parseFloat(b.amountPaid!), 0);
+
+    return purchaseRevenue + bookingRevenue;
+  };
+
+  return {
+    today: calculateRevenue(todayStart, now),
+    yesterday: calculateRevenue(yesterdayStart, todayStart),
+    week: calculateRevenue(weekStart, now),
+    lastWeek: calculateRevenue(lastWeekStart, weekStart),
+    month: calculateRevenue(monthStart, now),
+    lastMonth: calculateRevenue(lastMonthStart, monthStart),
+  };
+}
