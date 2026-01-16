@@ -422,3 +422,6 @@
 - [x] Integrate welcome modal into app layout (show once after first sign-up)
 - [x] Add smooth animations and engaging visuals
 - [x] Test welcome modal flow for new users
+
+## Fix Welcome Modal Accessibility
+- [x] Add DialogTitle to WelcomeModal for screen reader accessibility

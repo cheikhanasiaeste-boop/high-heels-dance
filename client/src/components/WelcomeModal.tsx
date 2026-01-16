@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Calendar, MessageCircle, BookOpen, Sparkles } from 'lucide-react';
 
@@ -30,8 +30,11 @@ export function WelcomeModal({ isOpen, onClose, userName }: WelcomeModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="sr-only">Welcome to High Heels Dance</DialogTitle>
+        </DialogHeader>
         {/* Header with Sparkle Icon */}
-        <div className="flex flex-col items-center text-center pt-6 pb-4">
+        <div className="flex flex-col items-center text-center pt-2 pb-4">
           <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-4 animate-pulse">
             <Sparkles className="w-8 h-8 text-white" />
           </div>
