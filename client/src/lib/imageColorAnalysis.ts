@@ -17,7 +17,18 @@ export interface ColorAnalysisResult {
 export async function analyzeImageBrightness(imageUrl: string): Promise<ColorAnalysisResult> {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = 'Anonymous';
+    // Don't set crossOrigin for same-origin images to avoid CORS issues
+    // Only set it if the image is from a different domain that supports CORS
+    try {
+      const imageUrlObj = new URL(imageUrl, window.location.href);
+      const isSameOrigin = imageUrlObj.origin === window.location.origin;
+      if (!isSameOrigin) {
+        img.crossOrigin = 'anonymous';
+      }
+    } catch (e) {
+      // If URL parsing fails, don't set crossOrigin
+      console.warn('Failed to parse image URL:', e);
+    }
     
     img.onload = () => {
       try {
@@ -90,8 +101,16 @@ export async function analyzeImageBrightness(imageUrl: string): Promise<ColorAna
       }
     };
 
-    img.onerror = () => {
-      reject(new Error('Failed to load image'));
+    img.onerror = (error) => {
+      console.warn('Image failed to load, using fallback styling:', error);
+      // Return a safe fallback instead of rejecting
+      // Assume medium brightness that will trigger light text (safer default)
+      resolve({
+        brightness: 80,
+        isDark: true,
+        recommendedTextColor: 'light',
+        contrastRatio: 5.0,
+      });
     };
 
     img.src = imageUrl;
