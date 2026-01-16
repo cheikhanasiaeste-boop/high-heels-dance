@@ -346,3 +346,14 @@
 - [x] Add video overlay for content readability
 - [x] Test video upload and playback
 - [x] Ensure responsive video display
+
+## Adaptive Popup Text Styling
+- [x] Create color analysis utility to detect image brightness
+- [x] Implement automatic text color adaptation (white for dark, dark for light)
+- [x] Add contrasting text stroke/outline for readability
+- [x] Add soft text shadow as fallback
+- [x] Implement smart gradient overlay for low-contrast scenarios
+- [x] Update WebsitePopup component with adaptive styling
+- [x] Ensure WCAG contrast compliance
+- [x] Test with various background images (light, dark, colorful)
+- [x] Optimize for modern, premium aesthetic

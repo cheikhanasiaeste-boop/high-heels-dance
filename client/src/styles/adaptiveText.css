@@ -1,0 +1,170 @@
+/**
+ * Adaptive Text Styling System
+ * Provides dynamic text styling based on background image analysis
+ * Ensures WCAG-compliant contrast and premium aesthetic
+ */
+
+/* Light text on dark backgrounds */
+.adaptive-text-light {
+  color: #ffffff;
+  
+  /* Multi-layered text shadow for depth and readability */
+  text-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.8),
+    0 2px 4px rgba(0, 0, 0, 0.6),
+    0 4px 8px rgba(0, 0, 0, 0.4),
+    0 0 1px rgba(0, 0, 0, 0.9);
+  
+  /* Text stroke for browsers that support it */
+  -webkit-text-stroke: 0.5px rgba(0, 0, 0, 0.3);
+  paint-order: stroke fill;
+}
+
+/* Dark text on light backgrounds */
+.adaptive-text-dark {
+  color: #1a1a1a;
+  
+  /* Subtle shadow for definition */
+  text-shadow: 
+    0 1px 2px rgba(255, 255, 255, 0.8),
+    0 2px 4px rgba(255, 255, 255, 0.6),
+    0 0 1px rgba(255, 255, 255, 0.9);
+  
+  /* Light stroke for crispness */
+  -webkit-text-stroke: 0.3px rgba(255, 255, 255, 0.5);
+  paint-order: stroke fill;
+}
+
+/* Enhanced version with stronger contrast (for low-contrast scenarios) */
+.adaptive-text-light-enhanced {
+  color: #ffffff;
+  
+  /* Stronger shadows */
+  text-shadow: 
+    0 2px 4px rgba(0, 0, 0, 0.9),
+    0 4px 8px rgba(0, 0, 0, 0.7),
+    0 6px 12px rgba(0, 0, 0, 0.5),
+    0 0 2px rgba(0, 0, 0, 1);
+  
+  /* Stronger stroke */
+  -webkit-text-stroke: 0.8px rgba(0, 0, 0, 0.5);
+  paint-order: stroke fill;
+  
+  /* Additional backdrop for extreme cases */
+  backdrop-filter: brightness(0.7);
+}
+
+.adaptive-text-dark-enhanced {
+  color: #0a0a0a;
+  
+  /* Stronger definition */
+  text-shadow: 
+    0 2px 4px rgba(255, 255, 255, 0.9),
+    0 4px 8px rgba(255, 255, 255, 0.7),
+    0 0 2px rgba(255, 255, 255, 1);
+  
+  /* Stronger stroke */
+  -webkit-text-stroke: 0.5px rgba(255, 255, 255, 0.7);
+  paint-order: stroke fill;
+  
+  /* Additional backdrop for extreme cases */
+  backdrop-filter: brightness(1.3);
+}
+
+/* Gradient overlay container for low-contrast scenarios */
+.adaptive-gradient-overlay {
+  position: relative;
+  isolation: isolate;
+}
+
+.adaptive-gradient-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Light gradient (for dark text on light backgrounds) */
+.adaptive-gradient-light::before {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, var(--overlay-opacity, 0.2)) 0%,
+    rgba(255, 255, 255, calc(var(--overlay-opacity, 0.2) * 0.7)) 50%,
+    rgba(255, 255, 255, calc(var(--overlay-opacity, 0.2) * 0.4)) 100%
+  );
+}
+
+/* Dark gradient (for light text on dark backgrounds) */
+.adaptive-gradient-dark::before {
+  background: linear-gradient(
+    135deg,
+    rgba(0, 0, 0, var(--overlay-opacity, 0.25)) 0%,
+    rgba(0, 0, 0, calc(var(--overlay-opacity, 0.25) * 0.8)) 50%,
+    rgba(0, 0, 0, calc(var(--overlay-opacity, 0.25) * 0.5)) 100%
+  );
+}
+
+/* Text content should be above gradient */
+.adaptive-text-content {
+  position: relative;
+  z-index: 2;
+}
+
+/* Premium typography styles for popup */
+.popup-heading {
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.75rem;
+}
+
+.popup-subheading {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  margin-bottom: 1.5rem;
+  opacity: 0.95;
+}
+
+.popup-description {
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0;
+  opacity: 0.9;
+}
+
+/* Animation for smooth appearance */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.adaptive-text-animated {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .popup-heading {
+    font-size: 1.5rem;
+  }
+  
+  .popup-subheading {
+    font-size: 1rem;
+  }
+  
+  .popup-description {
+    font-size: 0.875rem;
+  }
+}
