@@ -17,7 +17,7 @@ type FilterPreset = {
   label: string;
   eventType: "all" | "online" | "in-person";
   sessionType: "all" | "private" | "group";
-  priceFilter: "all" | "free" | "paid";
+  priceFilter: "all" | "free" | "premium";
 };
 
 const FILTER_PRESETS: FilterPreset[] = [
@@ -37,7 +37,7 @@ export default function BookSession() {
   const [notes, setNotes] = useState("");
   const [eventFilter, setEventFilter] = useState<"all" | "online" | "in-person">("all");
   const [sessionTypeFilter, setSessionTypeFilter] = useState<"all" | "private" | "group">("all");
-  const [priceFilter, setPriceFilter] = useState<"all" | "free" | "paid">("all");
+  const [priceFilter, setPriceFilter] = useState<"all" | "free" | "premium">("all");
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
@@ -110,7 +110,7 @@ export default function BookSession() {
     if (!availableSlots) return [];
     if (priceFilter === "all") return availableSlots;
     if (priceFilter === "free") return availableSlots.filter(s => s.isFree);
-    if (priceFilter === "paid") return availableSlots.filter(s => !s.isFree);
+    if (priceFilter === "premium") return availableSlots.filter(s => !s.isFree);
     return availableSlots;
   }, [availableSlots, priceFilter]);
 
@@ -470,13 +470,12 @@ export default function BookSession() {
                       Free
                     </Button>
                     <Button
-                      variant={priceFilter === "paid" ? "default" : "outline"}
+                      variant={priceFilter === "premium" ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setPriceFilter("paid")}
+                      onClick={() => setPriceFilter("premium")}
                       className="flex items-center gap-1"
                     >
-                      <Euro className="h-3 w-3" />
-                      Paid
+                      ✨ Premium
                     </Button>
                   </div>
                 </div>

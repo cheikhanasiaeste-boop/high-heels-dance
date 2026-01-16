@@ -116,3 +116,7 @@
 - [x] Make filter bar sticky on scroll
 - [x] Improve filter layout and spacing
 - [x] Add visual feedback when filters change
+
+## Filter Terminology Update
+- [x] Change "Paid" filter label to "Premium"
+- [x] Update filter variable naming for consistency
