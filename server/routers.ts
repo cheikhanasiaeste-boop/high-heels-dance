@@ -228,6 +228,43 @@ export const appRouter = router({
           await db.deleteAvailabilitySlot(input.id);
           return { success: true };
         }),
+      
+      bulkDelete: adminProcedure
+        .input(z.object({ ids: z.array(z.number()) }))
+        .mutation(async ({ input }) => {
+          for (const id of input.ids) {
+            await db.deleteAvailabilitySlot(id);
+          }
+          return { success: true, count: input.ids.length };
+        }),
+      
+      search: adminProcedure
+        .input(z.object({
+          startDate: z.string().optional(),
+          endDate: z.string().optional(),
+        }))
+        .query(async ({ input }) => {
+          const allSlots = await db.getAllAvailabilitySlots();
+          
+          if (!input.startDate && !input.endDate) {
+            return allSlots;
+          }
+          
+          return allSlots.filter(slot => {
+            const slotDate = new Date(slot.startTime);
+            const start = input.startDate ? new Date(input.startDate) : null;
+            const end = input.endDate ? new Date(input.endDate) : null;
+            
+            if (start && slotDate < start) return false;
+            if (end) {
+              const endOfDay = new Date(end);
+              endOfDay.setHours(23, 59, 59, 999);
+              if (slotDate > endOfDay) return false;
+            }
+            
+            return true;
+          });
+        }),
     }),
     
     // Booking management

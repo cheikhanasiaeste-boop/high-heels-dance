@@ -7,8 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Checkbox } from "@/components/ui/checkbox";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Plus, Pencil, Trash2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, AlertCircle, Calendar, X } from "lucide-react";
 import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 import { useState } from "react";
@@ -25,6 +26,8 @@ export default function Admin() {
   const [editingCourse, setEditingCourse] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
   const [availabilityDialogOpen, setAvailabilityDialogOpen] = useState(false);
+  const [selectedSlots, setSelectedSlots] = useState<number[]>([]);
+  const [dateFilter, setDateFilter] = useState({ startDate: '', endDate: '' });
   const [newSlot, setNewSlot] = useState({ 
     date: '', 
     startTime: '', 
@@ -49,8 +52,11 @@ export default function Admin() {
     { enabled: isAuthenticated && user?.role === 'admin' }
   );
   
-  const { data: availabilitySlots } = trpc.admin.availability.list.useQuery(
-    undefined,
+  const { data: availabilitySlots } = trpc.admin.availability.search.useQuery(
+    { 
+      startDate: dateFilter.startDate || undefined, 
+      endDate: dateFilter.endDate || undefined 
+    },
     { enabled: isAuthenticated && user?.role === 'admin' }
   );
   
@@ -131,7 +137,7 @@ export default function Admin() {
   const createSlotMutation = trpc.admin.availability.create.useMutation({
     onSuccess: () => {
       toast.success("Time slot added successfully!");
-      utils.admin.availability.list.invalidate();
+      utils.admin.availability.search.invalidate();
       utils.bookings.availableSlots.invalidate();
       setAvailabilityDialogOpen(false);
       setNewSlot({ 
@@ -156,7 +162,7 @@ export default function Admin() {
   const deleteSlotMutation = trpc.admin.availability.delete.useMutation({
     onSuccess: () => {
       toast.success("Time slot deleted successfully!");
-      utils.admin.availability.list.invalidate();
+      utils.admin.availability.search.invalidate();
       utils.bookings.availableSlots.invalidate();
     },
     onError: (error) => {
@@ -164,11 +170,23 @@ export default function Admin() {
     },
   });
   
+  const bulkDeleteSlotsMutation = trpc.admin.availability.bulkDelete.useMutation({
+    onSuccess: (data) => {
+      toast.success(`${data.count} session(s) deleted successfully!`);
+      setSelectedSlots([]);
+      utils.admin.availability.search.invalidate();
+      utils.bookings.availableSlots.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete sessions");
+    },
+  });
+  
   const cancelBookingMutation = trpc.admin.bookings.cancel.useMutation({
     onSuccess: () => {
       toast.success("Booking cancelled successfully!");
       utils.admin.bookings.list.invalidate();
-      utils.admin.availability.list.invalidate();
+      utils.admin.availability.search.invalidate();
     },
     onError: (error) => {
       toast.error(error.message || "Failed to cancel booking");
@@ -216,6 +234,23 @@ export default function Admin() {
       toast.error(error.message || "Failed to cancel booking");
     },
   });
+  
+  const uploadMutation = trpc.upload.useMutation({
+    onSuccess: (data) => {
+      setEditingCourse((prev: any) => ({
+        ...prev,
+        imageUrl: data.url,
+        imageKey: data.key,
+      }));
+      toast.success("Image uploaded successfully!");
+      setUploading(false);
+    },
+    onError: (error) => {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload image");
+      setUploading(false);
+    },
+  });
 
   if (loading) {
     return (
@@ -242,23 +277,6 @@ export default function Admin() {
       </div>
     );
   }
-
-  const uploadMutation = trpc.upload.useMutation({
-    onSuccess: (data) => {
-      setEditingCourse((prev: any) => ({
-        ...prev,
-        imageUrl: data.url,
-        imageKey: data.key,
-      }));
-      toast.success("Image uploaded successfully!");
-      setUploading(false);
-    },
-    onError: (error) => {
-      console.error("Upload error:", error);
-      toast.error("Failed to upload image");
-      setUploading(false);
-    },
-  });
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -378,7 +396,7 @@ export default function Admin() {
         {/* Availability Management */}
         <Card>
           <CardHeader>
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center mb-4">
               <div>
                 <CardTitle>Availability Slots</CardTitle>
                 <CardDescription>Manage your available time slots for bookings</CardDescription>
@@ -568,10 +586,139 @@ export default function Admin() {
             </div>
           </CardHeader>
           <CardContent>
+            {/* Date Filter and Bulk Actions */}
+            <div className="space-y-4 mb-6 p-4 bg-muted/50 rounded-lg">
+              <div className="flex flex-wrap gap-4 items-end">
+                <div className="flex-1 min-w-[200px]">
+                  <Label htmlFor="filter-start-date">Start Date</Label>
+                  <Input
+                    id="filter-start-date"
+                    type="date"
+                    value={dateFilter.startDate}
+                    onChange={(e) => setDateFilter({ ...dateFilter, startDate: e.target.value })}
+                  />
+                </div>
+                <div className="flex-1 min-w-[200px]">
+                  <Label htmlFor="filter-end-date">End Date</Label>
+                  <Input
+                    id="filter-end-date"
+                    type="date"
+                    value={dateFilter.endDate}
+                    onChange={(e) => setDateFilter({ ...dateFilter, endDate: e.target.value })}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const today = new Date().toISOString().split('T')[0];
+                      setDateFilter({ startDate: today, endDate: today });
+                    }}
+                  >
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Today
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const today = new Date();
+                      const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+                      setDateFilter({ 
+                        startDate: today.toISOString().split('T')[0], 
+                        endDate: weekFromNow.toISOString().split('T')[0] 
+                      });
+                    }}
+                  >
+                    This Week
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const today = new Date();
+                      const monthFromNow = new Date(today.getFullYear(), today.getMonth() + 1, today.getDate());
+                      setDateFilter({ 
+                        startDate: today.toISOString().split('T')[0], 
+                        endDate: monthFromNow.toISOString().split('T')[0] 
+                      });
+                    }}
+                  >
+                    This Month
+                  </Button>
+                  {(dateFilter.startDate || dateFilter.endDate) && (
+                    <Button
+                      variant="ghost"
+                      onClick={() => setDateFilter({ startDate: '', endDate: '' })}
+                    >
+                      <X className="h-4 w-4 mr-2" />
+                      Clear
+                    </Button>
+                  )}
+                </div>
+              </div>
+              
+              {selectedSlots.length > 0 && (
+                <div className="flex items-center gap-4 p-3 bg-background border rounded-lg">
+                  <span className="text-sm font-medium">
+                    {selectedSlots.length} session(s) selected
+                  </span>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      if (confirm(`Delete ${selectedSlots.length} selected session(s)?`)) {
+                        bulkDeleteSlotsMutation.mutate({ ids: selectedSlots });
+                      }
+                    }}
+                    disabled={bulkDeleteSlotsMutation.isPending}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Selected
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedSlots([])}
+                  >
+                    Clear Selection
+                  </Button>
+                </div>
+              )}
+            </div>
+            
             {availabilitySlots && availabilitySlots.length > 0 ? (
-              <div className="space-y-4">
+              <>
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm text-muted-foreground">
+                    Showing <span className="font-semibold text-foreground">{availabilitySlots.length}</span> session(s)
+                    {dateFilter.startDate || dateFilter.endDate ? ' in selected date range' : ''}
+                  </p>
+                  {availabilitySlots.length > 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const allIds = availabilitySlots.map(slot => slot.id);
+                        setSelectedSlots(allIds);
+                      }}
+                    >
+                      Select All
+                    </Button>
+                  )}
+                </div>
+                <div className="space-y-4">
                 {availabilitySlots.map((slot) => (
-                  <div key={slot.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div key={slot.id} className="flex items-start gap-4 p-4 border rounded-lg">
+                    <Checkbox
+                      checked={selectedSlots.includes(slot.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedSlots([...selectedSlots, slot.id]);
+                        } else {
+                          setSelectedSlots(selectedSlots.filter(id => id !== slot.id));
+                        }
+                      }}
+                      className="mt-1"
+                    />
                     <div className="flex-1">
                       <p className="font-semibold">{slot.title}</p>
                       <p className="text-sm">
@@ -605,27 +752,32 @@ export default function Admin() {
                         <p className="text-xs text-muted-foreground mt-1">📍 {slot.location}</p>
                       )}
                     </div>
-                    {!slot.isBooked && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          if (confirm("Delete this time slot?")) {
-                            deleteSlotMutation.mutate({ id: slot.id });
-                          }
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {!slot.isBooked && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            if (confirm("Delete this time slot?")) {
+                              deleteSlotMutation.mutate({ id: slot.id });
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
+              </>
             ) : (
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  No availability slots yet. Click "Add Time Slot" to create your first slot.
+                  {dateFilter.startDate || dateFilter.endDate 
+                    ? "No sessions found for the selected date range. Try adjusting your filters."
+                    : 'No availability slots yet. Click "Add Time Slot" to create your first slot.'}
                 </AlertDescription>
               </Alert>
             )}
