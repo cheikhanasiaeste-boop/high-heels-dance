@@ -331,3 +331,9 @@
 - [x] Display metrics with proper formatting
 - [x] Test all time period filters
 - [ ] Implement client-side tracking script for automatic data collection
+
+## Homepage CTA Buttons
+- [x] Add "Explore Courses" button next to "Book a Dance Session"
+- [x] Style with complementary color scheme
+- [x] Link to course list section
+- [x] Test responsive layout with two buttons
