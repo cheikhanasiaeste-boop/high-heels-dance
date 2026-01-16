@@ -117,46 +117,71 @@ export default function Home() {
       </section>
 
       {/* Courses Section - PROMINENT */}
-      <section className="py-20 bg-white">
-        <div className="container">
-          <div className="text-center mb-12">
-            <h3 className="text-4xl font-bold mb-4">Dance Courses</h3>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
+      <section className="py-20 bg-gradient-to-b from-white via-pink-50/30 to-white relative overflow-hidden">
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-20 left-10 w-72 h-72 bg-pink-400 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-400 rounded-full blur-3xl"></div>
+        </div>
+        <div className="container relative z-10">
+          <div className="text-center mb-16">
+            <h3 className="text-5xl font-bold mb-4 bg-gradient-to-r from-pink-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+              Dance Courses
+            </h3>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
               Transform your dance skills with professionally designed courses for all levels
             </p>
             
-            {/* Course Filter */}
-            <div className="flex justify-center gap-3 flex-wrap">
-              <Button
-                variant={courseFilter === 'all' ? 'default' : 'outline'}
+            {/* Enhanced Course Filter */}
+            <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-md p-2 rounded-full shadow-lg border border-pink-100">
+              <button
                 onClick={() => setCourseFilter('all')}
-                className="min-w-[120px] transition-all"
+                className={`px-6 py-3 rounded-full font-medium transition-all duration-300 flex items-center gap-2 ${
+                  courseFilter === 'all'
+                    ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-md scale-105'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
               >
+                <span className="text-lg">🎯</span>
                 All Courses
                 {courseFilter === 'all' && courses && (
-                  <Badge variant="secondary" className="ml-2 bg-white/20">{courses.length}</Badge>
+                  <span className="ml-1 px-2 py-0.5 bg-white/30 rounded-full text-xs font-bold">
+                    {courses.length}
+                  </span>
                 )}
-              </Button>
-              <Button
-                variant={courseFilter === 'free' ? 'default' : 'outline'}
+              </button>
+              <button
                 onClick={() => setCourseFilter('free')}
-                className="min-w-[120px] transition-all"
+                className={`px-6 py-3 rounded-full font-medium transition-all duration-300 flex items-center gap-2 ${
+                  courseFilter === 'free'
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md scale-105'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
               >
+                <span className="text-lg">🎁</span>
                 Free
                 {courseFilter === 'free' && (
-                  <Badge variant="secondary" className="ml-2 bg-white/20">{filteredCourses.length}</Badge>
+                  <span className="ml-1 px-2 py-0.5 bg-white/30 rounded-full text-xs font-bold">
+                    {filteredCourses.length}
+                  </span>
                 )}
-              </Button>
-              <Button
-                variant={courseFilter === 'premium' ? 'default' : 'outline'}
+              </button>
+              <button
                 onClick={() => setCourseFilter('premium')}
-                className="min-w-[120px] transition-all"
+                className={`px-6 py-3 rounded-full font-medium transition-all duration-300 flex items-center gap-2 ${
+                  courseFilter === 'premium'
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md scale-105'
+                    : 'text-gray-600 hover:bg-gray-100'
+                }`}
               >
-                ✨ Premium
+                <span className="text-lg">✨</span>
+                Premium
                 {courseFilter === 'premium' && (
-                  <Badge variant="secondary" className="ml-2 bg-white/20">{filteredCourses.length}</Badge>
+                  <span className="ml-1 px-2 py-0.5 bg-white/30 rounded-full text-xs font-bold">
+                    {filteredCourses.length}
+                  </span>
                 )}
-              </Button>
+              </button>
             </div>
           </div>
           
@@ -173,51 +198,73 @@ export default function Home() {
               ))}
             </div>
           ) : filteredCourses.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 max-w-7xl mx-auto">
               {filteredCourses.map((course) => (
                 <Card 
                   key={course.id} 
-                  className="overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 border-2"
+                  className="group overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 bg-white/90 backdrop-blur-sm"
                 >
-                  <div className="h-56 bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center relative overflow-hidden group">
+                  <div className="aspect-[16/10] bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center relative overflow-hidden">
                     {course.imageUrl ? (
                       <>
                         <img 
                           src={course.imageUrl} 
                           alt={course.title} 
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" 
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        {!course.isFree && (
+                          <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-1 animate-pulse">
+                            <span>✨</span> PREMIUM
+                          </div>
+                        )}
                       </>
                     ) : (
-                      <span className="text-7xl">💃</span>
+                      <>
+                        <span className="text-8xl group-hover:scale-110 transition-transform duration-500">💃</span>
+                        {!course.isFree && (
+                          <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-1">
+                            <span>✨</span> PREMIUM
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
-                  <CardHeader>
-                    <div className="flex justify-between items-start mb-2">
-                      <CardTitle className="text-xl">{course.title}</CardTitle>
+                  <CardHeader className="pb-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <CardTitle className="text-2xl font-bold group-hover:text-pink-600 transition-colors">
+                        {course.title}
+                      </CardTitle>
                       {course.isFree && (
-                        <Badge variant="secondary" className="bg-green-100 text-green-700">Free</Badge>
+                        <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 shadow-md">Free</Badge>
                       )}
                     </div>
-                    <CardDescription className="line-clamp-2 text-base">{course.description}</CardDescription>
+                    <CardDescription className="line-clamp-2 text-base leading-relaxed">{course.description}</CardDescription>
                   </CardHeader>
-                  <CardContent>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-3xl font-bold text-primary">
-                        {course.isFree ? 'Free' : `€${course.price}`}
-                      </span>
-                      {course.originalPrice && Number(course.originalPrice) > Number(course.price) && (
-                        <span className="text-lg text-muted-foreground line-through">
-                          €{course.originalPrice}
+                  <CardContent className="pb-4">
+                    <div className="flex items-baseline gap-3">
+                      {course.isFree ? (
+                        <span className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                          Free
                         </span>
+                      ) : (
+                        <>
+                          <span className="text-4xl font-bold bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+                            €{course.price}
+                          </span>
+                          {course.originalPrice && Number(course.originalPrice) > Number(course.price) && (
+                            <span className="text-xl text-muted-foreground line-through">
+                              €{course.originalPrice}
+                            </span>
+                          )}
+                        </>
                       )}
                     </div>
                   </CardContent>
                   <CardFooter>
                     <Link href={`/course/${course.id}`} className="w-full">
-                      <Button className="w-full text-lg py-6">
-                        {course.isFree ? 'Start Learning' : 'View Details'}
+                      <Button className="w-full text-lg py-6 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                        {course.isFree ? '🎯 Start Learning' : '👀 View Details'}
                       </Button>
                     </Link>
                   </CardFooter>
