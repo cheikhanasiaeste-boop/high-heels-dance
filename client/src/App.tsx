@@ -17,6 +17,9 @@ import AdminSettings from "./pages/admin/Settings";
 import AdminUsers from "./pages/admin/Users";
 import BookSession from "./pages/BookSession";
 import Feedback from "./pages/Feedback";
+import Messages from "./pages/Messages";
+import Activity from "./pages/Activity";
+import MyBookings from "./pages/MyBookings";
 
 
 function Router() {
@@ -25,6 +28,9 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/course/:id" component={CourseDetail} />
       <Route path="/my-courses" component={MyCourses} />
+      <Route path="/my-bookings" component={MyBookings} />
+      <Route path="/messages" component={Messages} />
+      <Route path="/activity" component={Activity} />
       <Route path="/book-session" component={BookSession} />
       <Route path="/feedback" component={Feedback} />
 

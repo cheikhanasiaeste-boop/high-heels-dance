@@ -1,0 +1,61 @@
+import { useAuth } from '@/_core/hooks/useAuth';
+import { Link } from 'wouter';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { MessageSquare, ArrowLeft } from 'lucide-react';
+
+export default function Messages() {
+  const { user } = useAuth();
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="border-b bg-white sticky top-0 z-50">
+        <div className="container py-4 flex items-center gap-4">
+          <Link href="/">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Home
+            </Button>
+          </Link>
+          <h1 className="text-2xl font-bold text-gray-900">My Messages</h1>
+        </div>
+      </header>
+
+      {/* Content */}
+      <div className="container py-8">
+        <Card>
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <MessageSquare className="w-6 h-6 text-purple-600" />
+              </div>
+              <div>
+                <CardTitle>Messages</CardTitle>
+                <CardDescription>
+                  View and manage your conversations
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-12">
+              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                <MessageSquare className="w-8 h-8 text-gray-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                No messages yet
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Your conversations will appear here when you receive messages.
+              </p>
+              <Link href="/">
+                <Button>Browse Courses</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

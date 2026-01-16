@@ -175,3 +175,19 @@
     }
   }
 }
+/* Dropdown Animation */
+@keyframes dropdown-open {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.animate-dropdown-open {
+  animation: dropdown-open 0.2s ease-out forwards;
+  transform-origin: top right;
+}

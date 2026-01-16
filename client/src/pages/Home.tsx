@@ -10,6 +10,7 @@ import { Link } from "wouter";
 import { useState } from "react";
 import ChatWidget from "@/components/ChatWidget";
 import { WebsitePopup } from "@/components/WebsitePopup";
+import { UserProfileDropdown } from "@/components/UserProfileDropdown";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 
@@ -95,15 +96,12 @@ export default function Home() {
             </Link>
             {isAuthenticated ? (
               <>
-                <Link href="/my-courses">
-                  <Button variant="ghost">My Courses</Button>
-                </Link>
                 {user?.role === 'admin' && (
                   <Link href="/admin">
                     <Button variant="outline">Admin</Button>
                   </Link>
                 )}
-                <span className="text-sm text-muted-foreground hidden md:inline">{user?.name || user?.email}</span>
+                <UserProfileDropdown unreadMessagesCount={0} />
               </>
             ) : (
               <a href={getLoginUrl()}>

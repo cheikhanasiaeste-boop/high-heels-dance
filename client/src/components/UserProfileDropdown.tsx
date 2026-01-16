@@ -1,0 +1,229 @@
+import { useState, useRef, useEffect } from 'react';
+import { Link } from 'wouter';
+import { 
+  User, 
+  MessageSquare, 
+  Calendar, 
+  BookOpen, 
+  Activity, 
+  LogOut,
+  ChevronDown 
+} from 'lucide-react';
+import { useAuth } from '@/_core/hooks/useAuth';
+import { trpc } from '@/lib/trpc';
+
+interface UserProfileDropdownProps {
+  unreadMessagesCount?: number;
+}
+
+export function UserProfileDropdown({ unreadMessagesCount = 0 }: UserProfileDropdownProps) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const { user } = useAuth();
+  const logoutMutation = trpc.auth.logout.useMutation();
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node) &&
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    }
+
+    // Close dropdown on ESC key
+    function handleEscKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+        buttonRef.current?.focus();
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscKey);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleEscKey);
+      };
+    }
+  }, [isOpen]);
+
+  // Keyboard navigation within dropdown
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      const menuItems = dropdownRef.current?.querySelectorAll<HTMLAnchorElement | HTMLButtonElement>(
+        'a[role="menuitem"], button[role="menuitem"]'
+      );
+      
+      if (!menuItems || menuItems.length === 0) return;
+
+      const currentIndex = Array.from(menuItems).findIndex(
+        item => item === document.activeElement
+      );
+
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        const nextIndex = currentIndex < menuItems.length - 1 ? currentIndex + 1 : 0;
+        menuItems[nextIndex].focus();
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        const prevIndex = currentIndex > 0 ? currentIndex - 1 : menuItems.length - 1;
+        menuItems[prevIndex].focus();
+      } else if (event.key === 'Home') {
+        event.preventDefault();
+        menuItems[0].focus();
+      } else if (event.key === 'End') {
+        event.preventDefault();
+        menuItems[menuItems.length - 1].focus();
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
+  const handleLogout = async () => {
+    await logoutMutation.mutateAsync();
+    window.location.href = '/';
+  };
+
+  const toggleDropdown = () => {
+    setIsOpen(!isOpen);
+  };
+
+  const closeDropdown = () => {
+    setIsOpen(false);
+  };
+
+  if (!user) return null;
+
+  // Get user initials for avatar
+  const initials = (user.name || 'U')
+    .split(' ')
+    .map((n: string) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
+  return (
+    <div className="relative">
+      {/* Trigger Button */}
+      <button
+        ref={buttonRef}
+        onClick={toggleDropdown}
+        className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 min-h-[44px]"
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+        aria-label="User profile menu"
+      >
+        {/* Avatar */}
+        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-sm shadow-md">
+          {initials}
+        </div>
+        
+        {/* User Name */}
+        <span className="text-sm font-medium text-gray-700 hidden sm:inline">
+          {user.name}
+        </span>
+        
+        {/* Chevron Icon */}
+        <ChevronDown 
+          className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
+            isOpen ? 'rotate-180' : ''
+          }`}
+        />
+      </button>
+
+      {/* Dropdown Menu */}
+      {isOpen && (
+        <div
+          ref={dropdownRef}
+          role="menu"
+          aria-orientation="vertical"
+          className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50 animate-dropdown-open"
+        >
+          {/* User Info Header */}
+          <div className="px-4 py-3 border-b border-gray-100">
+            <p className="text-sm font-semibold text-gray-900">{user.name}</p>
+            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+          </div>
+
+          {/* Menu Items */}
+          <div className="py-1">
+            {/* My Messages */}
+            <Link href="/messages" onClick={closeDropdown}>
+              <a
+                role="menuitem"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors duration-150 focus:outline-none focus:bg-purple-50 focus:text-purple-700 min-h-[44px] group"
+              >
+                <MessageSquare className="w-5 h-5 text-gray-400 group-hover:text-purple-600 group-focus:text-purple-600 transition-colors" />
+                <span className="flex-1">My Messages</span>
+                {unreadMessagesCount > 0 && (
+                  <span className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold text-white bg-red-500 rounded-full">
+                    {unreadMessagesCount > 99 ? '99+' : unreadMessagesCount}
+                  </span>
+                )}
+              </a>
+            </Link>
+
+            {/* My Booked Sessions */}
+            <Link href="/my-bookings" onClick={closeDropdown}>
+              <a
+                role="menuitem"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors duration-150 focus:outline-none focus:bg-purple-50 focus:text-purple-700 min-h-[44px] group"
+              >
+                <Calendar className="w-5 h-5 text-gray-400 group-hover:text-purple-600 group-focus:text-purple-600 transition-colors" />
+                <span>My Booked Sessions</span>
+              </a>
+            </Link>
+
+            {/* My Courses */}
+            <Link href="/my-courses" onClick={closeDropdown}>
+              <a
+                role="menuitem"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors duration-150 focus:outline-none focus:bg-purple-50 focus:text-purple-700 min-h-[44px] group"
+              >
+                <BookOpen className="w-5 h-5 text-gray-400 group-hover:text-purple-600 group-focus:text-purple-600 transition-colors" />
+                <span>My Courses</span>
+              </a>
+            </Link>
+
+            {/* Activity History */}
+            <Link href="/activity" onClick={closeDropdown}>
+              <a
+                role="menuitem"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors duration-150 focus:outline-none focus:bg-purple-50 focus:text-purple-700 min-h-[44px] group"
+              >
+                <Activity className="w-5 h-5 text-gray-400 group-hover:text-purple-600 group-focus:text-purple-600 transition-colors" />
+                <span>Activity History</span>
+              </a>
+            </Link>
+          </div>
+
+          {/* Divider */}
+          <div className="border-t border-gray-100 my-1" />
+
+          {/* Logout */}
+          <div className="py-1">
+            <button
+              role="menuitem"
+              onClick={handleLogout}
+              className="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors duration-150 focus:outline-none focus:bg-red-50 min-h-[44px] group"
+            >
+              <LogOut className="w-5 h-5 text-red-500 group-hover:text-red-600 group-focus:text-red-600 transition-colors" />
+              <span className="font-medium">Logout</span>
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
