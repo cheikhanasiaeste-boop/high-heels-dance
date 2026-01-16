@@ -7,13 +7,20 @@ import {
   BookOpen, 
   Calendar,
   TrendingUp,
-  TrendingDown
+  TrendingDown,
+  Eye,
+  MousePointer,
+  Clock,
+  Activity
 } from "lucide-react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { AnalyticsChart } from "@/components/AnalyticsChart";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 export default function AdminDashboard() {
   const { user, isAuthenticated } = useAuth();
+  const [analyticsPeriod, setAnalyticsPeriod] = useState<'24h' | '7d' | '30d'>('7d');
   
   const { data: stats } = trpc.admin.dashboard.stats.useQuery(
     undefined,
@@ -22,6 +29,32 @@ export default function AdminDashboard() {
   
   const { data: revenue } = trpc.admin.dashboard.revenue.useQuery(
     undefined,
+    { enabled: isAuthenticated && user?.role === 'admin' }
+  );
+  
+  // Calculate date range based on selected period
+  const getDateRange = (period: '24h' | '7d' | '30d') => {
+    const end = new Date();
+    const start = new Date();
+    
+    switch (period) {
+      case '24h':
+        start.setHours(start.getHours() - 24);
+        break;
+      case '7d':
+        start.setDate(start.getDate() - 7);
+        break;
+      case '30d':
+        start.setDate(start.getDate() - 30);
+        break;
+    }
+    
+    return { startDate: start.toISOString(), endDate: end.toISOString() };
+  };
+  
+  const dateRange = getDateRange(analyticsPeriod);
+  const { data: analytics } = trpc.admin.dashboard.analytics.useQuery(
+    dateRange,
     { enabled: isAuthenticated && user?.role === 'admin' }
   );
 
@@ -222,6 +255,96 @@ export default function AdminDashboard() {
                 </p>
               </div>
             </div>
+          </CardContent>
+        </Card>
+        
+        {/* Website Analytics */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Website Analytics</CardTitle>
+                <CardDescription>Visitor behavior and engagement metrics</CardDescription>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant={analyticsPeriod === '24h' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setAnalyticsPeriod('24h')}
+                >
+                  Last 24 hours
+                </Button>
+                <Button
+                  variant={analyticsPeriod === '7d' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setAnalyticsPeriod('7d')}
+                >
+                  Last week
+                </Button>
+                <Button
+                  variant={analyticsPeriod === '30d' ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setAnalyticsPeriod('30d')}
+                >
+                  Last month
+                </Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {analytics ? (
+              <div className="grid gap-4 md:grid-cols-5">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Eye className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Page Views</p>
+                    <p className="text-2xl font-bold">{analytics.pageViews.toLocaleString()}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <MousePointer className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Visits</p>
+                    <p className="text-2xl font-bold">{analytics.visits.toLocaleString()}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <Users className="h-5 w-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Visitors</p>
+                    <p className="text-2xl font-bold">{analytics.visitors.toLocaleString()}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <Clock className="h-5 w-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Avg Duration</p>
+                    <p className="text-2xl font-bold">{Math.floor(analytics.avgDuration / 60)}m {analytics.avgDuration % 60}s</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-red-100 rounded-lg">
+                    <Activity className="h-5 w-5 text-red-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Bounce Rate</p>
+                    <p className="text-2xl font-bold">{analytics.bounceRate}%</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-32">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

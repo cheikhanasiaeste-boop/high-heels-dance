@@ -172,6 +172,17 @@ export const appRouter = router({
           const end = new Date(input.endDate);
           return await db.getUserGrowthTimeSeries(start, end);
         }),
+      
+      analytics: adminProcedure
+        .input(z.object({
+          startDate: z.string(),
+          endDate: z.string(),
+        }))
+        .query(async ({ input }) => {
+          const start = new Date(input.startDate);
+          const end = new Date(input.endDate);
+          return await db.getAnalytics(start, end);
+        }),
     }),
     
     courses: router({

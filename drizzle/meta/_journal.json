@@ -64,6 +64,13 @@
       "when": 1768595007293,
       "tag": "0008_closed_dazzler",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1768598547343,
+      "tag": "0009_tan_silhouette",
+      "breakpoints": true
     }
   ]
 }

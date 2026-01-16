@@ -200,3 +200,23 @@ export const sectionHeadings = mysqlTable("section_headings", {
 
 export type SectionHeading = typeof sectionHeadings.$inferSelect;
 export type InsertSectionHeading = typeof sectionHeadings.$inferInsert;
+
+/**
+ * Page analytics table - tracks page views and visitor sessions
+ */
+export const pageAnalytics = mysqlTable("page_analytics", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionId: varchar("session_id", { length: 255 }).notNull(), // Unique session identifier
+  visitorId: varchar("visitor_id", { length: 255 }).notNull(), // Unique visitor identifier (persists across sessions)
+  pagePath: varchar("page_path", { length: 500 }).notNull(), // URL path visited
+  referrer: text("referrer"), // Where visitor came from
+  userAgent: text("user_agent"), // Browser/device info
+  entryTime: timestamp("entry_time").defaultNow().notNull(), // When visitor entered page
+  exitTime: timestamp("exit_time"), // When visitor left page (null if still on page)
+  duration: int("duration"), // Time spent on page in seconds
+  isBounce: boolean("is_bounce").default(false), // True if visitor left without visiting another page
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type PageAnalytics = typeof pageAnalytics.$inferSelect;
+export type InsertPageAnalytics = typeof pageAnalytics.$inferInsert;

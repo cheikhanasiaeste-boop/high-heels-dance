@@ -831,3 +831,116 @@ export async function searchUsers(query: string, limit: number = 50) {
     ))
     .limit(limit);
 }
+
+// ============================================================================
+// Analytics Functions
+// ============================================================================
+
+export async function trackPageView(data: {
+  sessionId: string;
+  visitorId: string;
+  pagePath: string;
+  referrer?: string;
+  userAgent?: string;
+}) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { pageAnalytics } = await import("../drizzle/schema");
+  const [result] = await db.insert(pageAnalytics).values({
+    sessionId: data.sessionId,
+    visitorId: data.visitorId,
+    pagePath: data.pagePath,
+    referrer: data.referrer || null,
+    userAgent: data.userAgent || null,
+    entryTime: new Date(),
+  });
+  
+  return result;
+}
+
+export async function updatePageExit(sessionId: string, pagePath: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { pageAnalytics } = await import("../drizzle/schema");
+  
+  // Find the most recent entry for this session and page
+  const [entry] = await db
+    .select()
+    .from(pageAnalytics)
+    .where(and(
+      eq(pageAnalytics.sessionId, sessionId),
+      eq(pageAnalytics.pagePath, pagePath),
+      isNull(pageAnalytics.exitTime)
+    ))
+    .orderBy(desc(pageAnalytics.entryTime))
+    .limit(1);
+  
+  if (!entry) return null;
+  
+  const exitTime = new Date();
+  const duration = Math.floor((exitTime.getTime() - new Date(entry.entryTime).getTime()) / 1000);
+  
+  await db
+    .update(pageAnalytics)
+    .set({
+      exitTime,
+      duration,
+    })
+    .where(eq(pageAnalytics.id, entry.id));
+  
+  return { duration };
+}
+
+export async function markBounce(sessionId: string) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { pageAnalytics } = await import("../drizzle/schema");
+  await db
+    .update(pageAnalytics)
+    .set({ isBounce: true })
+    .where(eq(pageAnalytics.sessionId, sessionId));
+}
+
+export async function getAnalytics(startDate: Date, endDate: Date) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  const { pageAnalytics } = await import("../drizzle/schema");
+  
+  // Get all analytics data for the period
+  const data = await db
+    .select()
+    .from(pageAnalytics)
+    .where(and(
+      gte(pageAnalytics.entryTime, startDate),
+      lte(pageAnalytics.entryTime, endDate)
+    ));
+  
+  // Calculate metrics
+  const pageViews = data.length;
+  const uniqueVisitors = new Set(data.map(d => d.visitorId)).size;
+  const uniqueSessions = new Set(data.map(d => d.sessionId)).size;
+  
+  // Calculate average duration (only for entries with duration)
+  const durationsWithValue = data.filter(d => d.duration !== null).map(d => d.duration!);
+  const avgDuration = durationsWithValue.length > 0
+    ? durationsWithValue.reduce((sum, d) => sum + d, 0) / durationsWithValue.length
+    : 0;
+  
+  // Calculate bounce rate
+  const bouncedSessions = new Set(
+    data.filter(d => d.isBounce).map(d => d.sessionId)
+  ).size;
+  const bounceRate = uniqueSessions > 0 ? (bouncedSessions / uniqueSessions) * 100 : 0;
+  
+  return {
+    pageViews,
+    visits: uniqueSessions,
+    visitors: uniqueVisitors,
+    avgDuration: Math.round(avgDuration),
+    bounceRate: Math.round(bounceRate * 10) / 10, // Round to 1 decimal
+  };
+}

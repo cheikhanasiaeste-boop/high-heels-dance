@@ -319,3 +319,15 @@
 - [x] Ensure edit functionality for existing headings works
 - [x] Ensure create functionality for new headings works
 - [x] Test all CRUD operations
+
+## Website Analytics Dashboard
+- [x] Check built-in analytics API availability
+- [x] Create analytics database table for tracking page views
+- [x] Add analytics tracking functions to db.ts
+- [x] Create admin dashboard analytics endpoint
+- [x] Create analytics metrics cards (page views, visits, visitors, duration, bounce rate)
+- [x] Add time period filter (Last 24 hours, Last week, Last month)
+- [x] Integrate analytics data fetching
+- [x] Display metrics with proper formatting
+- [x] Test all time period filters
+- [ ] Implement client-side tracking script for automatic data collection
