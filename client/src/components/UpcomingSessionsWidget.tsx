@@ -33,7 +33,7 @@ export function UpcomingSessionsWidget() {
       {!isExpanded && (
         <button
           onClick={() => setIsExpanded(true)}
-          className="group relative flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-rose-500 via-pink-500 to-orange-400 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 animate-gentle-pulse overflow-hidden"
+          className="group relative flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-rose-500 via-pink-500 to-orange-400 text-white rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 animate-gentle-pulse animate-periodic-shake overflow-hidden"
           aria-label="View upcoming events"
         >
           <div className="absolute inset-0 animate-shimmer" />

@@ -478,3 +478,6 @@
 ## Update Widget Styling
 - [x] Remove loudspeaker emoji from widget text
 - [x] Change widget color to something catchy and coherent with page vibe
+
+## Add Shake Animation to Widget
+- [x] Create periodic shake animation for widget to draw attention

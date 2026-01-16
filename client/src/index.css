@@ -269,3 +269,26 @@
 .animate-slide-in-right {
   animation: slide-in-right 0.5s ease-out forwards;
 }
+
+/* Shake animation for widget */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* Periodic shake - triggers every 8 seconds */
+@keyframes periodic-shake {
+  0%, 6.25% { transform: translateX(0); }
+  6.875%, 7.5%, 8.125%, 8.75%, 9.375% { transform: translateX(-4px); }
+  7.1875%, 7.8125%, 8.4375%, 9.0625% { transform: translateX(4px); }
+  10%, 100% { transform: translateX(0); }
+}
+
+.animate-periodic-shake {
+  animation: periodic-shake 8s ease-in-out infinite;
+}
