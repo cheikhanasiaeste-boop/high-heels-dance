@@ -32,6 +32,10 @@ export default function Home() {
     { key: "heroVideoUrl" },
     { enabled: true }
   );
+  const { data: bgVideoUrl } = trpc.admin.settings.get.useQuery(
+    { key: "backgroundVideoUrl" },
+    { enabled: true }
+  );
   const [showChat, setShowChat] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [courseFilter, setCourseFilter] = useState<'all' | 'free' | 'premium'>('all');
@@ -184,8 +188,22 @@ export default function Home() {
 
       {/* Courses Section - PROMINENT */}
       <section className="py-20 bg-gradient-to-b from-white via-pink-50/30 to-white relative overflow-hidden">
+        {/* Background Video */}
+        {bgVideoUrl && (
+          <div className="absolute inset-0 z-0">
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-cover opacity-30"
+              src={bgVideoUrl}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-pink-50/60 to-white/60"></div>
+          </div>
+        )}
         {/* Decorative background elements */}
-        <div className="absolute inset-0 opacity-5">
+        <div className="absolute inset-0 opacity-5 z-0">
           <div className="absolute top-20 left-10 w-72 h-72 bg-pink-400 rounded-full blur-3xl"></div>
           <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-400 rounded-full blur-3xl"></div>
         </div>

@@ -337,3 +337,12 @@
 - [x] Style with complementary color scheme
 - [x] Link to course list section
 - [x] Test responsive layout with two buttons
+
+## Homepage Background Video
+- [x] Add background video URL field to site settings database
+- [x] Create video upload UI in Site Settings
+- [x] Implement background video player in homepage light pink section
+- [x] Configure auto-play, loop, and mute settings
+- [x] Add video overlay for content readability
+- [x] Test video upload and playback
+- [x] Ensure responsive video display

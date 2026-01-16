@@ -21,8 +21,31 @@ export default function AdminSettings() {
     { enabled: isAuthenticated && user?.role === 'admin' }
   );
 
+  const { data: bgVideoData } = trpc.admin.settings.get.useQuery(
+    { key: 'backgroundVideoUrl' },
+    { enabled: isAuthenticated && user?.role === 'admin' }
+  );
+
   const [bannerText, setBannerText] = useState(bannerData?.text || "");
   const [bannerEnabled, setBannerEnabled] = useState(bannerData?.enabled || false);
+  const [bgVideoUrl, setBgVideoUrl] = useState("");
+
+  // Update bgVideoUrl when data loads
+  if (bgVideoData && bgVideoUrl === "") {
+    setBgVideoUrl(bgVideoData);
+  }
+  const [isUploadingVideo, setIsUploadingVideo] = useState(false);
+
+  const uploadMutation = trpc.upload.useMutation();
+  const updateVideoMutation = trpc.admin.settings.update.useMutation({
+    onSuccess: () => {
+      toast.success("Background video updated successfully!");
+      utils.admin.settings.get.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to update background video");
+    },
+  });
 
   const updateBannerMutation = trpc.admin.banner.update.useMutation({
     onSuccess: () => {
@@ -97,6 +120,60 @@ export default function AdminSettings() {
               />
             </div>
             <Button onClick={handleUpdateBanner}>Save Banner Settings</Button>
+          </CardContent>
+        </Card>
+
+        {/* Background Video Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Homepage Background Video</CardTitle>
+            <CardDescription>Upload a video to play in the background of the light pink section</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="bg-video">Background Video</Label>
+              <Input
+                id="bg-video"
+                type="file"
+                accept="video/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  
+                  setIsUploadingVideo(true);
+                  try {
+                    const reader = new FileReader();
+                    reader.onload = async () => {
+                      const base64 = reader.result as string;
+                      const result = await uploadMutation.mutateAsync({ 
+                        key: `videos/background-${Date.now()}.mp4`,
+                        data: base64,
+                        contentType: file.type
+                      });
+                      setBgVideoUrl(result.url);
+                      await updateVideoMutation.mutateAsync({
+                        key: 'backgroundVideoUrl',
+                        value: result.url,
+                      });
+                      toast.success("Video uploaded successfully!");
+                    };
+                    reader.readAsDataURL(file);
+                  } catch (error) {
+                    toast.error("Failed to upload video");
+                  } finally {
+                    setIsUploadingVideo(false);
+                  }
+                }}
+                disabled={isUploadingVideo}
+              />
+              {isUploadingVideo && <p className="text-sm text-muted-foreground mt-2">Uploading video...</p>}
+              {bgVideoUrl && (
+                <div className="mt-4">
+                  <p className="text-sm text-muted-foreground mb-2">Current video:</p>
+                  <video src={bgVideoUrl} controls className="w-full max-w-md rounded-lg" />
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
