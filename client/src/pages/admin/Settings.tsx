@@ -11,7 +11,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ContentEditor } from "@/components/ContentEditor";
 import { PopupSettings } from "@/components/PopupSettings";
-import { SectionHeadingsEditor } from "@/components/SectionHeadingsEditor";
 
 export default function AdminSettings() {
   const { user, isAuthenticated } = useAuth();
@@ -98,17 +97,6 @@ export default function AdminSettings() {
               />
             </div>
             <Button onClick={handleUpdateBanner}>Save Banner Settings</Button>
-          </CardContent>
-        </Card>
-
-        {/* Section Headings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Section Headings</CardTitle>
-            <CardDescription>Manage and customize section headings throughout your website</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <SectionHeadingsEditor />
           </CardContent>
         </Card>
 
