@@ -11,7 +11,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ContentEditor } from "@/components/ContentEditor";
 import { PopupSettings } from "@/components/PopupSettings";
-import { SectionHeadingsEditor } from "@/components/SectionHeadingsEditor";
 
 export default function AdminSettings() {
   const { user, isAuthenticated } = useAuth();
@@ -107,15 +106,8 @@ export default function AdminSettings() {
             <CardTitle>Page Content</CardTitle>
             <CardDescription>Edit homepage sections and content</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Section Headings</h3>
-              <SectionHeadingsEditor />
-            </div>
-            <div className="border-t pt-6">
-              <h3 className="text-lg font-semibold mb-4">Content Editor</h3>
-              <ContentEditor />
-            </div>
+          <CardContent>
+            <ContentEditor />
           </CardContent>
         </Card>
       </div>
