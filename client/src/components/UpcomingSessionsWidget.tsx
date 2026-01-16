@@ -17,7 +17,7 @@ export function UpcomingSessionsWidget() {
       'booking',
       'Sign in to book this session and manage your bookings',
       () => {
-        setLocation(`/book-session?eventId=${eventId}`);
+        setLocation(`/book-session/${eventId}`);
         setIsExpanded(false);
       }
     );
