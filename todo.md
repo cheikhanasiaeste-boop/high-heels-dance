@@ -380,3 +380,6 @@
 - [x] Integrate dropdown into navigation header
 - [x] Test accessibility with keyboard and screen readers
 - [x] Ensure 44px minimum click target sizes
+
+## Update Explore Courses Link
+- [x] Change Explore Courses button to link to https://elizabethzolotova.manus.space/my-courses
