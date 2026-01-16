@@ -402,3 +402,15 @@
 - [x] Add close button and click-outside detection
 - [x] Test responsive breakpoints
 - [x] Ensure accessibility (keyboard navigation, ARIA labels)
+
+## Progressive Authentication Flow
+- [x] Create AuthenticationModal component with contextual messaging
+- [x] Add social login buttons (Google, Facebook, Instagram, Apple) with equal visual weight
+- [x] Implement authentication state manager to preserve booking/purchase context
+- [x] Allow users to configure booking (time, instructor, price) before auth trigger
+- [x] Show clear explanation of why login is required at trigger point
+- [x] Implement smooth transition back to action after successful authentication
+- [x] Handle cancellation gracefully (return to previous state without losing context)
+- [x] Auto-resume booking/purchase flow after authentication
+- [x] Remove any aggressive login prompts from public pages
+- [x] Test complete user journey from browsing to authenticated action

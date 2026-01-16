@@ -11,6 +11,8 @@ import { Link } from "wouter";
 import { getLoginUrl } from "@/const";
 import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
+import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
+import { ProgressiveAuthModal } from "@/components/ProgressiveAuthModal";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from "date-fns";
 
 type FilterPreset = {
@@ -31,6 +33,7 @@ const FILTER_PRESETS: FilterPreset[] = [
 export default function BookSession() {
   const { user, isAuthenticated, loading } = useAuth();
   const utils = trpc.useUtils();
+  const { isAuthModalOpen, authContext, authContextDetails, requireAuth, closeAuthModal } = useProgressiveAuth();
   
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
@@ -115,12 +118,13 @@ export default function BookSession() {
   }, [availableSlots, priceFilter]);
 
   const handleBookSlot = (slot: any) => {
-    if (!isAuthenticated) {
-      window.location.href = getLoginUrl();
-      return;
-    }
-    setSelectedSlot(slot);
-    setBookingDialogOpen(true);
+    // Allow users to select slot first, then require auth
+    const contextDetails = `${slot.sessionType === 'private' ? 'Private' : 'Group'} Session - ${format(new Date(slot.startTime), 'MMM d, h:mm a')}`;
+    
+    requireAuth('booking', contextDetails, () => {
+      setSelectedSlot(slot);
+      setBookingDialogOpen(true);
+    });
   };
 
   const confirmBooking = () => {
@@ -687,6 +691,14 @@ export default function BookSession() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Progressive Authentication Modal */}
+      <ProgressiveAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={closeAuthModal}
+        context={authContext || 'booking'}
+        contextDetails={authContextDetails}
+      />
     </div>
   );
 }
