@@ -134,9 +134,11 @@ export default function Home() {
         
         <div className="container text-center relative z-10">
           <div className="flex justify-center mb-6">
-            <div className="w-40 h-40 rounded-full bg-gradient-to-br from-pink-300 to-purple-300 flex items-center justify-center text-5xl font-bold text-white shadow-xl">
-              EZ
-            </div>
+            <img 
+              src="/profile-photo.jpeg" 
+              alt="Elizabeth Zolotova" 
+              className="w-40 h-40 rounded-full object-cover shadow-xl ring-4 ring-white/20"
+            />
           </div>
           <h2 className={`text-5xl font-bold mb-4 ${
             heroVideoUrl 
