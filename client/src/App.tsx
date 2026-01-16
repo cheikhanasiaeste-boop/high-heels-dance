@@ -10,7 +10,7 @@ import MyCourses from "./pages/MyCourses";
 import Admin from "./pages/Admin";
 import BookSession from "./pages/BookSession";
 import Feedback from "./pages/Feedback";
-import VideoGallery from "./pages/VideoGallery";
+
 
 function Router() {
   return (
@@ -20,7 +20,7 @@ function Router() {
       <Route path="/my-courses" component={MyCourses} />
       <Route path="/book-session" component={BookSession} />
       <Route path="/feedback" component={Feedback} />
-      <Route path="/video-gallery" component={VideoGallery} />
+
       <Route path="/admin" component={Admin} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

@@ -153,3 +153,16 @@
 - [x] Integrate S3 storage for video files
 - [x] Connect frontend feedback form to upload endpoint
 - [x] Test complete video upload flow
+
+## Homepage Redesign
+- [x] Remove Video Gallery link from navigation
+- [x] Integrate video testimonials into homepage testimonials section
+- [x] Create unified testimonial cards for text and video
+- [x] Add video modal player to homepage
+- [x] Optimize course section layout for prominence
+- [x] Test responsive design for new layout
+
+## Course Filter on Homepage
+- [x] Add filter buttons for All/Free/Premium courses
+- [x] Implement filter state and logic
+- [x] Style filter to match homepage design
