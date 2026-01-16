@@ -383,3 +383,7 @@
 
 ## Update Explore Courses Link
 - [x] Change Explore Courses button to link to https://elizabethzolotova.manus.space/my-courses
+
+## Navigation Updates
+- [x] Remove new tab behavior from Explore Courses button (open in same tab)
+- [x] Add "My Courses" button next to "Book a Session" in header with different color

@@ -94,6 +94,9 @@ export default function Home() {
             <Link href="/book-session">
               <Button variant="default">Book a Session</Button>
             </Link>
+            <a href="https://elizabethzolotova.manus.space/my-courses">
+              <Button variant="secondary" className="bg-blue-600 hover:bg-blue-700 text-white">My Courses</Button>
+            </a>
             {isAuthenticated ? (
               <>
                 {user?.role === 'admin' && (
@@ -177,7 +180,7 @@ export default function Home() {
             <Link href="/book-session">
               <Button size="lg" className="shadow-lg">Book a Dance Session</Button>
             </Link>
-            <a href="https://elizabethzolotova.manus.space/my-courses" target="_blank" rel="noopener noreferrer">
+            <a href="https://elizabethzolotova.manus.space/my-courses">
               <Button size="lg" variant="outline" className="shadow-lg border-2 border-primary hover:bg-primary hover:text-primary-foreground">Explore Courses</Button>
             </a>
           </div>
