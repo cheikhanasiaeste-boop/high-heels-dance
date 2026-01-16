@@ -387,3 +387,6 @@
 ## Navigation Updates
 - [x] Remove new tab behavior from Explore Courses button (open in same tab)
 - [x] Add "My Courses" button next to "Book a Session" in header with different color
+
+## My Courses Button Styling
+- [x] Update My Courses button color to match page's elegant pink-purple theme
