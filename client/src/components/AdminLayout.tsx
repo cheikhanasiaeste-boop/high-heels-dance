@@ -19,10 +19,10 @@ interface AdminLayoutProps {
 const menuItems = [
   { path: "/admin", icon: LayoutDashboard, label: "Dashboard" },
   { path: "/admin/courses", icon: BookOpen, label: "Courses" },
-  { path: "/admin/bookings", icon: Calendar, label: "Session Bookings" },
   { path: "/admin/availability", icon: Clock, label: "Available Sessions" },
-  { path: "/admin/testimonials", icon: MessageSquare, label: "Testimonials" },
+  { path: "/admin/bookings", icon: Calendar, label: "Session Bookings" },
   { path: "/admin/users", icon: Users, label: "User Management" },
+  { path: "/admin/testimonials", icon: MessageSquare, label: "Testimonials" },
   { path: "/admin/settings", icon: Settings, label: "Site Settings" },
 ];
 
