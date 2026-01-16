@@ -9,6 +9,7 @@ import {
   ArrowLeft
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AdminNotifications } from "@/components/AdminNotifications";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -27,7 +28,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const [location] = useLocation();
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <>
+      <AdminNotifications />
+      <div className="min-h-screen bg-background flex">
       {/* Side Menu */}
       <aside className="w-64 bg-card border-r border-border flex flex-col">
         {/* Header */}
@@ -82,6 +85,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           {children}
         </div>
       </main>
-    </div>
+      </div>
+    </>
   );
 }

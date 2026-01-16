@@ -9,6 +9,7 @@ import { invokeLLM } from "./_core/llm";
 import { storagePut } from "./storage";
 import Stripe from "stripe";
 import { getCourseStripePrice } from "./products";
+import { adminNotifications } from "./events";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-12-15.clover',
@@ -537,6 +538,9 @@ export const appRouter = router({
           // Mark private session as booked
           await db.updateAvailabilitySlot(input.slotId, { isBooked: true });
         }
+        
+        // Emit real-time notification for admin
+        adminNotifications.emitBooking(booking);
         
         return booking;
       }),
