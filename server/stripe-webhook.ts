@@ -45,28 +45,69 @@ export async function handleStripeWebhook(req: Request, res: Response) {
         // Extract metadata
         const userId = session.metadata?.user_id;
         const courseId = session.metadata?.course_id;
+        const slotId = session.metadata?.slot_id;
         
-        if (!userId || !courseId) {
-          console.error('[Webhook] Missing metadata in checkout session');
-          break;
+        // Handle course purchase
+        if (userId && courseId) {
+          const course = await db.getCourseById(Number(courseId));
+          if (!course) {
+            console.error('[Webhook] Course not found:', courseId);
+            break;
+          }
+
+          await db.createPurchase({
+            userId: Number(userId),
+            courseId: Number(courseId),
+            amount: course.price,
+            stripePaymentId: session.payment_intent as string,
+            status: 'completed',
+          });
+
+          console.log('[Webhook] Purchase completed:', { userId, courseId });
         }
-
-        // Create purchase record
-        const course = await db.getCourseById(Number(courseId));
-        if (!course) {
-          console.error('[Webhook] Course not found:', courseId);
-          break;
+        
+        // Handle session booking payment
+        if (userId && slotId) {
+          const slot = await db.getAvailabilitySlotById(Number(slotId));
+          if (!slot) {
+            console.error('[Webhook] Slot not found:', slotId);
+            break;
+          }
+          
+          if (slot.isBooked) {
+            console.error('[Webhook] Slot already booked:', slotId);
+            break;
+          }
+          
+          // Generate Zoom link for online sessions
+          const zoomLink = slot.eventType === 'online' 
+            ? `https://zoom.us/j/${Math.random().toString().slice(2, 12)}`
+            : null;
+          
+          // Create booking with payment info
+          await db.createBooking({
+            userId: Number(userId),
+            slotId: Number(slotId),
+            sessionType: slot.title,
+            zoomLink: zoomLink || undefined,
+            status: 'confirmed',
+            notes: session.metadata?.notes || undefined,
+            paymentRequired: true,
+            paymentStatus: 'completed',
+            stripePaymentIntentId: session.payment_intent as string,
+            amountPaid: ((session.amount_total || 0) / 100).toString(),
+          });
+          
+          // Mark slot as booked
+          await db.updateAvailabilitySlot(Number(slotId), { isBooked: true });
+          
+          console.log('[Webhook] Session booking completed:', { userId, slotId });
         }
-
-        await db.createPurchase({
-          userId: Number(userId),
-          courseId: Number(courseId),
-          amount: course.price,
-          stripePaymentId: session.payment_intent as string,
-          status: 'completed',
-        });
-
-        console.log('[Webhook] Purchase completed:', { userId, courseId });
+        
+        if (!userId || (!courseId && !slotId)) {
+          console.error('[Webhook] Missing required metadata in checkout session');
+        }
+        
         break;
       }
 

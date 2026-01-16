@@ -75,3 +75,16 @@
 - [ ] Implement email notifications for bookings
 - [x] Add booking confirmation page
 - [x] Test complete booking flow
+
+## Enhanced Calendar with Events
+- [x] Add event type field to availability slots (online/in-person)
+- [x] Add location field for in-person events
+- [x] Add pricing fields (isFree, price) to availability slots
+- [x] Update booking flow to handle payments for paid sessions
+- [x] Create calendar view component with month/week display
+- [x] Add location filter (online/in-person/all)
+- [x] Integrate Stripe checkout for paid session bookings
+- [x] Update admin panel to set event type, location, and pricing
+- [x] Add session details display (location, price, type)
+- [x] Test free booking flow (account required)
+- [x] Test paid booking flow (payment + account required)

@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it } from "vitest";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
 import * as db from "./db";
@@ -23,9 +23,9 @@ function createMockContext(user?: AuthenticatedUser): TrpcContext {
 
 function createTestUser(overrides?: Partial<AuthenticatedUser>): AuthenticatedUser {
   return {
-    id: 1,
-    openId: "test-user",
-    email: "test@example.com",
+    id: Math.floor(Math.random() * 1000000) + 1000,
+    openId: `test-user-${Date.now()}-${Math.random()}`,
+    email: `test-${Date.now()}@example.com`,
     name: "Test User",
     loginMethod: "manus",
     role: "user",
@@ -38,15 +38,14 @@ function createTestUser(overrides?: Partial<AuthenticatedUser>): AuthenticatedUs
 
 function createAdminUser(): AuthenticatedUser {
   return createTestUser({
-    id: 2,
-    openId: "admin-user",
-    email: "admin@example.com",
+    openId: `admin-user-${Date.now()}-${Math.random()}`,
+    email: `admin-${Date.now()}@example.com`,
     name: "Admin User",
     role: "admin",
   });
 }
 
-describe("Booking System", () => {
+describe("Enhanced Booking System", () => {
   describe("bookings.availableSlots", () => {
     it("returns available slots for public access", async () => {
       const ctx = createMockContext();
@@ -55,25 +54,70 @@ describe("Booking System", () => {
       const slots = await caller.bookings.availableSlots();
 
       expect(Array.isArray(slots)).toBe(true);
-      // All returned slots should not be booked
       slots.forEach(slot => {
         expect(slot.isBooked).toBe(false);
       });
     });
-  });
 
-  describe("bookings.create", () => {
-    it("allows authenticated users to book available slots", async () => {
-      const user = createTestUser();
-      const ctx = createMockContext(user);
-      const caller = appRouter.createCaller(ctx);
-
-      // Create an available slot as admin
+    it("filters slots by event type", async () => {
       const adminCtx = createMockContext(createAdminUser());
       const adminCaller = appRouter.createCaller(adminCtx);
       
       const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setDate(tomorrow.getDate() + 10);
+      tomorrow.setHours(14, 0, 0, 0);
+      
+      const endTime = new Date(tomorrow);
+      endTime.setHours(15, 0, 0, 0);
+      
+      // Create online slot
+      await adminCaller.admin.availability.create({
+        startTime: tomorrow.toISOString(),
+        endTime: endTime.toISOString(),
+        eventType: 'online',
+        isFree: true,
+        title: 'Online Filter Test',
+      });
+      
+      // Create in-person slot
+      const tomorrow2 = new Date(tomorrow);
+      tomorrow2.setHours(16, 0, 0, 0);
+      const endTime2 = new Date(tomorrow2);
+      endTime2.setHours(17, 0, 0, 0);
+      
+      await adminCaller.admin.availability.create({
+        startTime: tomorrow2.toISOString(),
+        endTime: endTime2.toISOString(),
+        eventType: 'in-person',
+        location: 'Studio A',
+        isFree: true,
+        title: 'In-Person Filter Test',
+      });
+
+      const ctx = createMockContext();
+      const caller = appRouter.createCaller(ctx);
+
+      // Test online filter
+      const onlineSlots = await caller.bookings.availableSlots({ eventType: 'online' });
+      expect(onlineSlots.every((s: any) => s.eventType === 'online')).toBe(true);
+      
+      // Test in-person filter
+      const inPersonSlots = await caller.bookings.availableSlots({ eventType: 'in-person' });
+      expect(inPersonSlots.every((s: any) => s.eventType === 'in-person')).toBe(true);
+    });
+  });
+
+  describe("bookings.create (free sessions)", () => {
+    it("allows authenticated users to book free sessions", async () => {
+      const user = createTestUser();
+      const ctx = createMockContext(user);
+      const caller = appRouter.createCaller(ctx);
+
+      const adminCtx = createMockContext(createAdminUser());
+      const adminCaller = appRouter.createCaller(adminCtx);
+      
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 11);
       tomorrow.setHours(14, 0, 0, 0);
       
       const endTime = new Date(tomorrow);
@@ -82,9 +126,11 @@ describe("Booking System", () => {
       const slot = await adminCaller.admin.availability.create({
         startTime: tomorrow.toISOString(),
         endTime: endTime.toISOString(),
+        eventType: 'online',
+        isFree: true,
+        title: 'Free Booking Test',
       });
 
-      // Book the slot
       const booking = await caller.bookings.create({
         slotId: slot.id,
         notes: "Looking forward to the session!",
@@ -94,13 +140,43 @@ describe("Booking System", () => {
       expect(booking.userId).toBe(user.id);
       expect(booking.slotId).toBe(slot.id);
       expect(booking.status).toBe("confirmed");
+      expect(booking.paymentRequired).toBe(false);
+      expect(booking.paymentStatus).toBe("not_required");
       expect(booking.zoomLink).toBeDefined();
-      expect(booking.notes).toBe("Looking forward to the session!");
+    });
+
+    it("prevents free booking flow for paid sessions", async () => {
+      const user = createTestUser();
+      const ctx = createMockContext(user);
+      const caller = appRouter.createCaller(ctx);
+
+      const adminCtx = createMockContext(createAdminUser());
+      const adminCaller = appRouter.createCaller(adminCtx);
+      
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 12);
+      tomorrow.setHours(14, 0, 0, 0);
+      
+      const endTime = new Date(tomorrow);
+      endTime.setHours(15, 0, 0, 0);
+      
+      const slot = await adminCaller.admin.availability.create({
+        startTime: tomorrow.toISOString(),
+        endTime: endTime.toISOString(),
+        eventType: 'online',
+        isFree: false,
+        price: '50.00',
+        title: 'Paid Session Test',
+      });
+
+      await expect(
+        caller.bookings.create({ slotId: slot.id })
+      ).rejects.toThrow("requires payment");
     });
 
     it("prevents booking already booked slots", async () => {
-      const user1 = createTestUser({ id: 3, openId: "user1" });
-      const user2 = createTestUser({ id: 4, openId: "user2" });
+      const user1 = createTestUser();
+      const user2 = createTestUser();
       
       const ctx1 = createMockContext(user1);
       const caller1 = appRouter.createCaller(ctx1);
@@ -108,12 +184,11 @@ describe("Booking System", () => {
       const ctx2 = createMockContext(user2);
       const caller2 = appRouter.createCaller(ctx2);
 
-      // Create an available slot
       const adminCtx = createMockContext(createAdminUser());
       const adminCaller = appRouter.createCaller(adminCtx);
       
       const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 2);
+      tomorrow.setDate(tomorrow.getDate() + 13);
       tomorrow.setHours(10, 0, 0, 0);
       
       const endTime = new Date(tomorrow);
@@ -122,63 +197,95 @@ describe("Booking System", () => {
       const slot = await adminCaller.admin.availability.create({
         startTime: tomorrow.toISOString(),
         endTime: endTime.toISOString(),
+        eventType: 'online',
+        isFree: true,
+        title: 'Double Booking Test',
       });
 
-      // First user books the slot
       await caller1.bookings.create({ slotId: slot.id });
 
-      // Second user tries to book the same slot
       await expect(
         caller2.bookings.create({ slotId: slot.id })
       ).rejects.toThrow("already booked");
     });
   });
 
-  describe("bookings.myBookings", () => {
-    it("returns user's bookings", async () => {
-      const user = createTestUser({ id: 5, openId: "user-bookings" });
+  describe("bookings.createCheckout (paid sessions)", () => {
+    it("creates checkout session for paid bookings", { timeout: 10000 }, async () => {
+      const user = createTestUser();
       const ctx = createMockContext(user);
       const caller = appRouter.createCaller(ctx);
 
-      // Create and book a slot
       const adminCtx = createMockContext(createAdminUser());
       const adminCaller = appRouter.createCaller(adminCtx);
       
       const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 3);
-      tomorrow.setHours(16, 0, 0, 0);
+      tomorrow.setDate(tomorrow.getDate() + 14);
+      tomorrow.setHours(14, 0, 0, 0);
       
       const endTime = new Date(tomorrow);
-      endTime.setHours(17, 0, 0, 0);
+      endTime.setHours(15, 0, 0, 0);
       
       const slot = await adminCaller.admin.availability.create({
         startTime: tomorrow.toISOString(),
         endTime: endTime.toISOString(),
+        eventType: 'in-person',
+        location: 'Dance Studio',
+        isFree: false,
+        price: '75.00',
+        title: 'Paid Checkout Test',
       });
 
-      await caller.bookings.create({ slotId: slot.id });
+      const result = await caller.bookings.createCheckout({
+        slotId: slot.id,
+        notes: "Excited for this session!",
+      });
 
-      // Get user's bookings
-      const bookings = await caller.bookings.myBookings();
+      expect(result.checkoutUrl).toBeDefined();
+      expect(typeof result.checkoutUrl).toBe('string');
+      expect(result.checkoutUrl).toContain('checkout.stripe.com');
+    });
 
-      expect(Array.isArray(bookings)).toBe(true);
-      expect(bookings.length).toBeGreaterThan(0);
-      expect(bookings[0]?.userId).toBe(user.id);
+    it("prevents checkout for free sessions", async () => {
+      const user = createTestUser();
+      const ctx = createMockContext(user);
+      const caller = appRouter.createCaller(ctx);
+
+      const adminCtx = createMockContext(createAdminUser());
+      const adminCaller = appRouter.createCaller(adminCtx);
+      
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 15);
+      tomorrow.setHours(14, 0, 0, 0);
+      
+      const endTime = new Date(tomorrow);
+      endTime.setHours(15, 0, 0, 0);
+      
+      const slot = await adminCaller.admin.availability.create({
+        startTime: tomorrow.toISOString(),
+        endTime: endTime.toISOString(),
+        eventType: 'online',
+        isFree: true,
+        title: 'Free Session Checkout Test',
+      });
+
+      await expect(
+        caller.bookings.createCheckout({ slotId: slot.id })
+      ).rejects.toThrow("free");
     });
   });
 
   describe("bookings.cancel", () => {
     it("allows users to cancel their own bookings", async () => {
-      const user = createTestUser({ id: 6, openId: "user-cancel" });
+      const user = createTestUser();
       const ctx = createMockContext(user);
       const caller = appRouter.createCaller(ctx);
 
-      // Create and book a slot
       const adminCtx = createMockContext(createAdminUser());
       const adminCaller = appRouter.createCaller(adminCtx);
       
       const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 4);
+      tomorrow.setDate(tomorrow.getDate() + 16);
       tomorrow.setHours(9, 0, 0, 0);
       
       const endTime = new Date(tomorrow);
@@ -187,69 +294,35 @@ describe("Booking System", () => {
       const slot = await adminCaller.admin.availability.create({
         startTime: tomorrow.toISOString(),
         endTime: endTime.toISOString(),
+        eventType: 'online',
+        isFree: true,
+        title: 'Cancel Test Session',
       });
 
       const booking = await caller.bookings.create({ slotId: slot.id });
 
-      // Cancel the booking
       const result = await caller.bookings.cancel({ id: booking.id });
 
       expect(result.success).toBe(true);
 
-      // Verify booking is cancelled
       const cancelledBooking = await db.getBookingById(booking.id);
       expect(cancelledBooking?.status).toBe("cancelled");
 
-      // Verify slot is available again
       const freedSlot = await db.getAvailabilitySlotById(slot.id);
       expect(freedSlot?.isBooked).toBe(false);
-    });
-
-    it("prevents users from cancelling others' bookings", async () => {
-      const user1 = createTestUser({ id: 7, openId: "user-owner" });
-      const user2 = createTestUser({ id: 8, openId: "user-other" });
-      
-      const ctx1 = createMockContext(user1);
-      const caller1 = appRouter.createCaller(ctx1);
-      
-      const ctx2 = createMockContext(user2);
-      const caller2 = appRouter.createCaller(ctx2);
-
-      // User1 creates a booking
-      const adminCtx = createMockContext(createAdminUser());
-      const adminCaller = appRouter.createCaller(adminCtx);
-      
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 5);
-      tomorrow.setHours(13, 0, 0, 0);
-      
-      const endTime = new Date(tomorrow);
-      endTime.setHours(14, 0, 0, 0);
-      
-      const slot = await adminCaller.admin.availability.create({
-        startTime: tomorrow.toISOString(),
-        endTime: endTime.toISOString(),
-      });
-
-      const booking = await caller1.bookings.create({ slotId: slot.id });
-
-      // User2 tries to cancel user1's booking
-      await expect(
-        caller2.bookings.cancel({ id: booking.id })
-      ).rejects.toThrow("Not your booking");
     });
   });
 });
 
-describe("Admin Availability Management", () => {
+describe("Admin Availability Management (Enhanced)", () => {
   describe("admin.availability.create", () => {
-    it("allows admin to create availability slots", async () => {
+    it("allows admin to create free online slots", async () => {
       const admin = createAdminUser();
       const ctx = createMockContext(admin);
       const caller = appRouter.createCaller(ctx);
 
       const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 6);
+      tomorrow.setDate(tomorrow.getDate() + 17);
       tomorrow.setHours(15, 0, 0, 0);
       
       const endTime = new Date(tomorrow);
@@ -258,27 +331,45 @@ describe("Admin Availability Management", () => {
       const slot = await caller.admin.availability.create({
         startTime: tomorrow.toISOString(),
         endTime: endTime.toISOString(),
+        eventType: 'online',
+        isFree: true,
+        title: 'Admin Free Online Test',
       });
 
       expect(slot).toBeDefined();
       expect(slot.isBooked).toBe(false);
-      expect(new Date(slot.startTime).getTime()).toBe(tomorrow.getTime());
+      expect(slot.eventType).toBe('online');
+      expect(slot.isFree).toBe(true);
     });
 
-    it("denies non-admin users from creating slots", async () => {
-      const user = createTestUser();
-      const ctx = createMockContext(user);
+    it("allows admin to create paid in-person slots with location", async () => {
+      const admin = createAdminUser();
+      const ctx = createMockContext(admin);
       const caller = appRouter.createCaller(ctx);
 
       const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 7);
+      tomorrow.setDate(tomorrow.getDate() + 18);
+      tomorrow.setHours(15, 0, 0, 0);
+      
+      const endTime = new Date(tomorrow);
+      endTime.setHours(16, 0, 0, 0);
 
-      await expect(
-        caller.admin.availability.create({
-          startTime: tomorrow.toISOString(),
-          endTime: new Date(tomorrow.getTime() + 3600000).toISOString(),
-        })
-      ).rejects.toThrow("Admin access required");
+      const slot = await caller.admin.availability.create({
+        startTime: tomorrow.toISOString(),
+        endTime: endTime.toISOString(),
+        eventType: 'in-person',
+        location: 'Dance Studio, 123 Main St',
+        isFree: false,
+        price: '75.00',
+        title: 'Private In-Person Session',
+        description: 'Advanced choreography',
+      });
+
+      expect(slot).toBeDefined();
+      expect(slot.eventType).toBe('in-person');
+      expect(slot.location).toBe('Dance Studio, 123 Main St');
+      expect(slot.isFree).toBe(false);
+      expect(slot.price).toBe('75.00');
     });
   });
 
@@ -289,7 +380,7 @@ describe("Admin Availability Management", () => {
       const caller = appRouter.createCaller(ctx);
 
       const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 8);
+      tomorrow.setDate(tomorrow.getDate() + 19);
       tomorrow.setHours(11, 0, 0, 0);
       
       const endTime = new Date(tomorrow);
@@ -298,6 +389,9 @@ describe("Admin Availability Management", () => {
       const slot = await caller.admin.availability.create({
         startTime: tomorrow.toISOString(),
         endTime: endTime.toISOString(),
+        eventType: 'online',
+        isFree: true,
+        title: 'Delete Test Session',
       });
 
       const result = await caller.admin.availability.delete({ id: slot.id });

@@ -88,6 +88,12 @@ export const availabilitySlots = mysqlTable("availabilitySlots", {
   id: int("id").autoincrement().primaryKey(),
   startTime: timestamp("startTime").notNull(),
   endTime: timestamp("endTime").notNull(),
+  eventType: mysqlEnum("eventType", ["online", "in-person"]).default("online").notNull(),
+  location: text("location"), // Physical address for in-person events
+  isFree: boolean("isFree").default(true).notNull(),
+  price: varchar("price", { length: 20 }), // Price in EUR (e.g., "50.00")
+  title: varchar("title", { length: 200 }).default("One-on-One Dance Session").notNull(),
+  description: text("description"),
   isBooked: boolean("isBooked").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
@@ -106,6 +112,10 @@ export const bookings = mysqlTable("bookings", {
   zoomLink: text("zoomLink"),
   status: mysqlEnum("status", ["pending", "confirmed", "cancelled"]).default("confirmed").notNull(),
   notes: text("notes"), // User notes for the session
+  paymentRequired: boolean("paymentRequired").default(false).notNull(),
+  paymentStatus: mysqlEnum("paymentStatus", ["pending", "completed", "failed", "not_required"]).default("not_required").notNull(),
+  stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
+  amountPaid: varchar("amountPaid", { length: 20 }), // Amount in EUR
   bookedAt: timestamp("bookedAt").defaultNow().notNull(),
 });
 

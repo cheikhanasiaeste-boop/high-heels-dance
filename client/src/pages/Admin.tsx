@@ -23,7 +23,17 @@ export default function Admin() {
   const [editingCourse, setEditingCourse] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
   const [availabilityDialogOpen, setAvailabilityDialogOpen] = useState(false);
-  const [newSlot, setNewSlot] = useState({ date: '', startTime: '', endTime: '' });
+  const [newSlot, setNewSlot] = useState({ 
+    date: '', 
+    startTime: '', 
+    endTime: '', 
+    eventType: 'online' as 'online' | 'in-person',
+    location: '',
+    isFree: true,
+    price: '',
+    title: 'One-on-One Dance Session',
+    description: ''
+  });
 
   const { data: courses, isLoading: coursesLoading } = trpc.admin.courses.list.useQuery(
     undefined,
@@ -99,7 +109,17 @@ export default function Admin() {
       utils.admin.availability.list.invalidate();
       utils.bookings.availableSlots.invalidate();
       setAvailabilityDialogOpen(false);
-      setNewSlot({ date: '', startTime: '', endTime: '' });
+      setNewSlot({ 
+        date: '', 
+        startTime: '', 
+        endTime: '', 
+        eventType: 'online',
+        location: '',
+        isFree: true,
+        price: '',
+        title: 'One-on-One Dance Session',
+        description: ''
+      });
     },
     onError: (error) => {
       toast.error(error.message || "Failed to add time slot");
@@ -306,7 +326,26 @@ export default function Admin() {
                     <DialogTitle>Add Availability Slot</DialogTitle>
                     <DialogDescription>Create a new time slot for session bookings</DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4 py-4">
+                  <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
+                    <div className="space-y-2">
+                      <Label htmlFor="slot-title">Session Title</Label>
+                      <Input
+                        id="slot-title"
+                        value={newSlot.title}
+                        onChange={(e) => setNewSlot({ ...newSlot, title: e.target.value })}
+                        placeholder="One-on-One Dance Session"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="slot-description">Description (Optional)</Label>
+                      <Textarea
+                        id="slot-description"
+                        value={newSlot.description}
+                        onChange={(e) => setNewSlot({ ...newSlot, description: e.target.value })}
+                        placeholder="Session details..."
+                        rows={2}
+                      />
+                    </div>
                     <div className="space-y-2">
                       <Label htmlFor="slot-date">Date</Label>
                       <Input
@@ -316,24 +355,74 @@ export default function Admin() {
                         onChange={(e) => setNewSlot({ ...newSlot, date: e.target.value })}
                       />
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="slot-start">Start Time</Label>
-                      <Input
-                        id="slot-start"
-                        type="time"
-                        value={newSlot.startTime}
-                        onChange={(e) => setNewSlot({ ...newSlot, startTime: e.target.value })}
-                      />
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="slot-start">Start Time</Label>
+                        <Input
+                          id="slot-start"
+                          type="time"
+                          value={newSlot.startTime}
+                          onChange={(e) => setNewSlot({ ...newSlot, startTime: e.target.value })}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="slot-end">End Time</Label>
+                        <Input
+                          id="slot-end"
+                          type="time"
+                          value={newSlot.endTime}
+                          onChange={(e) => setNewSlot({ ...newSlot, endTime: e.target.value })}
+                        />
+                      </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="slot-end">End Time</Label>
-                      <Input
-                        id="slot-end"
-                        type="time"
-                        value={newSlot.endTime}
-                        onChange={(e) => setNewSlot({ ...newSlot, endTime: e.target.value })}
-                      />
+                      <Label htmlFor="slot-type">Event Type</Label>
+                      <select
+                        id="slot-type"
+                        className="w-full p-2 border rounded-md"
+                        value={newSlot.eventType}
+                        onChange={(e) => setNewSlot({ ...newSlot, eventType: e.target.value as 'online' | 'in-person' })}
+                      >
+                        <option value="online">Online (Zoom)</option>
+                        <option value="in-person">In-Person</option>
+                      </select>
                     </div>
+                    {newSlot.eventType === 'in-person' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="slot-location">Location</Label>
+                        <Input
+                          id="slot-location"
+                          value={newSlot.location}
+                          onChange={(e) => setNewSlot({ ...newSlot, location: e.target.value })}
+                          placeholder="Studio address..."
+                        />
+                      </div>
+                    )}
+                    <div className="space-y-2">
+                      <Label htmlFor="slot-pricing">Pricing</Label>
+                      <select
+                        id="slot-pricing"
+                        className="w-full p-2 border rounded-md"
+                        value={newSlot.isFree ? 'free' : 'paid'}
+                        onChange={(e) => setNewSlot({ ...newSlot, isFree: e.target.value === 'free' })}
+                      >
+                        <option value="free">Free (Account Required)</option>
+                        <option value="paid">Paid (Payment Required)</option>
+                      </select>
+                    </div>
+                    {!newSlot.isFree && (
+                      <div className="space-y-2">
+                        <Label htmlFor="slot-price">Price (EUR)</Label>
+                        <Input
+                          id="slot-price"
+                          type="number"
+                          step="0.01"
+                          value={newSlot.price}
+                          onChange={(e) => setNewSlot({ ...newSlot, price: e.target.value })}
+                          placeholder="50.00"
+                        />
+                      </div>
+                    )}
                   </div>
                   <DialogFooter>
                     <Button variant="outline" onClick={() => setAvailabilityDialogOpen(false)}>
@@ -341,8 +430,16 @@ export default function Admin() {
                     </Button>
                     <Button
                       onClick={() => {
-                        if (!newSlot.date || !newSlot.startTime || !newSlot.endTime) {
-                          toast.error("Please fill in all fields");
+                        if (!newSlot.date || !newSlot.startTime || !newSlot.endTime || !newSlot.title) {
+                          toast.error("Please fill in all required fields");
+                          return;
+                        }
+                        if (newSlot.eventType === 'in-person' && !newSlot.location) {
+                          toast.error("Please provide a location for in-person sessions");
+                          return;
+                        }
+                        if (!newSlot.isFree && !newSlot.price) {
+                          toast.error("Please set a price for paid sessions");
                           return;
                         }
                         const startTime = new Date(`${newSlot.date}T${newSlot.startTime}`);
@@ -350,6 +447,12 @@ export default function Admin() {
                         createSlotMutation.mutate({
                           startTime: startTime.toISOString(),
                           endTime: endTime.toISOString(),
+                          eventType: newSlot.eventType,
+                          location: newSlot.eventType === 'in-person' ? newSlot.location : undefined,
+                          isFree: newSlot.isFree,
+                          price: !newSlot.isFree ? newSlot.price : undefined,
+                          title: newSlot.title,
+                          description: newSlot.description || undefined,
                         });
                       }}
                       disabled={createSlotMutation.isPending}
@@ -366,15 +469,27 @@ export default function Admin() {
               <div className="space-y-4">
                 {availabilitySlots.map((slot) => (
                   <div key={slot.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <p className="font-semibold">
+                    <div className="flex-1">
+                      <p className="font-semibold">{slot.title}</p>
+                      <p className="text-sm">
                         {new Date(slot.startTime).toLocaleDateString()} - 
                         {new Date(slot.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} to 
                         {new Date(slot.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        {slot.isBooked ? '🔒 Booked' : '✅ Available'}
-                      </p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-xs px-2 py-1 bg-muted rounded">
+                          {slot.eventType === 'online' ? '💻 Online' : '📍 In-Person'}
+                        </span>
+                        <span className="text-xs px-2 py-1 bg-muted rounded">
+                          {slot.isFree ? '🆓 Free' : `💰 €${slot.price}`}
+                        </span>
+                        <span className="text-xs px-2 py-1 bg-muted rounded">
+                          {slot.isBooked ? '🔒 Booked' : '✅ Available'}
+                        </span>
+                      </div>
+                      {slot.location && (
+                        <p className="text-xs text-muted-foreground mt-1">📍 {slot.location}</p>
+                      )}
                     </div>
                     {!slot.isBooked && (
                       <Button

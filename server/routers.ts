@@ -196,11 +196,23 @@ export const appRouter = router({
         .input(z.object({
           startTime: z.string(), // ISO datetime string
           endTime: z.string(),
+          eventType: z.enum(["online", "in-person"]),
+          location: z.string().optional(),
+          isFree: z.boolean(),
+          price: z.string().optional(),
+          title: z.string(),
+          description: z.string().optional(),
         }))
         .mutation(async ({ input }) => {
           return await db.createAvailabilitySlot({
             startTime: new Date(input.startTime),
             endTime: new Date(input.endTime),
+            eventType: input.eventType,
+            location: input.location,
+            isFree: input.isFree,
+            price: input.price,
+            title: input.title,
+            description: input.description,
             isBooked: false,
           });
         }),
@@ -272,12 +284,22 @@ export const appRouter = router({
 
   // Booking system
   bookings: router({
-    // Get available slots for booking
-    availableSlots: publicProcedure.query(async () => {
-      return await db.getAvailableSlots();
-    }),
+    // Get available slots for booking with optional filter
+    availableSlots: publicProcedure
+      .input(z.object({
+        eventType: z.enum(["online", "in-person", "all"]).optional(),
+      }).optional())
+      .query(async ({ input }) => {
+        const allSlots = await db.getAvailableSlots();
+        
+        if (!input?.eventType || input.eventType === "all") {
+          return allSlots;
+        }
+        
+        return allSlots.filter(slot => slot.eventType === input.eventType);
+      }),
     
-    // Create a booking
+    // Create a booking (free sessions only)
     create: protectedProcedure
       .input(z.object({
         slotId: z.number(),
@@ -292,24 +314,91 @@ export const appRouter = router({
         if (slot.isBooked) {
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'This time slot is already booked' });
         }
+        if (!slot.isFree) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'This session requires payment. Use the payment flow instead.' });
+        }
         
-        // Generate Zoom link (placeholder for now)
-        const zoomLink = `https://zoom.us/j/${Math.random().toString().slice(2, 12)}`;
+        // Generate Zoom link for online sessions
+        const zoomLink = slot.eventType === 'online' 
+          ? `https://zoom.us/j/${Math.random().toString().slice(2, 12)}`
+          : null;
         
         // Create booking
         const booking = await db.createBooking({
           userId: ctx.user.id,
           slotId: input.slotId,
-          sessionType: 'One-on-One Dance Session',
-          zoomLink,
+          sessionType: slot.title,
+          zoomLink: zoomLink || undefined,
           status: 'confirmed',
           notes: input.notes,
+          paymentRequired: false,
+          paymentStatus: 'not_required',
         });
         
         // Mark slot as booked
         await db.updateAvailabilitySlot(input.slotId, { isBooked: true });
         
         return booking;
+      }),
+    
+    // Create checkout session for paid bookings
+    createCheckout: protectedProcedure
+      .input(z.object({
+        slotId: z.number(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const slot = await db.getAvailabilitySlotById(input.slotId);
+        if (!slot) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Time slot not found' });
+        }
+        if (slot.isBooked) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'This time slot is already booked' });
+        }
+        if (slot.isFree) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'This session is free. Use the free booking flow.' });
+        }
+        if (!slot.price) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Session price not configured' });
+        }
+
+        const Stripe = (await import('stripe')).default;
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-12-15.clover' });
+
+        const origin = ctx.req.headers.origin || `${ctx.req.protocol}://${ctx.req.get('host')}`;
+        const priceInCents = Math.round(parseFloat(slot.price) * 100);
+
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ['card'],
+          line_items: [
+            {
+              price_data: {
+                currency: 'eur',
+                product_data: {
+                  name: slot.title,
+                  description: `${slot.eventType === 'online' ? 'Online' : 'In-person'} session on ${new Date(slot.startTime).toLocaleString()}`,
+                },
+                unit_amount: priceInCents,
+              },
+              quantity: 1,
+            },
+          ],
+          mode: 'payment',
+          success_url: `${origin}/book-session?success=true`,
+          cancel_url: `${origin}/book-session?cancelled=true`,
+          client_reference_id: ctx.user.id.toString(),
+          customer_email: ctx.user.email || undefined,
+          metadata: {
+            user_id: ctx.user.id.toString(),
+            slot_id: input.slotId.toString(),
+            customer_email: ctx.user.email || '',
+            customer_name: ctx.user.name || '',
+            notes: input.notes || '',
+          },
+          allow_promotion_codes: true,
+        });
+
+        return { checkoutUrl: session.url };
       }),
     
     // Get user's bookings
