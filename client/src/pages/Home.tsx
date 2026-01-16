@@ -155,15 +155,21 @@ export default function Home() {
             {heroTagline || "I'm a professional dancer and dance teacher who can make you fall in love with dance."}
           </p>
           <div className="flex justify-center gap-4 mb-8">
-            <Button variant="outline" size="icon" className="rounded-full hover:bg-pink-100 transition-colors">
-              <Instagram className="h-5 w-5" />
-            </Button>
-            <Button variant="outline" size="icon" className="rounded-full hover:bg-pink-100 transition-colors">
-              <Youtube className="h-5 w-5" />
-            </Button>
-            <Button variant="outline" size="icon" className="rounded-full hover:bg-pink-100 transition-colors">
-              <Facebook className="h-5 w-5" />
-            </Button>
+            <a href="https://www.instagram.com/elizabeth_zolotova/" target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" size="icon" className="rounded-full hover:bg-pink-100 transition-colors">
+                <Instagram className="h-5 w-5" />
+              </Button>
+            </a>
+            <a href="https://www.youtube.com/@HighHeelsTutorials" target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" size="icon" className="rounded-full hover:bg-pink-100 transition-colors">
+                <Youtube className="h-5 w-5" />
+              </Button>
+            </a>
+            <a href="https://www.facebook.com/liza.zolotova.399/" target="_blank" rel="noopener noreferrer">
+              <Button variant="outline" size="icon" className="rounded-full hover:bg-pink-100 transition-colors">
+                <Facebook className="h-5 w-5" />
+              </Button>
+            </a>
           </div>
           <div className="flex justify-center gap-4">
             <Link href="/book-session">
