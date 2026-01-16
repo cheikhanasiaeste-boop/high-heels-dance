@@ -952,3 +952,28 @@ export async function markUserWelcomeSeen(userId: number): Promise<void> {
   
   await db.update(users).set({ hasSeenWelcome: true }).where(eq(users.id, userId));
 }
+
+// Get upcoming available slots for homepage display
+export async function getUpcomingAvailableSlots(limit: number = 6): Promise<AvailabilitySlot[]> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const now = new Date();
+  
+  const result = await db.select()
+    .from(availabilitySlots)
+    .where(
+      and(
+        gte(availabilitySlots.startTime, now),
+        eq(availabilitySlots.isBooked, false)
+      )
+    )
+    .orderBy(availabilitySlots.startTime)
+    .limit(limit);
+  
+  // Calculate spots left for each slot
+  return result.map(slot => ({
+    ...slot,
+    spotsLeft: slot.capacity - slot.currentBookings,
+  })) as AvailabilitySlot[];
+}

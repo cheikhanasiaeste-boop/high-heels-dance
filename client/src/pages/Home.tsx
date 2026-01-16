@@ -10,7 +10,8 @@ import { Link } from "wouter";
 import { useState } from "react";
 import ChatWidget from "@/components/ChatWidget";
 import { WebsitePopup } from "@/components/WebsitePopup";
-import { UserProfileDropdown } from "@/components/UserProfileDropdown";
+import { UserProfileDropdown } from '@/components/UserProfileDropdown';
+import { UpcomingEventsSection } from '@/components/UpcomingEventsSection';
 import { MobileNav } from "@/components/MobileNav";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
@@ -382,6 +383,9 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* Upcoming Events Section */}
+      <UpcomingEventsSection />
 
       {/* Testimonials Section - Mixed Text & Video */}
       {allTestimonials.length > 0 && (

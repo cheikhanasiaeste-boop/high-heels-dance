@@ -240,6 +240,12 @@ export const appRouter = router({
         return await db.getAllAvailabilitySlots();
       }),
       
+      upcoming: publicProcedure
+        .input(z.object({ limit: z.number().optional().default(6) }))
+        .query(async ({ input }) => {
+          return await db.getUpcomingAvailableSlots(input.limit);
+        }),
+      
       create: adminProcedure
         .input(z.object({
           startTime: z.string(),

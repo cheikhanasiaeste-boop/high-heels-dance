@@ -425,3 +425,17 @@
 
 ## Fix Welcome Modal Accessibility
 - [x] Add DialogTitle to WelcomeModal for screen reader accessibility
+
+## Hover-Activated Event Booking System
+- [x] Create backend procedure to fetch upcoming events with availability
+- [x] Design EventCard component with hover/tap overlay
+- [x] Add event details display (name, date, time, duration, spots left)
+- [x] Implement smooth fade/slide animations (150-250ms)
+- [x] Add "Book Now" CTA with progressive authentication integration
+- [x] Highlight events starting within 24 hours
+- [x] Ensure keyboard navigation and focus states
+- [x] Implement mobile-friendly tap interaction
+- [x] Add touch targets ≥ 44px for mobile
+- [x] Integrate event cards into homepage layout
+- [x] Test booking flow with authentication
+- [x] Verify accessibility compliance
