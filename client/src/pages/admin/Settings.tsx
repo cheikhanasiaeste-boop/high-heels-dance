@@ -10,7 +10,6 @@ import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ContentEditor } from "@/components/ContentEditor";
-import { UserManagement } from "@/components/UserManagement";
 import { PopupSettings } from "@/components/PopupSettings";
 import { SectionHeadingsEditor } from "@/components/SectionHeadingsEditor";
 
@@ -74,17 +73,6 @@ export default function AdminSettings() {
           </CardContent>
         </Card>
 
-        {/* Section Headings */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Section Headings</CardTitle>
-            <CardDescription>Manage headings for different sections of your website</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <SectionHeadingsEditor />
-          </CardContent>
-        </Card>
-
         {/* Banner Settings */}
         <Card>
           <CardHeader>
@@ -113,25 +101,21 @@ export default function AdminSettings() {
           </CardContent>
         </Card>
 
-        {/* Content Editor */}
+        {/* Page Content */}
         <Card>
           <CardHeader>
             <CardTitle>Page Content</CardTitle>
             <CardDescription>Edit homepage sections and content</CardDescription>
           </CardHeader>
-          <CardContent>
-            <ContentEditor />
-          </CardContent>
-        </Card>
-
-        {/* User Management */}
-        <Card>
-          <CardHeader>
-            <CardTitle>User Management</CardTitle>
-            <CardDescription>Manage user roles and permissions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <UserManagement />
+          <CardContent className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Section Headings</h3>
+              <SectionHeadingsEditor />
+            </div>
+            <div className="border-t pt-6">
+              <h3 className="text-lg font-semibold mb-4">Content Editor</h3>
+              <ContentEditor />
+            </div>
           </CardContent>
         </Card>
       </div>

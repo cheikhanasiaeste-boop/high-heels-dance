@@ -436,9 +436,9 @@ export const appRouter = router({
       upsert: adminProcedure
         .input(z.object({
           enabled: z.boolean(),
-          type: z.enum(['email_collection', 'announcement', 'custom']),
           title: z.string(),
           message: z.string(),
+          imageUrl: z.string().nullable().optional(),
           buttonText: z.string(),
           showEmailInput: z.boolean(),
           emailPlaceholder: z.string().optional(),

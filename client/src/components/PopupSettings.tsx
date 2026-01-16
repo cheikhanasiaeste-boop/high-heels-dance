@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Upload } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -13,31 +13,67 @@ export function PopupSettings() {
   const { data: popupData } = trpc.admin.popup.get.useQuery();
 
   const [enabled, setEnabled] = useState(false);
-  const [type, setType] = useState<'email_collection' | 'announcement' | 'custom'>('announcement');
   const [title, setTitle] = useState('');
   const [message, setMessage] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [buttonText, setButtonText] = useState('Got it');
   const [showEmailInput, setShowEmailInput] = useState(false);
   const [emailPlaceholder, setEmailPlaceholder] = useState('Enter your email');
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (popupData) {
       setEnabled(popupData.enabled);
-      setType(popupData.type);
       setTitle(popupData.title);
       setMessage(popupData.message);
+      setImageUrl(popupData.imageUrl || '');
       setButtonText(popupData.buttonText);
       setShowEmailInput(popupData.showEmailInput);
       setEmailPlaceholder(popupData.emailPlaceholder || 'Enter your email');
     }
   }, [popupData]);
 
+  const uploadMutation = trpc.upload.useMutation({
+    onSuccess: (data: any) => {
+      setImageUrl(data.url);
+      toast.success("Image uploaded successfully!");
+      setUploading(false);
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to upload image");
+      setUploading(false);
+    },
+  });
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    setUploading(true);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64Data = (reader.result as string).split(',')[1]; // Remove data:image/...;base64, prefix
+      const key = `popup-images/${Date.now()}-${file.name}`;
+      uploadMutation.mutate({ 
+        key, 
+        data: base64Data,
+        contentType: file.type 
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
   const upsertMutation = trpc.admin.popup.upsert.useMutation({
     onSuccess: () => {
       toast.success("Popup settings saved successfully!");
       utils.admin.popup.get.invalidate();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error(error.message || "Failed to save popup settings");
     },
   });
@@ -45,9 +81,9 @@ export function PopupSettings() {
   const handleSave = () => {
     upsertMutation.mutate({
       enabled,
-      type,
       title,
       message,
+      imageUrl: imageUrl || null,
       buttonText,
       showEmailInput,
       emailPlaceholder,
@@ -63,20 +99,6 @@ export function PopupSettings() {
           onCheckedChange={setEnabled}
         />
         <Label htmlFor="popup-enabled">Enable Popup</Label>
-      </div>
-
-      <div>
-        <Label htmlFor="popup-type">Popup Type</Label>
-        <Select value={type} onValueChange={(value: any) => setType(value)}>
-          <SelectTrigger id="popup-type">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="announcement">Announcement</SelectItem>
-            <SelectItem value="email_collection">Email Collection</SelectItem>
-            <SelectItem value="custom">Custom</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <div>
@@ -98,6 +120,37 @@ export function PopupSettings() {
           placeholder="Enter your popup message..."
           rows={4}
         />
+      </div>
+
+      <div>
+        <Label htmlFor="popup-image">Popup Image (optional)</Label>
+        <div className="flex items-center gap-2">
+          <Input
+            id="popup-image"
+            type="file"
+            accept="image/*"
+            onChange={handleImageUpload}
+            disabled={uploading}
+            className="flex-1"
+          />
+          {uploading && <span className="text-sm text-muted-foreground">Uploading...</span>}
+        </div>
+        {imageUrl && (
+          <div className="mt-2">
+            <img src={imageUrl} alt="Popup preview" className="max-w-xs rounded border" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setImageUrl('')}
+              className="mt-1"
+            >
+              Remove Image
+            </Button>
+          </div>
+        )}
+        <p className="text-sm text-muted-foreground mt-1">
+          Upload an image or GIF to display in the popup
+        </p>
       </div>
 
       <div>

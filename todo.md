@@ -297,3 +297,14 @@
 - [ ] Add user details view
 - [ ] Add pagination for user list
 - [x] Test all user management features
+
+## Site Settings Refinement
+- [x] Remove popup type selector from Website Popup section
+- [x] Add imageUrl field to popup database schema
+- [x] Add image/GIF upload functionality to popup settings
+- [x] Update popup frontend component to display image
+- [x] Remove standalone Section Headings section from settings
+- [x] Move section headings management to Page Content area
+- [x] Add edit functionality for existing section headings
+- [x] Remove User Management section from Site Settings page
+- [x] Test all settings changes

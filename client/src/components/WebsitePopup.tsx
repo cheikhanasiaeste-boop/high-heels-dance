@@ -7,9 +7,9 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 interface PopupSettings {
   id: number;
   enabled: boolean;
-  type: 'email_collection' | 'announcement' | 'custom';
   title: string;
   message: string;
+  imageUrl: string | null;
   buttonText: string;
   showEmailInput: boolean;
   emailPlaceholder: string | null;
@@ -76,6 +76,16 @@ export function WebsitePopup({ settings, onDismiss, onEmailSubmit }: WebsitePopu
             {settings.message}
           </DialogDescription>
         </DialogHeader>
+        
+        {settings.imageUrl && (
+          <div className="flex justify-center">
+            <img 
+              src={settings.imageUrl} 
+              alt="Popup" 
+              className="max-w-full max-h-64 rounded-lg object-contain"
+            />
+          </div>
+        )}
         
         <div className="space-y-4">
           {settings.showEmailInput && (

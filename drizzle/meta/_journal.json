@@ -57,6 +57,13 @@
       "when": 1768594105451,
       "tag": "0007_conscious_leper_queen",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1768595007293,
+      "tag": "0008_closed_dazzler",
+      "breakpoints": true
     }
   ]
 }

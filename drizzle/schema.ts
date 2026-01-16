@@ -154,9 +154,9 @@ export type InsertTestimonial = typeof testimonials.$inferInsert;
 export const popupSettings = mysqlTable("popup_settings", {
   id: int("id").autoincrement().primaryKey(),
   enabled: boolean("enabled").default(false).notNull(),
-  type: mysqlEnum("type", ["email_collection", "announcement", "custom"]).default("announcement").notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   message: text("message").notNull(),
+  imageUrl: varchar("imageUrl", { length: 500 }),
   buttonText: varchar("buttonText", { length: 100 }).default("Got it").notNull(),
   showEmailInput: boolean("showEmailInput").default(false).notNull(),
   emailPlaceholder: varchar("emailPlaceholder", { length: 255 }).default("Enter your email"),
