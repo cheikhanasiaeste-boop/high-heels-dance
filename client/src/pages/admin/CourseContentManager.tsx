@@ -717,13 +717,16 @@ function EditLessonDialog({ lesson }: { lesson: any }) {
 }
 
 
-// Course Thumbnail Upload Component with Interactive Crop Editor
+// Course Thumbnail Upload Component with Pre-Upload Crop Editor
 function CourseThumbnailUpload({ course }: { course: any }) {
   const [uploading, setUploading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [zoom, setZoom] = useState(parseFloat(course.imageCropZoom || "1.00"));
-  const [offsetX, setOffsetX] = useState(parseFloat(course.imageCropOffsetX || "0.00"));
-  const [offsetY, setOffsetY] = useState(parseFloat(course.imageCropOffsetY || "0.00"));
+  const [previewMode, setPreviewMode] = useState(false); // New: pre-upload preview mode
+  const [selectedFile, setSelectedFile] = useState<File | null>(null); // New: selected file
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null); // New: client-side preview
+  const [zoom, setZoom] = useState(1.0);
+  const [offsetX, setOffsetX] = useState(0);
+  const [offsetY, setOffsetY] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const utils = trpc.useUtils();
@@ -744,7 +747,7 @@ function CourseThumbnailUpload({ course }: { course: any }) {
     },
   });
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -760,29 +763,64 @@ function CourseThumbnailUpload({ course }: { course: any }) {
       return;
     }
 
+    // Create preview URL for client-side display
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    setSelectedFile(file);
+    setPreviewMode(true);
+    
+    // Reset crop settings for new image
+    setZoom(1.0);
+    setOffsetX(0);
+    setOffsetY(0);
+    
+    // Clear the input so the same file can be selected again
+    e.target.value = '';
+  };
+
+  const handleCancelUpload = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+    setPreviewUrl(null);
+    setSelectedFile(null);
+    setPreviewMode(false);
+    setZoom(1.0);
+    setOffsetX(0);
+    setOffsetY(0);
+  };
+
+  const handleConfirmUpload = async () => {
+    if (!selectedFile) return;
+
     setUploading(true);
 
     try {
       // Upload to S3
       const result = await uploadMutation.mutateAsync({
-        fileName: file.name,
-        fileType: file.type,
-        fileData: await fileToBase64(file),
+        fileName: selectedFile.name,
+        fileType: selectedFile.type,
+        fileData: await fileToBase64(selectedFile),
       });
 
-      // Update course with new image URL and reset crop settings
+      // Update course with new image URL and crop settings
       await updateCourseMutation.mutateAsync({
         id: course.id,
         imageUrl: result.url,
-        imageCropZoom: "1.00",
-        imageCropOffsetX: "0.00",
-        imageCropOffsetY: "0.00",
+        imageCropZoom: zoom.toFixed(2),
+        imageCropOffsetX: offsetX.toFixed(2),
+        imageCropOffsetY: offsetY.toFixed(2),
       });
       
-      // Reset local state
-      setZoom(1.0);
-      setOffsetX(0);
-      setOffsetY(0);
+      // Clean up
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl);
+      }
+      setPreviewUrl(null);
+      setSelectedFile(null);
+      setPreviewMode(false);
+      
+      toast.success("Thumbnail uploaded successfully");
     } catch (error) {
       console.error("Upload error:", error);
       toast.error("Failed to upload thumbnail");
@@ -813,13 +851,14 @@ function CourseThumbnailUpload({ course }: { course: any }) {
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (!isEditing) return;
+    if (!isEditing && !previewMode) return;
     setIsDragging(true);
     setDragStart({ x: e.clientX, y: e.clientY });
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !isEditing) return;
+    if (!isDragging) return;
+    if (!isEditing && !previewMode) return;
     
     const deltaX = (e.clientX - dragStart.x) / 3; // Reduce sensitivity
     const deltaY = (e.clientY - dragStart.y) / 3;
@@ -851,6 +890,10 @@ function CourseThumbnailUpload({ course }: { course: any }) {
     offsetX.toFixed(2) !== (course.imageCropOffsetX || "0.00") ||
     offsetY.toFixed(2) !== (course.imageCropOffsetY || "0.00");
 
+  // Determine which image to show and whether to show crop controls
+  const displayImageUrl = previewMode ? previewUrl : course.imageUrl;
+  const showCropControls = previewMode || isEditing;
+
   return (
     <div className="space-y-6">
       <Card className="p-6">
@@ -861,7 +904,7 @@ function CourseThumbnailUpload({ course }: { course: any }) {
               Upload and adjust the thumbnail image for your course
             </p>
           </div>
-          {course.imageUrl && (
+          {course.imageUrl && !previewMode && (
             <Button
               variant={isEditing ? "default" : "outline"}
               onClick={() => setIsEditing(!isEditing)}
@@ -873,16 +916,16 @@ function CourseThumbnailUpload({ course }: { course: any }) {
         </div>
 
         {/* Thumbnail Preview with Crop Editor */}
-        {course.imageUrl && (
+        {displayImageUrl && (
           <div className="mb-6">
             <Label className="mb-2 block">
-              {isEditing ? "Drag to reposition • Use slider to zoom" : "Current Thumbnail"}
+              {previewMode ? "Adjust your thumbnail before uploading" : (isEditing ? "Drag to reposition • Use slider to zoom" : "Current Thumbnail")}
             </Label>
             <div 
               className="relative w-full max-w-2xl aspect-video rounded-lg overflow-hidden border-2 transition-colors"
               style={{
-                borderColor: isEditing ? "hsl(var(--primary))" : "hsl(var(--border))",
-                cursor: isEditing ? (isDragging ? "grabbing" : "grab") : "default",
+                borderColor: showCropControls ? "hsl(var(--primary))" : "hsl(var(--border))",
+                cursor: showCropControls ? (isDragging ? "grabbing" : "grab") : "default",
               }}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
@@ -890,17 +933,17 @@ function CourseThumbnailUpload({ course }: { course: any }) {
               onMouseLeave={handleMouseUp}
             >
               <img
-                src={course.imageUrl}
-                alt={course.title}
+                src={displayImageUrl}
+                alt={previewMode ? "Preview" : course.title}
                 className="w-full h-full object-cover transition-transform"
                 style={{
                   transform: `scale(${zoom}) translate(${offsetX / zoom}%, ${offsetY / zoom}%)`,
                   userSelect: "none",
-                  pointerEvents: isEditing ? "none" : "auto",
+                  pointerEvents: showCropControls ? "none" : "auto",
                 }}
                 draggable={false}
               />
-              {isEditing && (
+              {showCropControls && (
                 <div className="absolute inset-0 pointer-events-none">
                   <div className="absolute inset-0 border-2 border-dashed border-primary/50" />
                   <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
@@ -911,7 +954,7 @@ function CourseThumbnailUpload({ course }: { course: any }) {
             </div>
 
             {/* Crop Controls */}
-            {isEditing && (
+            {showCropControls && (
               <div className="mt-4 space-y-4 p-4 bg-muted/50 rounded-lg">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -938,50 +981,71 @@ function CourseThumbnailUpload({ course }: { course: any }) {
                     variant="outline"
                     size="sm"
                     onClick={handleResetCrop}
-                    disabled={!hasChanges}
                   >
                     Reset to Original
                   </Button>
-                  <Button
-                    size="sm"
-                    onClick={handleSaveCrop}
-                    disabled={!hasChanges || uploading}
-                  >
-                    {uploading ? "Saving..." : "Apply Changes"}
-                  </Button>
+                  {previewMode ? (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleCancelUpload}
+                        disabled={uploading}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleConfirmUpload}
+                        disabled={uploading}
+                      >
+                        {uploading ? "Uploading..." : "Upload & Save"}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      size="sm"
+                      onClick={handleSaveCrop}
+                      disabled={!hasChanges || uploading}
+                    >
+                      {uploading ? "Saving..." : "Apply Changes"}
+                    </Button>
+                  )}
                 </div>
               </div>
             )}
           </div>
         )}
 
-        {/* Upload Button */}
-        <div>
-          <Label htmlFor="thumbnail-upload" className="mb-2 block">
-            {course.imageUrl ? "Replace Thumbnail" : "Upload Thumbnail"}
-          </Label>
-          <div className="flex items-center gap-4">
-            <Button
-              variant="outline"
+        {/* Upload Button - Hidden during preview mode */}
+        {!previewMode && (
+          <div>
+            <Label htmlFor="thumbnail-upload" className="mb-2 block">
+              {course.imageUrl ? "Replace Thumbnail" : "Upload Thumbnail"}
+            </Label>
+            <div className="flex items-center gap-4">
+              <Button
+                variant="outline"
+                disabled={uploading}
+                onClick={() => document.getElementById("thumbnail-upload")?.click()}
+              >
+                <ImageIcon className="w-4 h-4 mr-2" />
+                {uploading ? "Uploading..." : "Choose Image"}
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Max 5MB • JPG, PNG, or WebP • Recommended: 800x600px
+              </span>
+            </div>
+            <input
+              id="thumbnail-upload"
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
               disabled={uploading}
-              onClick={() => document.getElementById("thumbnail-upload")?.click()}
-            >
-              <ImageIcon className="w-4 h-4 mr-2" />
-              {uploading ? "Uploading..." : "Choose Image"}
-            </Button>
-            <span className="text-sm text-muted-foreground">
-              Max 5MB • JPG, PNG, or WebP • Recommended: 800x600px
-            </span>
+            />
           </div>
-          <input
-            id="thumbnail-upload"
-            type="file"
-            accept="image/*"
-            onChange={handleFileChange}
-            className="hidden"
-            disabled={uploading}
-          />
-        </div>
+        )}
       </Card>
     </div>
   );

@@ -747,3 +747,12 @@
 - [x] Apply crop settings to public course displays
 - [x] Test thumbnail adjustment workflow
 - [x] Ensure keyboard accessibility for controls
+
+## Pre-Upload Thumbnail Adjustment
+- [x] Show crop editor immediately after file selection
+- [x] Load selected file as data URL for client-side preview
+- [x] Allow zoom and position adjustments before upload
+- [x] Add "Upload & Save" button to confirm and upload
+- [x] Add "Cancel" button to discard selection
+- [x] Save crop settings together with image upload
+- [x] Test complete pre-upload adjustment workflow
