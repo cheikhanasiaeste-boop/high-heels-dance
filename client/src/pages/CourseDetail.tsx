@@ -118,7 +118,7 @@ export default function CourseDetail() {
           <div className="lg:col-span-2">
             <div className="aspect-video bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg mb-8 flex items-center justify-center overflow-hidden">
               {course.imageUrl ? (
-                <img src={course.imageUrl} alt={course.title} className="w-full h-full object-cover" />
+                <img src={course.imageUrl} alt={course.title} loading="lazy" className="w-full h-full object-cover" />
               ) : (
                 <span className="text-9xl">💃</span>
               )}

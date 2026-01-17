@@ -101,6 +101,7 @@ export default function Courses() {
                     <img
                       src={course.imageUrl}
                       alt={course.title}
+                      loading="lazy"
                       className="w-full h-full object-cover"
                     />
                     {!course.isFree && (
