@@ -1845,10 +1845,11 @@ export async function getUserMessages(userId: number) {
   const db = await getDb();
   if (!db) return [];
   
+  // Get both received and sent messages
   return await db
     .select()
     .from(messages)
-    .where(eq(messages.toUserId, userId))
+    .where(or(eq(messages.toUserId, userId), eq(messages.fromUserId, userId)))
     .orderBy(desc(messages.createdAt));
 }
 

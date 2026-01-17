@@ -1119,3 +1119,10 @@
 - [x] Fix hero background to display video when available
 - [x] Fix hero background to display static image as fallback
 - [x] Test both video and image backgrounds
+
+## My Messages Not Showing Sent Messages
+- [x] Investigate getUserMessages query in db.ts
+- [x] Check if query only returns received messages
+- [x] Fix query to include sent messages for admin users
+- [x] Update My Messages UI to distinguish sent vs received
+- [x] Test message display for both admin and regular users

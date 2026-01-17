@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { trpc } from "@/lib/trpc";
-import { Mail, MailOpen, Clock } from "lucide-react";
+import { Mail, MailOpen, Clock, Send, Inbox } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -96,9 +96,20 @@ export default function MyMessages() {
                           <Mail className="h-5 w-5 text-pink-600" />
                         )}
                         <CardTitle className="text-lg">{message.subject}</CardTitle>
-                        {!message.isRead && (
+                        {!message.isRead && message.toUserId === user?.id && (
                           <Badge variant="default" className="bg-pink-600">
                             New
+                          </Badge>
+                        )}
+                        {message.fromUserId === user?.id ? (
+                          <Badge variant="outline" className="border-blue-500 text-blue-600">
+                            <Send className="h-3 w-3 mr-1" />
+                            Sent
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="border-green-500 text-green-600">
+                            <Inbox className="h-3 w-3 mr-1" />
+                            Received
                           </Badge>
                         )}
                       </div>
@@ -124,7 +135,7 @@ export default function MyMessages() {
               <DialogHeader>
                 <DialogTitle>{selectedMessage.subject}</DialogTitle>
                 <DialogDescription>
-                  Received on {new Date(selectedMessage.createdAt).toLocaleString()}
+                  {selectedMessage.fromUserId === user?.id ? 'Sent' : 'Received'} on {new Date(selectedMessage.createdAt).toLocaleString()}
                 </DialogDescription>
               </DialogHeader>
               <div className="py-4">
