@@ -701,6 +701,6 @@
 - [x] Test both views to ensure consistency
 
 ## Image Optimization and Lazy Loading
-- [x] Compress hero background webp image
+- [x] Restore original animated webp (kept at 2MB - reasonable for animated background)
 - [x] Add lazy loading to below-the-fold images
-- [x] Test page load performance improvements
+- [x] Verified animation quality and performance
