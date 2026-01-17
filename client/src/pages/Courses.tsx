@@ -99,38 +99,40 @@ export default function Courses() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCourses.map((course) => (
               <Card key={course.id} className="flex flex-col hover:shadow-lg transition-shadow">
-                {course.imageUrl && (
-                  <div className="relative h-48 overflow-hidden rounded-t-lg bg-muted/20">
-                    <img
-                      src={course.imageUrl}
-                      alt={course.title}
-                      loading="lazy"
-                      className="absolute"
-                      style={{
-                        top: '50%',
-                        left: '50%',
-                        width: 'auto',
-                        height: 'auto',
-                        maxWidth: 'none',
-                        maxHeight: 'none',
-                        minWidth: '100%',
-                        minHeight: '100%',
-                        transform: `translate(-50%, -50%) scale(${parseFloat(course.imageCropZoom || "1.00")}) translate(${parseFloat(course.imageCropOffsetX || "0")}px, ${parseFloat(course.imageCropOffsetY || "0")}px)`,
-                        transformOrigin: 'center center',
-                      }}
-                    />
-                    {!course.isFree && (
-                      <Badge className="absolute top-3 right-3 bg-purple-600">
-                        ✨ Premium
-                      </Badge>
-                    )}
-                    {course.isFree && (
-                      <Badge className="absolute top-3 right-3 bg-green-600">
-                        🎁 Free
-                      </Badge>
-                    )}
-                  </div>
-                )}
+                <div className="relative">
+                  {course.imageUrl ? (
+                    <>
+                      <img 
+                        src={course.imageUrl} 
+                        alt={course.title} 
+                        className="w-full h-48 object-cover rounded-t-lg"
+                      />
+                      {course.isTopPick && (
+                        <div className="absolute top-4 left-4 z-10 animate-pulse-slow">
+                          <div className="relative">
+                            {/* Glitter effects */}
+                            <div className="absolute -inset-2 bg-gradient-to-r from-pink-400 via-purple-400 to-pink-400 rounded-full blur-md opacity-75 animate-spin-slow"></div>
+                            <div className="absolute -inset-1 bg-gradient-to-r from-pink-300 via-purple-300 to-pink-300 rounded-full blur-sm opacity-50"></div>
+                            {/* Badge */}
+                            <div className="relative bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-2xl flex items-center gap-1.5 border-2 border-white/50">
+                              <span className="text-base animate-bounce-subtle">⭐</span>
+                              <span className="tracking-wide">TOP PICK</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      {!course.isFree && (
+                        <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-1 animate-pulse">
+                          <span>✨</span> PREMIUM
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="w-full h-48 bg-gradient-to-br from-pink-100 to-purple-100 rounded-t-lg flex items-center justify-center">
+                      <span className="text-6xl">💃</span>
+                    </div>
+                  )}
+                </div>
                 
                 <CardHeader>
                   <CardTitle className="line-clamp-2">{course.title}</CardTitle>

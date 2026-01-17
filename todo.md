@@ -927,3 +927,9 @@
 - [x] Verify isTopPick displays correctly in admin after save
 - [x] Verify Top Pick badge shows on homepage
 - [x] Test Top Pick toggle on/off functionality (5/5 tests passing)
+
+## Explore Courses Thumbnail Consistency
+- [x] Update Courses page thumbnails to match homepage style
+- [x] Apply h-48 object-cover format to course cards
+- [x] Ensure Top Pick and Premium badges display correctly
+- [x] Test thumbnail display on Explore Courses page
