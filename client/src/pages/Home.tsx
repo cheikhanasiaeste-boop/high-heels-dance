@@ -241,9 +241,9 @@ export default function Home() {
             <Link href="/book-session">
               <Button size="lg" className="shadow-lg">Book a Dance Session</Button>
             </Link>
-            <a href="https://elizabethzolotova.manus.space/my-courses">
+            <Link href="/courses">
               <Button size="lg" variant="outline" className="shadow-lg border-2 border-primary hover:bg-primary hover:text-primary-foreground">Explore Courses</Button>
-            </a>
+            </Link>
           </div>
         </div>
       </section>

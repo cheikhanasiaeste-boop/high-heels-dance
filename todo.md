@@ -674,3 +674,11 @@
 - [x] Remove or conditionally hide prompts on public pages (home, courses, etc.)
 - [x] Ensure protected features still require authentication
 - [x] Test guest navigation flow without unwanted prompts
+
+## Fix Course Exploration for Guests
+- [x] Identify where sign-in is required when clicking "Explore Courses"
+- [x] Remove authentication requirement from course listing page
+- [x] Remove authentication requirement from course detail pages
+- [x] Keep authentication requirement only for purchase/enroll buttons
+- [x] Test guest can browse all courses without sign-in prompts
+- [x] Test guest is prompted to sign in only when purchasing
