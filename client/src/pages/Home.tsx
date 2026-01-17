@@ -137,8 +137,25 @@ export default function Home() {
 
       {/* Hero/Profile Section */}
       <section className="relative py-20 overflow-hidden">
-        {/* Video Background */}
-        {heroVideoUrl ? (
+        {/* Animated Background */}
+        {backgroundUrl && !prefersReducedMotion ? (
+          <>
+            <div className="absolute inset-0 z-0">
+              <img
+                src={backgroundUrl}
+                alt=""
+                role="presentation"
+                className="w-full h-full object-cover"
+                style={{
+                  opacity: 0.25,
+                  filter: 'saturate(0.6) brightness(0.85) blur(2px)',
+                }}
+                loading="eager"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-pink-50/50 to-white/80"></div>
+            </div>
+          </>
+        ) : heroVideoUrl ? (
           <>
             <video
               autoPlay
@@ -165,18 +182,10 @@ export default function Home() {
               className="w-40 h-40 rounded-full object-cover shadow-xl ring-4 ring-white/20"
             />
           </div>
-          <h2 className={`text-5xl font-bold mb-4 ${
-            heroVideoUrl 
-              ? 'text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]' 
-              : 'bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent'
-          }`}>
+          <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
             {heroTitle || 'Elizabeth Zolotova'}
           </h2>
-          <p className={`text-xl mb-8 max-w-2xl mx-auto leading-relaxed font-serif ${
-            heroVideoUrl
-              ? 'text-white/95 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]'
-              : 'text-muted-foreground'
-          }`}>
+          <p className="text-xl mb-8 max-w-2xl mx-auto leading-relaxed font-serif text-muted-foreground">
             {heroTagline || "I'm a professional dancer and dance teacher who can make you fall in love with dance."}
           </p>
           <div className="flex justify-center gap-4 mb-8">
@@ -209,23 +218,6 @@ export default function Home() {
 
       {/* Courses Section - PROMINENT */}
       <section className="py-20 bg-gradient-to-b from-white via-pink-50/30 to-white relative overflow-hidden">
-        {/* Background Animation */}
-        {backgroundUrl && !prefersReducedMotion && (
-          <div className="absolute inset-0 z-0">
-            <img
-              src={backgroundUrl}
-              alt=""
-              role="presentation"
-              className="w-full h-full object-cover"
-              style={{
-                opacity: 0.25,
-                filter: 'saturate(0.6) brightness(0.85) blur(2px)',
-              }}
-              loading="lazy"
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-pink-50/50 to-white/80"></div>
-          </div>
-        )}
         {/* Decorative background elements */}
         <div className="absolute inset-0 opacity-5 z-0">
           <div className="absolute top-20 left-10 w-72 h-72 bg-pink-400 rounded-full blur-3xl"></div>

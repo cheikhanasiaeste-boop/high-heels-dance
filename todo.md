@@ -537,3 +537,10 @@
 - [x] Verify homepage renders animation with elegant filters (desaturated, darkened, blurred)
 - [x] Test prefers-reduced-motion fallback
 - [x] Confirm readability of foreground content over animated background
+
+## Move Animated Background to Hero Section
+- [x] Remove animated background from courses section
+- [x] Add animated background to hero section (upper light pink area with profile photo)
+- [x] Apply same elegant filters (desaturated, darkened, blurred, overlay)
+- [x] Verify profile photo and text remain clearly readable
+- [x] Test prefers-reduced-motion fallback in hero section
