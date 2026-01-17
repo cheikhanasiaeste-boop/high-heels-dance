@@ -94,6 +94,33 @@ export default function AdminSettings() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validate animated WebP performance specs
+    const isAnimatedWebP = file.type === 'image/webp' && file.name.toLowerCase().endsWith('.webp');
+    
+    if (isAnimatedWebP) {
+      // File size validation (max 5MB for smooth performance)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (file.size > maxSize) {
+        toast.error(
+          `Animated WebP is too large (${(file.size / 1024 / 1024).toFixed(2)}MB). ` +
+          `Maximum recommended size is 5MB for smooth playback. ` +
+          `Please optimize your file with lower frame count, reduced resolution, or better compression.`,
+          { duration: 8000 }
+        );
+        return;
+      }
+
+      // Warning for files between 2-5MB
+      if (file.size > 2 * 1024 * 1024) {
+        toast.warning(
+          `Large animated WebP detected (${(file.size / 1024 / 1024).toFixed(2)}MB). ` +
+          `For best performance, keep files under 2MB. ` +
+          `Recommended specs: 1920x1080 max, 15-20 FPS, 2-3 second loop.`,
+          { duration: 6000 }
+        );
+      }
+    }
+
     setUploadingBackground(true);
     try {
       const reader = new FileReader();
@@ -215,6 +242,19 @@ export default function AdminSettings() {
               <p className="text-sm text-muted-foreground mt-1">
                 {uploadingBackground ? 'Uploading...' : 'Choose an image file (WebP, JPG, or PNG). For best results, use a high-resolution image.'}
               </p>
+              <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm font-semibold text-blue-900 mb-1">📊 Animated WebP Performance Specs</p>
+                <ul className="text-xs text-blue-800 space-y-1">
+                  <li>• <strong>File Size:</strong> Under 2MB (optimal), max 5MB</li>
+                  <li>• <strong>Resolution:</strong> 1920x1080 or lower</li>
+                  <li>• <strong>Frame Rate:</strong> 15-20 FPS (avoid 30+ FPS)</li>
+                  <li>• <strong>Duration:</strong> 2-3 second loop recommended</li>
+                  <li>• <strong>Compression:</strong> Use lossy WebP with quality 75-85</li>
+                </ul>
+                <p className="text-xs text-blue-700 mt-2 italic">
+                  Files exceeding these specs may cause visible lag or stuttering.
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>

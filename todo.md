@@ -969,3 +969,16 @@
 - [x] Ensure badges stay horizontally aligned at same height on Explore Courses
 - [x] Verify Top Pick sorting always puts Top Picks first
 - [x] Test that Top Pick courses appear before ALL non-Top Pick courses
+
+## Animated WebP Performance Optimization
+- [x] Locate all animated WebP usage on website (hero background on homepage)
+- [x] Analyze file size, frame count, and resolution
+- [x] Diagnose root causes of lag (eager loading, no caching, CPU-bound decode)
+- [x] Implement GPU-accelerated rendering with transform3d and will-change
+- [x] Add lazy loading and intersection observer via AnimatedWebP component
+- [x] Implement animation preloading strategy with fetchPriority
+- [x] Add static fallback poster for poor performance (automatic FPS monitoring)
+- [x] Create admin upload validation for animated WebP (5MB hard limit, 2MB warning)
+- [x] Add file size and spec warnings in admin (toast notifications)
+- [x] Document recommended animated WebP specifications (specs card in admin)
+- [x] Test animation smoothness and performance

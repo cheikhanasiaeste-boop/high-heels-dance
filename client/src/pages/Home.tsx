@@ -8,6 +8,7 @@ import { trpc } from "@/lib/trpc";
 import { Instagram, Youtube, Facebook, MessageCircle, Star, Play } from "lucide-react";
 import { Link } from "wouter";
 import { useState, useEffect, useRef } from "react";
+import { AnimatedWebP } from "@/components/AnimatedWebP";
 import ChatWidget from "@/components/ChatWidget";
 import { WebsitePopup } from "@/components/WebsitePopup";
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
@@ -190,22 +191,20 @@ export default function Home() {
         {/* Animated Background */}
         {backgroundUrl && !prefersReducedMotion ? (
           <>
-            <div className="absolute inset-0 z-0" style={{ willChange: 'transform' }}>
+            <div className="absolute inset-0 z-0" style={{ 
+              willChange: 'transform',
+              contain: 'layout style paint',
+            }}>
               {backgroundUrl.endsWith('.webp') || backgroundUrl.endsWith('.gif') ? (
-                <img
+                <AnimatedWebP
                   src={backgroundUrl}
                   alt=""
-                  role="presentation"
                   className="w-full h-full object-cover"
                   style={{
                     opacity: 0.6,
                     filter: 'saturate(0.8) brightness(0.9) blur(1px)',
-                    willChange: 'transform',
-                    transform: 'translateZ(0)',
-                    backfaceVisibility: 'hidden',
                   }}
-                  loading="eager"
-                  decoding="async"
+                  fallbackSrc={heroBackgroundUrl?.replace(/\.(webp|gif)$/, '.jpg') || undefined}
                 />
               ) : (
                 <video
