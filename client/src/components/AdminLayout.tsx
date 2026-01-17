@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AdminNotifications } from "@/components/AdminNotifications";
+import { trpc } from "@/lib/trpc";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
@@ -28,6 +29,9 @@ const menuItems = [
 
 export function AdminLayout({ children }: AdminLayoutProps) {
   const [location] = useLocation();
+  
+  // Get pending testimonials count
+  const { data: pendingCount = 0 } = trpc.admin.testimonials.pendingCount.useQuery();
 
   return (
     <>
@@ -58,7 +62,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   <Link 
                     href={item.path}
                     className={cn(
-                      "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                      "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative",
                       isActive
                         ? "bg-primary text-primary-foreground"
                         : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -66,6 +70,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                   >
                     <Icon className="h-5 w-5" />
                     <span className="font-medium">{item.label}</span>
+                    {item.path === '/admin/testimonials' && pendingCount > 0 && (
+                      <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse">
+                        {pendingCount}
+                      </span>
+                    )}
                   </Link>
                 </li>
               );

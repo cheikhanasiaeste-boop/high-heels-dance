@@ -540,6 +540,12 @@ export const appRouter = router({
       list: adminProcedure.query(async () => {
         return await db.getAllTestimonials();
       }),
+      
+      // Get pending testimonials count
+      pendingCount: adminProcedure.query(async () => {
+        const testimonials = await db.getAllTestimonials();
+        return testimonials.filter(t => t.status === 'pending').length;
+      }),
 
       // Approve testimonial
       approve: adminProcedure

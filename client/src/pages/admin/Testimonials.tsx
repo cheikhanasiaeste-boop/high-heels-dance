@@ -7,6 +7,7 @@ import { Check, X, Star, Image as ImageIcon, Video, ExternalLink } from "lucide-
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 export default function AdminTestimonials() {
   const { user, isAuthenticated } = useAuth();
@@ -128,7 +129,10 @@ export default function AdminTestimonials() {
         <div className="space-y-4">
           {testimonials && testimonials.length > 0 ? (
             testimonials.map((testimonial: any) => (
-              <Card key={testimonial.id} className={testimonial.status === 'pending' ? 'border-yellow-500' : ''}>
+              <Card key={testimonial.id} className={cn(
+                testimonial.status === 'pending' ? 'border-2 border-yellow-500 shadow-lg shadow-yellow-500/20' : '',
+                'transition-all'
+              )}>
                 <CardHeader>
                   <div className="flex items-center justify-between gap-4">
                     <Checkbox

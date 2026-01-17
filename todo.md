@@ -1040,3 +1040,11 @@
 - [x] Display rating details with star visualization in admin testimonials
 - [x] Show uploaded media (photo/video) with view links in admin testimonials
 - [x] Test media upload and admin display
+
+## Testimonial Notification Badge
+- [x] Create API endpoint to get pending testimonials count (admin.testimonials.pendingCount)
+- [x] Add notification badge to Testimonials submenu in AdminLayout
+- [x] Display pending count in badge (red pulsing badge)
+- [x] Add visual indicator (border/highlight) for new/unread testimonials (yellow border + shadow)
+- [x] Test notification badge updates when testimonials are submitted
+- [x] Test badge disappears when all testimonials are reviewed
