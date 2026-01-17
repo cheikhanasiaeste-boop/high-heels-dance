@@ -180,7 +180,7 @@ export default function AdminSettings() {
           <CardHeader>
             <CardTitle>Homepage Background Animation</CardTitle>
             <CardDescription>
-              Upload an animated WebP to display as a subtle background animation in the courses section.
+              Upload an animated WebP to display as a background animation in the hero section (upper area with profile photo).
               For best performance, keep file size under 2MB. Recommended dimensions: 1920x1080px.
             </CardDescription>
           </CardHeader>

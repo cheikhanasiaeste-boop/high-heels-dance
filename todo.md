@@ -544,3 +544,11 @@
 - [x] Apply same elegant filters (desaturated, darkened, blurred, overlay)
 - [x] Verify profile photo and text remain clearly readable
 - [x] Test prefers-reduced-motion fallback in hero section
+
+## Increase Hero Background Animation Visibility
+- [x] Reduce white overlay opacity to make animation more visible (white/80 → white/40)
+- [x] Adjust opacity, saturation, brightness filters for better visibility (0.25→0.6, 0.6→0.8, 0.85→0.9, 2px→1px blur)
+- [x] Maintain text readability while showing more of the animation
+- [x] Verify admin panel allows changing WebP file in Homepage Background Animation setting
+- [x] Test upload, preview, and save workflow in admin panel
+- [x] Update admin description from "courses section" to "hero section"

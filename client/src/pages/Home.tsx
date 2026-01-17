@@ -147,12 +147,12 @@ export default function Home() {
                 role="presentation"
                 className="w-full h-full object-cover"
                 style={{
-                  opacity: 0.25,
-                  filter: 'saturate(0.6) brightness(0.85) blur(2px)',
+                  opacity: 0.6,
+                  filter: 'saturate(0.8) brightness(0.9) blur(1px)',
                 }}
                 loading="eager"
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-pink-50/50 to-white/80"></div>
+              <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-pink-50/30 to-white/40"></div>
             </div>
           </>
         ) : heroVideoUrl ? (
