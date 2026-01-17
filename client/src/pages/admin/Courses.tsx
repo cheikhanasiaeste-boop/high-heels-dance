@@ -8,14 +8,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { trpc } from "@/lib/trpc";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, BookOpen } from "lucide-react";
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 
 export default function AdminCourses() {
   const { user, isAuthenticated } = useAuth();
   const utils = trpc.useUtils();
+  const [, navigate] = useLocation();
   
   const [courseDialogOpen, setCourseDialogOpen] = useState(false);
   const [editingCourse, setEditingCourse] = useState<any>(null);
@@ -320,6 +322,15 @@ export default function AdminCourses() {
                 <CardContent>
                   <p className="text-sm text-muted-foreground line-clamp-3">{course.description}</p>
                   <div className="flex gap-2 mt-4">
+                    <Button
+                      size="sm"
+                      variant="default"
+                      onClick={() => navigate(`/admin/courses/${course.id}/content`)}
+                      className="flex-1"
+                    >
+                      <BookOpen className="h-4 w-4 mr-2" />
+                      Manage Content
+                    </Button>
                     <Button
                       size="sm"
                       variant="outline"

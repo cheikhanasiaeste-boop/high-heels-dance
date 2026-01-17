@@ -234,6 +234,124 @@ export const appRouter = router({
         }),
     }),
     
+    // Course content management (modules and lessons)
+    courseContent: router({
+      // Get all modules for a course
+      getModules: adminProcedure
+        .input(z.object({ courseId: z.number() }))
+        .query(async ({ input }) => {
+          return await db.getCourseModules(input.courseId);
+        }),
+      
+      // Get all lessons for a module
+      getLessons: adminProcedure
+        .input(z.object({ moduleId: z.number() }))
+        .query(async ({ input }) => {
+          return await db.getModuleLessons(input.moduleId);
+        }),
+      
+      // Create a new module
+      createModule: adminProcedure
+        .input(z.object({
+          courseId: z.number(),
+          title: z.string().min(1),
+          description: z.string().optional(),
+          order: z.number().default(0),
+        }))
+        .mutation(async ({ input }) => {
+          return await db.createCourseModule(input);
+        }),
+      
+      // Update a module
+      updateModule: adminProcedure
+        .input(z.object({
+          id: z.number(),
+          title: z.string().min(1).optional(),
+          description: z.string().optional(),
+          order: z.number().optional(),
+          isPublished: z.boolean().optional(),
+        }))
+        .mutation(async ({ input }) => {
+          const { id, ...updates } = input;
+          return await db.updateCourseModule(id, updates);
+        }),
+      
+      // Delete a module
+      deleteModule: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          await db.deleteCourseModule(input.id);
+          return { success: true };
+        }),
+      
+      // Create a new lesson
+      createLesson: adminProcedure
+        .input(z.object({
+          moduleId: z.number(),
+          courseId: z.number(),
+          title: z.string().min(1),
+          description: z.string().optional(),
+          videoUrl: z.string().optional(),
+          videoKey: z.string().optional(),
+          duration: z.number().optional(),
+          content: z.string().optional(),
+          order: z.number().default(0),
+          isFree: z.boolean().default(false),
+        }))
+        .mutation(async ({ input }) => {
+          return await db.createCourseLesson(input);
+        }),
+      
+      // Update a lesson
+      updateLesson: adminProcedure
+        .input(z.object({
+          id: z.number(),
+          title: z.string().min(1).optional(),
+          description: z.string().optional(),
+          videoUrl: z.string().optional(),
+          videoKey: z.string().optional(),
+          duration: z.number().optional(),
+          content: z.string().optional(),
+          order: z.number().optional(),
+          isPublished: z.boolean().optional(),
+          isFree: z.boolean().optional(),
+        }))
+        .mutation(async ({ input }) => {
+          const { id, ...updates } = input;
+          return await db.updateCourseLesson(id, updates);
+        }),
+      
+      // Delete a lesson
+      deleteLesson: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .mutation(async ({ input }) => {
+          await db.deleteCourseLesson(input.id);
+          return { success: true };
+        }),
+      
+      // Reorder modules
+      reorderModules: adminProcedure
+        .input(z.object({
+          courseId: z.number(),
+          moduleIds: z.array(z.number()),
+        }))
+        .mutation(async ({ input }) => {
+          await db.reorderCourseModules(input.courseId, input.moduleIds);
+          return { success: true };
+        }),
+      
+      // Reorder lessons
+      reorderLessons: adminProcedure
+        .input(z.object({
+          moduleId: z.number(),
+          lessonIds: z.array(z.number()),
+        }))
+        .mutation(async ({ input }) => {
+          await db.reorderModuleLessons(input.moduleId, input.lessonIds);
+          return { success: true };
+        }),
+    }),
+    
     // Availability management
     availability: router({
       list: adminProcedure.query(async () => {

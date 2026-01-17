@@ -704,3 +704,18 @@
 - [x] Restore original animated webp (kept at 2MB - reasonable for animated background)
 - [x] Add lazy loading to below-the-fold images
 - [x] Verified animation quality and performance
+
+## Course Content Management Interface
+- [ ] Design database schema for course modules and lessons
+- [ ] Create backend tRPC procedures for CRUD operations
+- [ ] Build course content management UI with tabs (Thumbnail, Checkout, Course, Options)
+- [ ] Implement module and lesson management
+- [ ] Add drag-and-drop reordering for modules/lessons
+- [ ] Test complete course content management flow
+
+## Course Content Management Interface
+- [x] Design database schema for course modules and lessons
+- [x] Create backend tRPC procedures for CRUD operations
+- [x] Build course content management UI with tabs
+- [x] Test module and lesson creation
+- [x] Test module and lesson deletion

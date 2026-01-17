@@ -27,7 +27,16 @@ import {
   InsertTestimonial,
   userCourseEnrollments,
   UserCourseEnrollment,
-  InsertUserCourseEnrollment
+  InsertUserCourseEnrollment,
+  courseModules,
+  CourseModule,
+  InsertCourseModule,
+  courseLessons,
+  CourseLesson,
+  InsertCourseLesson,
+  userLessonProgress,
+  UserLessonProgress,
+  InsertUserLessonProgress
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1284,4 +1293,237 @@ export async function bulkRemoveCourses(
 
   // Return success (actual count not available from delete operation)
   return { removed: userIds.length * courseIds.length };
+}
+
+// ============================================================================
+// Course Content Management (Modules & Lessons)
+// ============================================================================
+
+/**
+ * Get all modules for a course, ordered by order field
+ */
+export async function getCourseModules(courseId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db
+    .select()
+    .from(courseModules)
+    .where(eq(courseModules.courseId, courseId))
+    .orderBy(courseModules.order);
+}
+
+/**
+ * Get all lessons for a module, ordered by order field
+ */
+export async function getModuleLessons(moduleId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db
+    .select()
+    .from(courseLessons)
+    .where(eq(courseLessons.moduleId, moduleId))
+    .orderBy(courseLessons.order);
+}
+
+/**
+ * Create a new course module
+ */
+export async function createCourseModule(data: {
+  courseId: number;
+  title: string;
+  description?: string;
+  order?: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const [module] = await db
+    .insert(courseModules)
+    .values({
+      courseId: data.courseId,
+      title: data.title,
+      description: data.description || null,
+      order: data.order || 0,
+      isPublished: true,
+    })
+    .$returningId();
+  
+  return module;
+}
+
+/**
+ * Update a course module
+ */
+export async function updateCourseModule(
+  id: number,
+  updates: {
+    title?: string;
+    description?: string;
+    order?: number;
+    isPublished?: boolean;
+  }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .update(courseModules)
+    .set(updates)
+    .where(eq(courseModules.id, id));
+  
+  return { success: true };
+}
+
+/**
+ * Delete a course module and all its lessons
+ */
+export async function deleteCourseModule(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // First delete all lessons in this module
+  await db
+    .delete(courseLessons)
+    .where(eq(courseLessons.moduleId, id));
+  
+  // Then delete the module
+  await db
+    .delete(courseModules)
+    .where(eq(courseModules.id, id));
+  
+  return { success: true };
+}
+
+/**
+ * Create a new course lesson
+ */
+export async function createCourseLesson(data: {
+  moduleId: number;
+  courseId: number;
+  title: string;
+  description?: string;
+  videoUrl?: string;
+  videoKey?: string;
+  duration?: number;
+  content?: string;
+  order?: number;
+  isFree?: boolean;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const [lesson] = await db
+    .insert(courseLessons)
+    .values({
+      moduleId: data.moduleId,
+      courseId: data.courseId,
+      title: data.title,
+      description: data.description || null,
+      videoUrl: data.videoUrl || null,
+      videoKey: data.videoKey || null,
+      duration: data.duration || null,
+      content: data.content || null,
+      order: data.order || 0,
+      isFree: data.isFree || false,
+      isPublished: true,
+    })
+    .$returningId();
+  
+  return lesson;
+}
+
+/**
+ * Update a course lesson
+ */
+export async function updateCourseLesson(
+  id: number,
+  updates: {
+    title?: string;
+    description?: string;
+    videoUrl?: string;
+    videoKey?: string;
+    duration?: number;
+    content?: string;
+    order?: number;
+    isPublished?: boolean;
+    isFree?: boolean;
+  }
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .update(courseLessons)
+    .set(updates)
+    .where(eq(courseLessons.id, id));
+  
+  return { success: true };
+}
+
+/**
+ * Delete a course lesson
+ */
+export async function deleteCourseLesson(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Delete user progress for this lesson
+  await db
+    .delete(userLessonProgress)
+    .where(eq(userLessonProgress.lessonId, id));
+  
+  // Delete the lesson
+  await db
+    .delete(courseLessons)
+    .where(eq(courseLessons.id, id));
+  
+  return { success: true };
+}
+
+/**
+ * Reorder course modules
+ */
+export async function reorderCourseModules(courseId: number, moduleIds: number[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Update order for each module
+  for (let i = 0; i < moduleIds.length; i++) {
+    await db
+      .update(courseModules)
+      .set({ order: i })
+      .where(
+        and(
+          eq(courseModules.id, moduleIds[i]),
+          eq(courseModules.courseId, courseId)
+        )
+      );
+  }
+  
+  return { success: true };
+}
+
+/**
+ * Reorder module lessons
+ */
+export async function reorderModuleLessons(moduleId: number, lessonIds: number[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  // Update order for each lesson
+  for (let i = 0; i < lessonIds.length; i++) {
+    await db
+      .update(courseLessons)
+      .set({ order: i })
+      .where(
+        and(
+          eq(courseLessons.id, lessonIds[i]),
+          eq(courseLessons.moduleId, moduleId)
+        )
+      );
+  }
+  
+  return { success: true };
 }

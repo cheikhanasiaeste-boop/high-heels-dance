@@ -246,3 +246,74 @@ export const userCourseEnrollments = mysqlTable("user_course_enrollments", {
 
 export type UserCourseEnrollment = typeof userCourseEnrollments.$inferSelect;
 export type InsertUserCourseEnrollment = typeof userCourseEnrollments.$inferInsert;
+
+/**
+ * Course modules - organize lessons into modules/sections
+ */
+export const courseModules = mysqlTable("course_modules", {
+  id: int("id").autoincrement().primaryKey(),
+  courseId: int("courseId").notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  order: int("order").notNull().default(0), // For ordering modules within a course
+  isPublished: boolean("isPublished").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  courseIdIdx: index("module_courseId_idx").on(table.courseId),
+  orderIdx: index("module_order_idx").on(table.courseId, table.order),
+}));
+
+export type CourseModule = typeof courseModules.$inferSelect;
+export type InsertCourseModule = typeof courseModules.$inferInsert;
+
+/**
+ * Course lessons - individual lessons within modules
+ */
+export const courseLessons = mysqlTable("course_lessons", {
+  id: int("id").autoincrement().primaryKey(),
+  moduleId: int("moduleId").notNull(),
+  courseId: int("courseId").notNull(), // Denormalized for easier queries
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description"),
+  videoUrl: text("videoUrl"), // S3 URL or external video URL
+  videoKey: text("videoKey"), // S3 key if stored in S3
+  duration: int("duration"), // Duration in minutes
+  content: text("content"), // Rich text content (markdown or HTML)
+  order: int("order").notNull().default(0), // For ordering lessons within a module
+  isPublished: boolean("isPublished").default(true).notNull(),
+  isFree: boolean("isFree").default(false).notNull(), // Some lessons can be free preview
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  moduleIdIdx: index("lesson_moduleId_idx").on(table.moduleId),
+  courseIdIdx: index("lesson_courseId_idx").on(table.courseId),
+  orderIdx: index("lesson_order_idx").on(table.moduleId, table.order),
+}));
+
+export type CourseLesson = typeof courseLessons.$inferSelect;
+export type InsertCourseLesson = typeof courseLessons.$inferInsert;
+
+/**
+ * User lesson progress - tracks which lessons users have completed
+ */
+export const userLessonProgress = mysqlTable("user_lesson_progress", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  lessonId: int("lessonId").notNull(),
+  courseId: int("courseId").notNull(), // Denormalized for easier queries
+  isCompleted: boolean("isCompleted").default(false).notNull(),
+  lastWatchedAt: timestamp("lastWatchedAt"),
+  watchedDuration: int("watchedDuration").default(0), // Seconds watched
+  completedAt: timestamp("completedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  uniqueProgress: unique().on(table.userId, table.lessonId),
+  userIdIdx: index("progress_userId_idx").on(table.userId),
+  lessonIdIdx: index("progress_lessonId_idx").on(table.lessonId),
+  courseIdIdx: index("progress_courseId_idx").on(table.userId, table.courseId),
+}));
+
+export type UserLessonProgress = typeof userLessonProgress.$inferSelect;
+export type InsertUserLessonProgress = typeof userLessonProgress.$inferInsert;
