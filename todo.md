@@ -786,3 +786,15 @@
 - [x] Handle auth cancellation gracefully
 - [x] Test complete guest-to-authenticated flow
 - [x] Ensure no silent failures on clicks
+
+## Fix Silent Failures in Free Course and Event Booking
+- [x] Locate "Start Learning" button in free course display
+- [x] Diagnose why clicking does nothing for guests
+- [x] Implement progressive auth for free course enrollment
+- [x] Locate "Book" button in upcoming events hover widget
+- [x] Diagnose why clicking does nothing for guests
+- [x] Implement progressive auth for event booking widget
+- [x] Ensure consistent behavior with CourseDetail and BookSession pages
+- [x] Test guest flow for free course enrollment
+- [x] Test guest flow for event booking from hover widget
+- [x] Verify auth modal appears with correct context

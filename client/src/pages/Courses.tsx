@@ -6,9 +6,12 @@ import { trpc } from "@/lib/trpc";
 import { ArrowLeft, BookOpen, Lock } from "lucide-react";
 import { Link } from "wouter";
 import { useState } from "react";
+import { useProgressiveAuth } from '@/hooks/useProgressiveAuth';
+import { ProgressiveAuthModal } from '@/components/ProgressiveAuthModal';
 
 export default function Courses() {
   const { isAuthenticated } = useAuth();
+  const { isAuthModalOpen, authContext, authContextDetails, requireAuth, closeAuthModal } = useProgressiveAuth();
   const { data: courses, isLoading } = trpc.courses.list.useQuery();
   const [filter, setFilter] = useState<'all' | 'free' | 'premium'>('all');
 
@@ -174,6 +177,14 @@ export default function Courses() {
           </div>
         )}
       </div>
+
+      {/* Progressive Authentication Modal */}
+      <ProgressiveAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={closeAuthModal}
+        context={authContext || 'course'}
+        contextDetails={authContextDetails}
+      />
     </div>
   );
 }

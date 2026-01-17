@@ -13,11 +13,14 @@ import { WebsitePopup } from "@/components/WebsitePopup";
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
 import { UpcomingSessionsWidget } from '@/components/UpcomingSessionsWidget';
 import { MobileNav } from "@/components/MobileNav";
+import { useProgressiveAuth } from '@/hooks/useProgressiveAuth';
+import { ProgressiveAuthModal } from '@/components/ProgressiveAuthModal';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 
 export default function Home() {
   const { user, isAuthenticated } = useAuth();
+  const { isAuthModalOpen, authContext, authContextDetails, requireAuth, closeAuthModal } = useProgressiveAuth();
   const { data: courses, isLoading } = trpc.courses.list.useQuery();
   const { data: banner } = trpc.banner.get.useQuery();
   const { data: textTestimonials } = trpc.testimonials.list.useQuery();
@@ -599,6 +602,14 @@ export default function Home() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Progressive Authentication Modal */}
+      <ProgressiveAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={closeAuthModal}
+        context={authContext || 'booking'}
+        contextDetails={authContextDetails}
+      />
     </div>
   );
 }
