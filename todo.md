@@ -492,3 +492,13 @@
 - [x] Investigate why widget was not showing on homepage
 - [x] Create sample upcoming events in database to make widget visible
 - [x] Verify widget displays correctly with rose-gold gradient and vibration animation
+
+## Redesign Widget with Hover-to-Expand Interaction
+- [x] Replace click-to-expand with hover-to-expand behavior
+- [x] Implement premium attention-grabbing animation (single bounce/lift, no continuous vibration)
+- [x] Add smooth open/close transitions on hover enter/leave
+- [x] Apply vertical lift animation (6px) with subtle scale (1.02)
+- [x] Use controlled easing (cubic-bezier soft spring, no elastic overshoot)
+- [x] Add keyboard focus support mirroring hover behavior
+- [x] Implement prefers-reduced-motion accessibility support
+- [x] Remove old vibration animation, replace with intentional premium motion
