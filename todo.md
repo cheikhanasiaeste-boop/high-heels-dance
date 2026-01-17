@@ -948,3 +948,9 @@
 - [x] Remove yellow/gold outer glow layer from Explore Courses badge
 - [x] Keep pink/purple gradient effects
 - [x] Test refined badge appearance
+
+## Premium Badge Static Refinement
+- [x] Remove pulse animation from homepage Premium badge
+- [x] Remove pulse animation from Explore Courses Premium badge
+- [x] Keep Premium badge styling but make it static
+- [x] Test static Premium badge appearance
