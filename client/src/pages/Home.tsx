@@ -7,7 +7,7 @@ import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { Instagram, Youtube, Facebook, MessageCircle, Star, Play } from "lucide-react";
 import { Link } from "wouter";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import ChatWidget from "@/components/ChatWidget";
 import { WebsitePopup } from "@/components/WebsitePopup";
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
@@ -73,6 +73,36 @@ export default function Home() {
     if (!a.isFeatured && b.isFeatured) return 1;
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
+
+  // Intersection observer for lazy loading videos
+  useEffect(() => {
+    const videoElements = document.querySelectorAll('video[data-lazy="true"]');
+    
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const video = entry.target as HTMLVideoElement;
+            if (video.dataset.src) {
+              video.src = video.dataset.src;
+              video.removeAttribute('data-src');
+              video.removeAttribute('data-lazy');
+              observer.unobserve(video);
+            }
+          }
+        });
+      },
+      {
+        rootMargin: '50px', // Start loading 50px before video enters viewport
+      }
+    );
+
+    videoElements.forEach((video) => observer.observe(video));
+
+    return () => {
+      videoElements.forEach((video) => observer.unobserve(video));
+    };
+  }, [allTestimonials]); // Re-run when testimonials change
 
   return (
     <div className="min-h-screen">
@@ -427,9 +457,11 @@ export default function Home() {
                       >
                         <div className="relative aspect-video bg-gradient-to-br from-pink-100 to-purple-100 overflow-hidden">
                           <video
-                            src={testimonial.videoUrl}
+                            data-src={testimonial.videoUrl}
+                            data-lazy="true"
                             className="w-full h-full object-cover"
-                            preload="metadata"
+                            preload="none"
+                            poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect fill='%23f9a8d4' width='16' height='9'/%3E%3C/svg%3E"
                           />
                           <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors flex items-center justify-center">
                             <div className="bg-white/90 rounded-full p-4 group-hover:scale-110 transition-transform">
