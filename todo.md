@@ -481,3 +481,6 @@
 
 ## Add Shake Animation to Widget
 - [x] Create periodic shake animation for widget to draw attention
+
+## Refine Widget Vibration Animation
+- [x] Replace shake with subtle vibration that grabs attention without excessive movement
