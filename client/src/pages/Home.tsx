@@ -321,25 +321,26 @@ export default function Home() {
           </div>
           
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div className="flex gap-6 overflow-x-auto pb-6 px-4 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-pink-300 scrollbar-track-pink-50">
               {[1, 2, 3].map((i) => (
-                <Card key={i} className="animate-pulse">
-                  <div className="h-56 bg-muted"></div>
+                <Card key={i} className="animate-pulse flex-shrink-0 w-[380px] snap-center">
+                  <div className="h-64 bg-muted"></div>
                   <CardHeader>
                     <div className="h-6 bg-muted rounded mb-2"></div>
-                    <div className="h-4 bg-muted rounded"></div>
+                    <div className="h-20 bg-muted rounded"></div>
                   </CardHeader>
                 </Card>
               ))}
             </div>
           ) : filteredCourses.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 max-w-7xl mx-auto">
+            <div className="relative">
+              <div className="flex gap-6 overflow-x-auto pb-6 px-4 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-pink-300 scrollbar-track-pink-50 hover:scrollbar-thumb-pink-400">
               {filteredCourses.map((course) => (
                 <Card 
                   key={course.id} 
-                  className="group overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 bg-white/90 backdrop-blur-sm"
+                  className="group flex-shrink-0 w-[380px] snap-center overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 bg-white/90 backdrop-blur-sm"
                 >
-                  <div className="aspect-[16/10] bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center relative overflow-hidden">
+                  <div className="h-64 bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center relative overflow-hidden">
                     {course.imageUrl ? (
                       <>
                         <img 
@@ -387,7 +388,7 @@ export default function Home() {
                         <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 shadow-md">Free</Badge>
                       )}
                     </div>
-                    <CardDescription className="line-clamp-2 text-base leading-relaxed">{course.description}</CardDescription>
+                    <CardDescription className="line-clamp-3 text-base leading-relaxed text-gray-600">{course.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="pb-4">
                     <div className="flex items-baseline gap-3">
@@ -418,6 +419,16 @@ export default function Home() {
                   </CardFooter>
                 </Card>
               ))}
+              </div>
+              {filteredCourses.length > 3 && (
+                <div className="flex justify-center gap-2 mt-6">
+                  <div className="text-sm text-muted-foreground flex items-center gap-2">
+                    <span>←</span>
+                    <span>Scroll to explore more</span>
+                    <span>→</span>
+                  </div>
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center py-12">
