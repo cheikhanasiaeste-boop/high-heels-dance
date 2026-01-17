@@ -244,6 +244,14 @@ export default function AdminCourses() {
                   />
                   <Label htmlFor="isPublished">Published</Label>
                 </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="isTopPick"
+                    checked={editingCourse?.isTopPick === true}
+                    onCheckedChange={(checked) => setEditingCourse({ ...editingCourse, isTopPick: checked })}
+                  />
+                  <Label htmlFor="isTopPick">Top Pick ⭐</Label>
+                </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setCourseDialogOpen(false)}>

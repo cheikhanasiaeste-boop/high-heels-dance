@@ -828,3 +828,17 @@
 - [x] Add hover effects and visual feedback
 - [x] Ensure responsive behavior on mobile devices
 - [x] Test conversion-focused layout with clear CTAs
+
+## Course Layout Enhancements
+- [x] Add isTopPick boolean field to courses table schema
+- [x] Push database schema changes
+- [x] Add Top Pick toggle to admin course list
+- [x] Update course update API to handle isTopPick field
+- [x] Change homepage layout from horizontal scroll to 2-row grid (3 columns × 2 rows)
+- [x] Ensure 6 courses visible without scrolling
+- [x] Add left/right navigation arrows for scrolling
+- [x] Show/hide arrows based on scroll position
+- [x] Display "Top Pick" badge on marked courses
+- [x] Test Top Pick toggle functionality
+- [x] Test 2-row grid layout on different screen sizes
+- [x] Test navigation arrows behavior

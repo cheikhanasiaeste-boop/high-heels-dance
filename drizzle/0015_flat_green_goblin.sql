@@ -1,0 +1,1 @@
+ALTER TABLE `courses` ADD `isTopPick` boolean DEFAULT false NOT NULL;

@@ -321,9 +321,9 @@ export default function Home() {
           </div>
           
           {isLoading ? (
-            <div className="flex gap-6 overflow-x-auto pb-6 px-4 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-pink-300 scrollbar-track-pink-50">
-              {[1, 2, 3].map((i) => (
-                <Card key={i} className="animate-pulse flex-shrink-0 w-[380px] snap-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Card key={i} className="animate-pulse">
                   <div className="h-64 bg-muted"></div>
                   <CardHeader>
                     <div className="h-6 bg-muted rounded mb-2"></div>
@@ -333,12 +333,12 @@ export default function Home() {
               ))}
             </div>
           ) : filteredCourses.length > 0 ? (
-            <div className="relative">
-              <div className="flex gap-6 overflow-x-auto pb-6 px-4 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-pink-300 scrollbar-track-pink-50 hover:scrollbar-thumb-pink-400">
-              {filteredCourses.map((course) => (
+            <div className="relative max-w-7xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredCourses.slice(0, 6).map((course) => (
                 <Card 
                   key={course.id} 
-                  className="group flex-shrink-0 w-[380px] snap-center overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 bg-white/90 backdrop-blur-sm"
+                  className="group overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 bg-white/90 backdrop-blur-sm"
                 >
                   <div className="h-64 bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center relative overflow-hidden">
                     {course.imageUrl ? (
@@ -362,15 +362,24 @@ export default function Home() {
                           }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        {course.isTopPick && (
+                          <div className="absolute top-4 left-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-1 z-10">
+                            <span>⭐</span> TOP PICK
+                          </div>
+                        )}
                         {!course.isFree && (
                           <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-1 animate-pulse">
                             <span>✨</span> PREMIUM
                           </div>
                         )}
                       </>
-                    ) : (
-                      <>
+                    ) : (                      <>
                         <span className="text-8xl group-hover:scale-110 transition-transform duration-500">💃</span>
+                        {course.isTopPick && (
+                          <div className="absolute top-4 left-4 bg-gradient-to-r from-yellow-400 to-amber-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-1 z-10">
+                            <span>⭐</span> TOP PICK
+                          </div>
+                        )}
                         {!course.isFree && (
                           <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-1">
                             <span>✨</span> PREMIUM
@@ -420,13 +429,13 @@ export default function Home() {
                 </Card>
               ))}
               </div>
-              {filteredCourses.length > 3 && (
-                <div className="flex justify-center gap-2 mt-6">
-                  <div className="text-sm text-muted-foreground flex items-center gap-2">
-                    <span>←</span>
-                    <span>Scroll to explore more</span>
-                    <span>→</span>
-                  </div>
+              {filteredCourses.length > 6 && (
+                <div className="flex justify-center mt-8">
+                  <Link href="/courses">
+                    <Button size="lg" variant="outline" className="shadow-lg">
+                      View All {filteredCourses.length} Courses
+                    </Button>
+                  </Link>
                 </div>
               )}
             </div>

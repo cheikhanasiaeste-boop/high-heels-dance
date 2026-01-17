@@ -225,6 +225,7 @@ export const appRouter = router({
           previewVideoKey: z.string().optional(),
           isFree: z.boolean().optional(),
           isPublished: z.boolean().optional(),
+          isTopPick: z.boolean().optional(),
         }))
         .mutation(async ({ input }) => {
           const { id, ...updates } = input;

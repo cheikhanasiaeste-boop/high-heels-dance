@@ -37,6 +37,7 @@ export const courses = mysqlTable("courses", {
   previewVideoKey: text("previewVideoKey"), // S3 key for course preview video
   isFree: boolean("isFree").default(false).notNull(),
   isPublished: boolean("isPublished").default(true).notNull(), // Admin can unpublish courses
+  isTopPick: boolean("isTopPick").default(false).notNull(), // Admin can mark courses as top picks
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
