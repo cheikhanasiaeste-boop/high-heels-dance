@@ -215,7 +215,14 @@ export default function CourseDetail() {
                 )}
 
                 {canAccess && (
-                  <Button className="w-full" size="lg" variant="secondary">
+                  <Button 
+                    className="w-full" 
+                    size="lg" 
+                    variant="secondary"
+                    onClick={() => {
+                      toast.info("Course content coming soon! You have access to this course.");
+                    }}
+                  >
                     Start Learning
                   </Button>
                 )}

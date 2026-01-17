@@ -804,3 +804,10 @@
 - [x] Ensure widget's own hook instance connects to its own modal
 - [x] Test guest clicking Book button shows auth modal
 - [x] Verify auth flow completes and redirects to booking page
+
+## Fix Start Learning Button for Free Courses
+- [x] Diagnose why Start Learning button does nothing when clicked
+- [x] Check if button has onClick handler
+- [x] Implement progressive auth for free course enrollment
+- [x] Ensure button enrolls guest after authentication
+- [x] Test complete flow from guest click to enrollment
