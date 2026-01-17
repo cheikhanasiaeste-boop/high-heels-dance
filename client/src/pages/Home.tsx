@@ -23,6 +23,7 @@ export default function Home() {
   const { user, isAuthenticated } = useAuth();
   const { isAuthModalOpen, authContext, authContextDetails, requireAuth, closeAuthModal } = useProgressiveAuth();
   const { data: courses, isLoading } = trpc.courses.list.useQuery();
+  const { data: unreadCount } = trpc.messages.unreadCount.useQuery(undefined, { enabled: isAuthenticated });
   const { data: banner } = trpc.banner.get.useQuery();
   const { data: textTestimonials } = trpc.testimonials.list.useQuery();
   const { data: videoTestimonials } = trpc.testimonials.videoTestimonials.useQuery();
@@ -175,7 +176,7 @@ export default function Home() {
                     <Button variant="outline">Admin</Button>
                   </Link>
                 )}
-                <UserProfileDropdown unreadMessagesCount={0} />
+                <UserProfileDropdown unreadMessagesCount={unreadCount || 0} />
               </>
             ) : (
               <a href={getLoginUrl()}>

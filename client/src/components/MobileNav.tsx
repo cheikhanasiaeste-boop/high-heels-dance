@@ -5,10 +5,12 @@ import { Button } from '@/components/ui/button';
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { getLoginUrl } from '@/const';
+import { trpc } from '@/lib/trpc';
 
 export function MobileNav() {
   const [isOpen, setIsOpen] = useState(false);
   const { user, isAuthenticated } = useAuth();
+  const { data: unreadCount } = trpc.messages.unreadCount.useQuery(undefined, { enabled: isAuthenticated });
 
   // Prevent body scroll when menu is open
   useEffect(() => {
@@ -129,8 +131,13 @@ export function MobileNav() {
                 </Link>
 
                 <Link href="/messages" onClick={closeMenu}>
-                  <Button variant="ghost" className="w-full justify-start" size="lg">
+                  <Button variant="ghost" className="w-full justify-start relative" size="lg">
                     My Messages
+                    {unreadCount && unreadCount > 0 && (
+                      <span className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold text-white bg-red-500 rounded-full">
+                        {unreadCount > 99 ? '99+' : unreadCount}
+                      </span>
+                    )}
                   </Button>
                 </Link>
 

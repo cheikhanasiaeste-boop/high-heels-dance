@@ -1133,3 +1133,32 @@
 - [x] Check if frontend is filtering out sent messages
 - [x] Test with actual user data in database
 - [x] Fix any remaining issues - Added cache invalidation to MessageComposeModal
+
+## Manual Test - Send Message to Anas and Verify in My Messages
+- [x] Open browser and log in as admin
+- [x] Navigate to User Management
+- [x] Find Anas in user list
+- [x] Click Message button
+- [x] Send test message
+- [x] Navigate to My Messages
+- [x] Verify sent message appears with "Sent" badge - ✅ WORKING CORRECTLY
+- [x] Fix any issues found - No issues, cache invalidation working
+- [x] Repeat until successful - ✅ TEST PASSED
+
+## CRITICAL: Recipients Cannot See Messages Sent TO Them
+- [x] Check database - verify message was created with correct toUserId
+- [x] Debug getUserMessages query - check if it's filtering correctly
+- [x] Identify why Anas (recipient) sees empty My Messages - Was testing as same user (self-messages)
+- [x] Fix the query or logic issue - No fix needed, system working correctly
+- [x] Test as sender (admin) - should see sent message - ✅ WORKING
+- [x] Test as recipient (Anas) - should see received message - ✅ WORKING
+- [x] Verify both sent and received messages appear correctly - ✅ CONFIRMED
+
+## Notification Badges for Unread Messages
+- [x] Add unread message count query to backend - Already existed
+- [x] Add notification badge to Profile icon in header
+- [x] Add notification badge to My Messages dropdown menu item - Already existed
+- [x] Add notification badge to My Messages in MobileNav
+- [x] Style badges with proper colors and positioning
+- [x] Test badges appear when unread messages exist - ✅ 4 tests passing
+- [x] Test badges disappear when all messages are read

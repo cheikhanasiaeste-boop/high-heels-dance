@@ -124,9 +124,16 @@ export function UserProfileDropdown({ unreadMessagesCount = 0 }: UserProfileDrop
         aria-haspopup="true"
         aria-label="User profile menu"
       >
-        {/* Avatar */}
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-sm shadow-md">
-          {initials}
+        {/* Avatar with notification badge */}
+        <div className="relative">
+          <div className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold text-sm shadow-md">
+            {initials}
+          </div>
+          {unreadMessagesCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white">
+              {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
+            </span>
+          )}
         </div>
         
         {/* User Name */}

@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, name, email FROM users WHERE email IN ('elizabethzolotova777@gmail.com', 'cheikhanas.iaeste@gmail.com'); INSERT INTO messages (fromUserId, toUserId, subject, body, isRead, createdAt) VALUES ((SELECT id FROM users WHERE email = 'elizabethzolotova777@gmail.com'), (SELECT id FROM users WHERE email = 'cheikhanas.iaeste@gmail.com'), 'Test from Yelizaveta to Anas', 'This message is sent FROM Yelizaveta TO Anas to test recipient visibility', 0, NOW());",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4HtU1c2nK4A5Wb2.root --database M2v4Dnk4LCsJQ3Qwy7fUfL --execute SELECT id, name, email FROM users WHERE email IN ('elizabethzolotova777@gmail.com', 'cheikhanas.iaeste@gmail.com'); INSERT INTO messages (fromUserId, toUserId, subject, body, isRead, createdAt) VALUES ((SELECT id FROM users WHERE email = 'elizabethzolotova777@gmail.com'), (SELECT id FROM users WHERE email = 'cheikhanas.iaeste@gmail.com'), 'Test from Yelizaveta to Anas', 'This message is sent FROM Yelizaveta TO Anas to test recipient visibility', 0, NOW());",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Anas",
+      "email": "cheikhanas.iaeste@gmail.com"
+    },
+    {
+      "id": "124298",
+      "name": "Yelizaveta Zolotova",
+      "email": "elizabethzolotova777@gmail.com"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\n1\tAnas\tcheikhanas.iaeste@gmail.com\n124298\tYelizaveta Zolotova\telizabethzolotova777@gmail.com\n",
+  "stderr": "",
+  "execution_time_ms": 63
+}

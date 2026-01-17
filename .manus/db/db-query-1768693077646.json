@@ -1,0 +1,73 @@
+{
+  "query": "SELECT id, name, email, role, openId FROM users ORDER BY id LIMIT 20;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4HtU1c2nK4A5Wb2.root --database M2v4Dnk4LCsJQ3Qwy7fUfL --execute SELECT id, name, email, role, openId FROM users ORDER BY id LIMIT 20;",
+  "rows": [
+    {
+      "id": "1",
+      "name": "Anas",
+      "email": "cheikhanas.iaeste@gmail.com",
+      "role": "admin",
+      "openId": "YbWXQTSAJmufhPqcx8c5Ax"
+    },
+    {
+      "id": "124298",
+      "name": "Yelizaveta Zolotova",
+      "email": "elizabethzolotova777@gmail.com",
+      "role": "admin",
+      "openId": "CkqTkTGuUy9qpV23R8ieqf"
+    },
+    {
+      "id": "126293",
+      "name": "Welcome Test User",
+      "email": "welcome-test-1768603838447@example.com",
+      "role": "user",
+      "openId": "test-welcome-1768603838447"
+    },
+    {
+      "id": "300800",
+      "name": "Test User 1",
+      "email": "testuser1@example.com",
+      "role": "user",
+      "openId": "manual_1768687340081_w9wjwh"
+    },
+    {
+      "id": "300802",
+      "name": "Test User 1",
+      "email": "testuser1-1768687418545@example.com",
+      "role": "user",
+      "openId": "manual_1768687418663_jjg30q"
+    },
+    {
+      "id": "330088",
+      "name": "Course Count Test User",
+      "email": "coursecount-1768690117666@example.com",
+      "role": "user",
+      "openId": "manual_1768690117775_4cjrz5"
+    },
+    {
+      "id": "330095",
+      "name": "Course Count Test User",
+      "email": "coursecount-1768690134083@example.com",
+      "role": "user",
+      "openId": "manual_1768690134204_n5rarl"
+    },
+    {
+      "id": "330195",
+      "name": "Admin User",
+      "email": "admin-1768691560274@example.com",
+      "role": "admin",
+      "openId": "manual_1768691560391_6uq12n"
+    },
+    {
+      "id": "330196",
+      "name": "Regular User",
+      "email": "regular-1768691560409@example.com",
+      "role": "user",
+      "openId": "manual_1768691560416_aw5vpt"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\topenId\n1\tAnas\tcheikhanas.iaeste@gmail.com\tadmin\tYbWXQTSAJmufhPqcx8c5Ax\n124298\tYelizaveta Zolotova\telizabethzolotova777@gmail.com\tadmin\tCkqTkTGuUy9qpV23R8ieqf\n126293\tWelcome Test User\twelcome-test-1768603838447@example.com\tuser\ttest-welcome-1768603838447\n300800\tTest User 1\ttestuser1@example.com\tuser\tmanual_1768687340081_w9wjwh\n300802\tTest User 1\ttestuser1-1768687418545@example.com\tuser\tmanual_1768687418663_jjg30q\n330088\tCourse Count Test User\tcoursecount-1768690117666@example.com\tuser\tmanual_1768690117775_4cjrz5\n330095\tCourse Count Test User\tcoursecount-1768690134083@example.com\tuser\tmanual_1768690134204_n5rarl\n330195\tAdmin User\tadmin-1768691560274@example.com\tadmin\tmanual_1768691560391_6uq12n\n330196\tRegular User\tregular-1768691560409@example.com\tuser\tmanual_1768691560416_aw5vpt\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}
