@@ -1113,3 +1113,9 @@
 - [x] Add Message button to user table rows in UserManagementNew
 - [x] Ensure button opens MessageComposeModal
 - [x] Test message sending from user list
+
+## Hero Background Display Issue
+- [x] Investigate hero background implementation in Home.tsx
+- [x] Fix hero background to display video when available
+- [x] Fix hero background to display static image as fallback
+- [x] Test both video and image backgrounds

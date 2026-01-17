@@ -188,14 +188,14 @@ export default function Home() {
 
       {/* Hero/Profile Section */}
       <section className="relative py-20 overflow-hidden">
-        {/* Animated Background */}
-        {backgroundUrl && !prefersReducedMotion ? (
+        {/* Background - Animated or Static */}
+        {backgroundUrl ? (
           <>
             <div className="absolute inset-0 z-0" style={{ 
               willChange: 'transform',
               contain: 'layout style paint',
             }}>
-              {backgroundUrl.endsWith('.webp') || backgroundUrl.endsWith('.gif') ? (
+              {!prefersReducedMotion && (backgroundUrl.endsWith('.webp') || backgroundUrl.endsWith('.gif')) ? (
                 <AnimatedWebP
                   src={backgroundUrl}
                   alt=""
@@ -206,7 +206,7 @@ export default function Home() {
                   }}
                   fallbackSrc={heroBackgroundUrl?.replace(/\.(webp|gif)$/, '.jpg') || undefined}
                 />
-              ) : (
+              ) : !prefersReducedMotion && backgroundUrl.endsWith('.mp4') ? (
                 <video
                   autoPlay
                   loop
@@ -224,6 +224,16 @@ export default function Home() {
                 >
                   <source src={backgroundUrl} type="video/mp4" />
                 </video>
+              ) : (
+                <img
+                  src={backgroundUrl}
+                  alt=""
+                  className="w-full h-full object-cover"
+                  style={{
+                    opacity: 0.6,
+                    filter: 'saturate(0.8) brightness(0.9) blur(1px)',
+                  }}
+                />
               )}
               <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-pink-50/30 to-white/40"></div>
             </div>
