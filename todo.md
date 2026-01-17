@@ -860,3 +860,13 @@
 - [x] Test hero background animates properly
 - [x] Test thumbnail display on homepage shows more content
 - [x] Test thumbnail display in admin course editor shows more content
+
+## Background Animation Performance + Thumbnail Zoom Adjustment
+- [x] Optimize hero background animation for smooth playback
+- [x] Add GPU acceleration with will-change CSS property
+- [x] Optimize image/video loading and rendering
+- [x] Reduce thumbnail zoom from 80% to 40%
+- [x] Update homepage course card default zoom
+- [x] Update admin thumbnail editor default zoom
+- [x] Test background animation is fluid with no lag
+- [x] Test thumbnails show significantly more image content

@@ -180,7 +180,7 @@ export default function Home() {
         {/* Animated Background */}
         {backgroundUrl && !prefersReducedMotion ? (
           <>
-            <div className="absolute inset-0 z-0">
+            <div className="absolute inset-0 z-0" style={{ willChange: 'transform' }}>
               {backgroundUrl.endsWith('.webp') || backgroundUrl.endsWith('.gif') ? (
                 <img
                   src={backgroundUrl}
@@ -190,8 +190,12 @@ export default function Home() {
                   style={{
                     opacity: 0.6,
                     filter: 'saturate(0.8) brightness(0.9) blur(1px)',
+                    willChange: 'transform',
+                    transform: 'translateZ(0)',
+                    backfaceVisibility: 'hidden',
                   }}
                   loading="eager"
+                  decoding="async"
                 />
               ) : (
                 <video
@@ -199,10 +203,14 @@ export default function Home() {
                   loop
                   muted
                   playsInline
+                  preload="auto"
                   className="w-full h-full object-cover"
                   style={{
                     opacity: 0.6,
                     filter: 'saturate(0.8) brightness(0.9) blur(1px)',
+                    willChange: 'transform',
+                    transform: 'translateZ(0)',
+                    backfaceVisibility: 'hidden',
                   }}
                 >
                   <source src={backgroundUrl} type="video/mp4" />
@@ -378,7 +386,7 @@ export default function Home() {
                             maxHeight: 'none',
                             minWidth: '100%',
                             minHeight: '100%',
-                            transform: `translate(-50%, -50%) scale(${parseFloat(course.imageCropZoom || "0.8")}) translate(${parseFloat(course.imageCropOffsetX || "0")}px, ${parseFloat(course.imageCropOffsetY || "0")}px)`,
+                            transform: `translate(-50%, -50%) scale(${parseFloat(course.imageCropZoom || "0.4")}) translate(${parseFloat(course.imageCropOffsetX || "0")}px, ${parseFloat(course.imageCropOffsetY || "0")}px)`,
                             transformOrigin: 'center center',
                           }}
                         />

@@ -724,7 +724,7 @@ function CourseThumbnailUpload({ course }: { course: any }) {
   const [previewMode, setPreviewMode] = useState(false); // New: pre-upload preview mode
   const [selectedFile, setSelectedFile] = useState<File | null>(null); // New: selected file
   const [previewUrl, setPreviewUrl] = useState<string | null>(null); // New: client-side preview
-  const [zoom, setZoom] = useState(parseFloat(course.imageCropZoom || "0.80"));
+  const [zoom, setZoom] = useState(parseFloat(course.imageCropZoom || "0.40"));
   const [offsetX, setOffsetX] = useState(parseFloat(course.imageCropOffsetX || "0"));
   const [offsetY, setOffsetY] = useState(parseFloat(course.imageCropOffsetY || "0"));
   const [isDragging, setIsDragging] = useState(false);
@@ -770,7 +770,7 @@ function CourseThumbnailUpload({ course }: { course: any }) {
     setPreviewMode(true);
     
     // Reset crop settings for new image
-    setZoom(0.8);
+    setZoom(0.4);
     setOffsetX(0);
     setOffsetY(0);
     
@@ -785,7 +785,7 @@ function CourseThumbnailUpload({ course }: { course: any }) {
     setPreviewUrl(null);
     setSelectedFile(null);
     setPreviewMode(false);
-    setZoom(0.8);
+    setZoom(0.4);
     setOffsetX(0);
     setOffsetY(0);
   };
@@ -845,7 +845,7 @@ function CourseThumbnailUpload({ course }: { course: any }) {
   };
 
   const handleResetCrop = () => {
-    setZoom(0.8);
+    setZoom(0.4);
     setOffsetX(0);
     setOffsetY(0);
   };
