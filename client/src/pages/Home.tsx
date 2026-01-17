@@ -68,7 +68,7 @@ export default function Home() {
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [courseFilter, setCourseFilter] = useState<'all' | 'free' | 'premium'>('all');
 
-  // Filter and sort courses - Top Picks first
+  // Filter and sort courses - Top Picks first, then chronological
   const filteredCourses = (courses?.filter(course => {
     if (courseFilter === 'free') return course.isFree;
     if (courseFilter === 'premium') return !course.isFree;
@@ -77,7 +77,8 @@ export default function Home() {
     // Top picks come first
     if (a.isTopPick && !b.isTopPick) return -1;
     if (!a.isTopPick && b.isTopPick) return 1;
-    return 0;
+    // Within same category, sort by ID descending (newest first)
+    return b.id - a.id;
   });
 
   // Combine text and video testimonials
@@ -388,15 +389,19 @@ export default function Home() {
                           className="w-full h-48 object-cover rounded-t-lg"
                         />
                         {course.isTopPick && (
-                          <div className="absolute top-4 left-4 z-10 animate-pulse-slow">
-                            <div className="relative">
-                              {/* Glitter effects */}
-                              <div className="absolute -inset-2 bg-gradient-to-r from-pink-400 via-purple-400 to-pink-400 rounded-full blur-md opacity-75 animate-spin-slow"></div>
-                              <div className="absolute -inset-1 bg-gradient-to-r from-pink-300 via-purple-300 to-pink-300 rounded-full blur-sm opacity-50"></div>
+                          <div className="absolute top-4 left-4 z-10">
+                            <div className="relative animate-pulse-glow">
+                              {/* Outer glow - gold shimmer */}
+                              <div className="absolute -inset-3 bg-gradient-to-r from-yellow-400 via-amber-400 to-yellow-400 rounded-full blur-lg opacity-60 animate-spin-slow"></div>
+                              {/* Middle glow - pink/purple */}
+                              <div className="absolute -inset-2 bg-gradient-to-r from-pink-400 via-fuchsia-400 to-purple-400 rounded-full blur-md opacity-75"></div>
+                              {/* Inner sparkle */}
+                              <div className="absolute -inset-1 bg-gradient-to-r from-pink-300 via-purple-300 to-pink-300 rounded-full blur-sm opacity-50 animate-sparkle"></div>
                               {/* Badge */}
-                              <div className="relative bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-2xl flex items-center gap-1.5 border-2 border-white/50">
-                                <span className="text-base animate-bounce-subtle">⭐</span>
-                                <span className="tracking-wide">TOP PICK</span>
+                              <div className="relative bg-gradient-to-r from-amber-500 via-pink-500 to-purple-500 text-white px-4 py-2 rounded-full text-sm font-extrabold shadow-2xl flex items-center gap-2 border-2 border-yellow-300/80">
+                                <span className="text-lg animate-star-bounce">⭐</span>
+                                <span className="tracking-wider">TOP PICK</span>
+                                <div className="absolute inset-0 rounded-full animate-shimmer-gold pointer-events-none"></div>
                               </div>
                             </div>
                           </div>

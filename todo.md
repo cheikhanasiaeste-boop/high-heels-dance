@@ -933,3 +933,12 @@
 - [x] Apply h-48 object-cover format to course cards
 - [x] Ensure Top Pick and Premium badges display correctly
 - [x] Test thumbnail display on Explore Courses page
+
+## Top Pick Priority Sorting and Badge Enhancement
+- [x] Sort homepage courses: Top Picks first, then chronological
+- [x] Sort Explore Courses page: Top Picks first, then chronological
+- [x] Enhance Top Pick badge with flashy animations
+- [x] Update Top Pick badge colors to be more attractive and cohesive (gold/pink/purple gradient)
+- [x] Add glitter/sparkle effects to Top Pick badge (3 glow layers + shimmer)
+- [x] Test Top Pick sorting on both pages
+- [x] Test Top Pick badge animations and visibility

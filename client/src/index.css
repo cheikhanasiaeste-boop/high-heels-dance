@@ -316,12 +316,14 @@
 }
 
 /* Top Pick Badge Animations */
-@keyframes pulse-slow {
+@keyframes pulse-glow {
   0%, 100% {
     opacity: 1;
+    transform: scale(1);
   }
   50% {
-    opacity: 0.95;
+    opacity: 0.85;
+    transform: scale(1.05);
   }
 }
 
@@ -334,23 +336,61 @@
   }
 }
 
-@keyframes bounce-subtle {
+@keyframes sparkle {
   0%, 100% {
-    transform: translateY(0);
+    opacity: 0;
+    transform: scale(0);
   }
   50% {
-    transform: translateY(-2px);
+    opacity: 1;
+    transform: scale(1);
   }
 }
 
-.animate-pulse-slow {
-  animation: pulse-slow 3s ease-in-out infinite;
+@keyframes star-bounce {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-3px) rotate(-5deg);
+  }
+  75% {
+    transform: translateY(-3px) rotate(5deg);
+  }
+}
+
+@keyframes shimmer-gold {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
 }
 
 .animate-spin-slow {
-  animation: spin-slow 8s linear infinite;
+  animation: spin-slow 6s linear infinite;
 }
 
-.animate-bounce-subtle {
-  animation: bounce-subtle 2s ease-in-out infinite;
+.animate-sparkle {
+  animation: sparkle 1.5s ease-in-out infinite;
+}
+
+.animate-star-bounce {
+  animation: star-bounce 1.5s ease-in-out infinite;
+}
+
+.animate-shimmer-gold {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 215, 0, 0.4),
+    transparent
+  );
+  background-size: 200% 100%;
+  animation: shimmer-gold 2s ease-in-out infinite;
 }
