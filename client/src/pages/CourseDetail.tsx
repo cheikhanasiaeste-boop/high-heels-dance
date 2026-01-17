@@ -220,7 +220,15 @@ export default function CourseDetail() {
                     size="lg" 
                     variant="secondary"
                     onClick={() => {
-                      toast.info("Course content coming soon! You have access to this course.");
+                      if (!isAuthenticated) {
+                        const contextDetails = course ? `${course.title} (Free)` : 'Free Course';
+                        requireAuth('course', contextDetails, () => {
+                          toast.success("You now have access to this course!");
+                          window.location.reload();
+                        });
+                      } else {
+                        toast.info("Course content coming soon! You have access to this course.");
+                      }
                     }}
                   >
                     Start Learning

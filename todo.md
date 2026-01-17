@@ -811,3 +811,10 @@
 - [x] Implement progressive auth for free course enrollment
 - [x] Ensure button enrolls guest after authentication
 - [x] Test complete flow from guest click to enrollment
+
+## Correct Start Learning Button Behavior
+- [x] Remove toast-only onClick handler
+- [x] Implement progressive auth like Book button
+- [x] Show auth modal for guests when clicking Start Learning
+- [x] Enroll user in free course after authentication
+- [x] Test complete flow: guest click → auth → enrollment
