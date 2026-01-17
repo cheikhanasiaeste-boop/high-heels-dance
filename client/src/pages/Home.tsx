@@ -51,6 +51,10 @@ export default function Home() {
     { key: "heroBackgroundUrl" },
     { enabled: true }
   );
+  const { data: heroProfilePictureUrl } = trpc.admin.settings.get.useQuery(
+    { key: "heroProfilePictureUrl" },
+    { enabled: true }
+  );
   
   // Use new animation format if available, fallback to old video
   // Priority: heroBackgroundUrl > bgAnimationUrl > bgVideoUrl
@@ -246,7 +250,7 @@ export default function Home() {
         <div className="container text-center relative z-10">
           <div className="flex justify-center mb-6">
             <img 
-              src="/profile-photo.jpeg" 
+              src={heroProfilePictureUrl || "/profile-photo.jpeg"} 
               alt="Elizabeth Zolotova" 
               className="w-40 h-40 rounded-full object-cover shadow-xl ring-4 ring-white/20"
             />

@@ -26,17 +26,31 @@ export default function AdminSettings() {
     { enabled: isAuthenticated && user?.role === 'admin' }
   );
 
+  const { data: heroProfilePictureData } = trpc.admin.settings.get.useQuery(
+    { key: 'heroProfilePictureUrl' },
+    { enabled: isAuthenticated && user?.role === 'admin' }
+  );
+
 
 
   const [bannerText, setBannerText] = useState(bannerData?.text || "");
   const [bannerEnabled, setBannerEnabled] = useState(bannerData?.enabled || false);
   const [heroBackgroundUrl, setHeroBackgroundUrl] = useState("");
+  const [heroProfilePictureUrl, setHeroProfilePictureUrl] = useState("");
+  const [uploadingBackground, setUploadingBackground] = useState(false);
+  const [uploadingProfile, setUploadingProfile] = useState(false);
 
   useEffect(() => {
     if (heroBackgroundData) {
       setHeroBackgroundUrl(heroBackgroundData);
     }
   }, [heroBackgroundData]);
+
+  useEffect(() => {
+    if (heroProfilePictureData) {
+      setHeroProfilePictureUrl(heroProfilePictureData);
+    }
+  }, [heroProfilePictureData]);
 
 
 
@@ -74,6 +88,74 @@ export default function AdminSettings() {
     });
   };
 
+  const uploadImageMutation = trpc.admin.media.uploadImage.useMutation();
+
+  const handleBackgroundFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingBackground(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = reader.result?.toString().split(',')[1];
+        if (!base64) throw new Error('Failed to read file');
+
+        const result = await uploadImageMutation.mutateAsync({
+          fileName: file.name,
+          fileType: file.type,
+          fileData: base64,
+        });
+
+        await updateHeroBackgroundMutation.mutateAsync({
+          key: 'heroBackgroundUrl',
+          value: result.url,
+        });
+
+        setHeroBackgroundUrl(result.url);
+        toast.success('Hero background uploaded successfully!');
+      };
+      reader.readAsDataURL(file);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to upload background');
+    } finally {
+      setUploadingBackground(false);
+    }
+  };
+
+  const handleProfilePictureUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingProfile(true);
+    try {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = reader.result?.toString().split(',')[1];
+        if (!base64) throw new Error('Failed to read file');
+
+        const result = await uploadImageMutation.mutateAsync({
+          fileName: file.name,
+          fileType: file.type,
+          fileData: base64,
+        });
+
+        await updateHeroBackgroundMutation.mutateAsync({
+          key: 'heroProfilePictureUrl',
+          value: result.url,
+        });
+
+        setHeroProfilePictureUrl(result.url);
+        toast.success('Profile picture uploaded successfully!');
+      };
+      reader.readAsDataURL(file);
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to upload profile picture');
+    } finally {
+      setUploadingProfile(false);
+    }
+  };
+
   if (!isAuthenticated || user?.role !== 'admin') {
     return (
       <AdminLayout>
@@ -109,22 +191,63 @@ export default function AdminSettings() {
         <Card>
           <CardHeader>
             <CardTitle>Hero Background</CardTitle>
-            <CardDescription>Set the homepage hero section background image URL</CardDescription>
+            <CardDescription>Upload the homepage hero section background image</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="hero-background-url">Background Image URL</Label>
-              <Input
-                id="hero-background-url"
-                value={heroBackgroundUrl}
-                onChange={(e) => setHeroBackgroundUrl(e.target.value)}
-                placeholder="https://example.com/background.webp"
-              />
+              <Label htmlFor="hero-background-file">Background Image</Label>
+              <div className="flex items-center gap-4">
+                <Input
+                  id="hero-background-file"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleBackgroundFileUpload}
+                  disabled={uploadingBackground}
+                />
+                {heroBackgroundUrl && (
+                  <img
+                    src={heroBackgroundUrl}
+                    alt="Hero background preview"
+                    className="w-24 h-24 object-cover rounded border"
+                  />
+                )}
+              </div>
               <p className="text-sm text-muted-foreground mt-1">
-                Enter a direct URL to an image (WebP, JPG, or PNG). For best results, use a high-resolution image.
+                {uploadingBackground ? 'Uploading...' : 'Choose an image file (WebP, JPG, or PNG). For best results, use a high-resolution image.'}
               </p>
             </div>
-            <Button onClick={handleUpdateHeroBackground}>Save Hero Background</Button>
+          </CardContent>
+        </Card>
+
+        {/* Hero Profile Picture Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Hero Profile Picture</CardTitle>
+            <CardDescription>Upload the round profile picture in the hero section</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="hero-profile-file">Profile Picture</Label>
+              <div className="flex items-center gap-4">
+                <Input
+                  id="hero-profile-file"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleProfilePictureUpload}
+                  disabled={uploadingProfile}
+                />
+                {heroProfilePictureUrl && (
+                  <img
+                    src={heroProfilePictureUrl}
+                    alt="Profile picture preview"
+                    className="w-24 h-24 object-cover rounded-full border"
+                  />
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                {uploadingProfile ? 'Uploading...' : 'Choose an image file for the profile picture. Will be displayed as a circle.'}
+              </p>
+            </div>
           </CardContent>
         </Card>
 

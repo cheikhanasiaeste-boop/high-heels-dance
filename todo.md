@@ -888,3 +888,25 @@
 - [x] Add hero background URL input field to admin settings page
 - [x] Apply hero background URL to homepage
 - [x] Test hero background customization workflow
+
+## Convert Hero Customization to File Upload
+- [ ] Add heroProfilePictureUrl to siteSettings
+- [ ] Convert hero background URL input to file upload button
+- [ ] Add hero profile picture file upload button
+- [ ] Implement image upload handler with S3 storage
+- [ ] Update hero background on file upload
+- [ ] Update hero profile picture on file upload
+- [ ] Apply hero profile picture URL to homepage
+- [ ] Test file upload for hero background
+- [ ] Test file upload for hero profile picture
+
+## Hero Customization - File Upload
+- [x] Add heroProfilePictureUrl to siteSettings
+- [x] Convert hero background URL input to file upload button
+- [x] Add hero profile picture file upload button
+- [x] Implement image upload handler with S3 storage
+- [x] Update hero background on file upload
+- [x] Update hero profile picture on file upload
+- [x] Apply hero profile picture URL to homepage
+- [x] Test file upload for hero background (11/11 tests passing)
+- [x] Test file upload for hero profile picture (11/11 tests passing)
