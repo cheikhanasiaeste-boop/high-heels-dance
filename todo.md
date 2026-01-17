@@ -682,3 +682,9 @@
 - [x] Keep authentication requirement only for purchase/enroll buttons
 - [x] Test guest can browse all courses without sign-in prompts
 - [x] Test guest is prompted to sign in only when purchasing
+
+## Remove Timed Sign-in Prompts for Guests
+- [x] Identify what component shows sign-in prompt after a few seconds
+- [x] Remove or disable the timed prompt for guest users
+- [x] Check for any other automatic authentication prompts
+- [x] Test guest can browse website without any timed interruptions
