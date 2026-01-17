@@ -114,7 +114,7 @@ export default function Courses() {
                         className="w-full h-48 object-cover rounded-t-lg"
                       />
                       {course.isTopPick && (
-                        <div className="absolute top-1/2 -translate-y-1/2 left-4 z-10">
+                        <div className="absolute top-4 left-4 z-10">
                           <div className="relative animate-pulse-glow">
                             {/* Outer glow - pink/purple */}
                             <div className="absolute -inset-2 bg-gradient-to-r from-pink-400 via-fuchsia-400 to-purple-400 rounded-full blur-md opacity-75"></div>
@@ -129,7 +129,7 @@ export default function Courses() {
                         </div>
                       )}
                       {!course.isFree && (
-                        <div className="absolute top-1/2 -translate-y-1/2 right-4 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-1">
+                        <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-1">
                           <span>✨</span> PREMIUM
                         </div>
                       )}

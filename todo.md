@@ -961,3 +961,11 @@
 - [x] Change Top Pick badge from top-4 to top-1/2 -translate-y-1/2 on Explore Courses
 - [x] Change Premium badge from top-4 to top-1/2 -translate-y-1/2 on Explore Courses
 - [x] Test vertically centered badges at same height
+
+## Badge Positioning and Top Pick Sorting Fixes
+- [x] Move badges from middle to top-4 on homepage
+- [x] Ensure badges stay horizontally aligned at same height on homepage
+- [x] Move badges from middle to top-4 on Explore Courses
+- [x] Ensure badges stay horizontally aligned at same height on Explore Courses
+- [x] Verify Top Pick sorting always puts Top Picks first
+- [x] Test that Top Pick courses appear before ALL non-Top Pick courses
