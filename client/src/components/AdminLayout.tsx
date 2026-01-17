@@ -7,7 +7,8 @@ import {
   MessageSquare,
   Settings,
   ArrowLeft,
-  Users
+  Users,
+  Activity
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AdminNotifications } from "@/components/AdminNotifications";
@@ -23,6 +24,7 @@ const menuItems = [
   { path: "/admin/availability", icon: Clock, label: "Available Sessions" },
   { path: "/admin/bookings", icon: Calendar, label: "Session Bookings" },
   { path: "/admin/users", icon: Users, label: "User Management" },
+  { path: "/admin/user-activity", icon: Activity, label: "User Activity" },
   { path: "/admin/testimonials", icon: MessageSquare, label: "Testimonials" },
   { path: "/admin/settings", icon: Settings, label: "Site Settings" },
 ];

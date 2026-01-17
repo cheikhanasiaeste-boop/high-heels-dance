@@ -350,3 +350,23 @@ export const visualSettings = mysqlTable("visual_settings", {
 
 export type VisualSettings = typeof visualSettings.$inferSelect;
 export type InsertVisualSettings = typeof visualSettings.$inferInsert;
+
+/**
+ * Messages table - stores internal platform messages from admin to users
+ */
+export const messages = mysqlTable("messages", {
+  id: int("id").autoincrement().primaryKey(),
+  fromUserId: int("fromUserId").notNull(), // Admin who sent the message
+  toUserId: int("toUserId").notNull(), // User who receives the message
+  subject: varchar("subject", { length: 255 }).notNull(),
+  body: text("body").notNull(),
+  isRead: boolean("isRead").default(false).notNull(),
+  readAt: timestamp("readAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+  toUserIdIdx: index("messages_toUserId_idx").on(table.toUserId),
+  fromUserIdIdx: index("messages_fromUserId_idx").on(table.fromUserId),
+}));
+
+export type Message = typeof messages.$inferSelect;
+export type InsertMessage = typeof messages.$inferInsert;

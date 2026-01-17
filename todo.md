@@ -1081,3 +1081,24 @@
 - [x] Test notification badge updates
 - [x] Test course count display
 - [x] Test message button functionality
+
+### Internal Messaging System
+- [x] Create messages database table schema
+- [x] Add API endpoints for sending messages
+- [x] Add API endpoints for getting user messages
+- [x] Add Message button to user list in admin
+- [x] Create message composition modal in admin
+- [x] Create My Messages page for users
+- [x] Add unread message count indicator
+- [x] Mark messages as read functionality
+- [x] Test message sending from admin to user
+- [x] Test message display in user My Messages page
+## User Activity Timeline
+- [x] Create User Activity Timeline tab in User Management
+- [x] Fetch user purchases data for timeline
+- [x] Fetch user bookings data for timeline
+- [ ] Fetch user course completions data for timeline
+- [x] Display timeline with chronological events
+- [x] Add event type icons and styling
+- [x] Add date/time formatting for events
+- [x] Test activity timeline display

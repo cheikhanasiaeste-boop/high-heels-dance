@@ -39,7 +39,10 @@ import {
   InsertUserLessonProgress,
   visualSettings,
   VisualSettings,
-  InsertVisualSettings
+  InsertVisualSettings,
+  messages,
+  Message,
+  InsertMessage
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1815,4 +1818,113 @@ export async function getUserEnrollmentCount(userId: number): Promise<number> {
     .where(eq(userCourseEnrollments.userId, userId));
   
   return Number(result[0]?.count || 0);
+}
+
+// ==================== Messages ====================
+
+export async function getUserMessages(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  return await db
+    .select()
+    .from(messages)
+    .where(eq(messages.toUserId, userId))
+    .orderBy(desc(messages.createdAt));
+}
+
+export async function getUnreadMessageCount(userId: number) {
+  const db = await getDb();
+  if (!db) return 0;
+  
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(messages)
+    .where(
+      and(
+        eq(messages.toUserId, userId),
+        eq(messages.isRead, false)
+      )
+    );
+  return result[0]?.count || 0;
+}
+
+export async function markMessageAsRead(messageId: number, userId: number) {
+  const db = await getDb();
+  if (!db) return { success: false };
+  
+  await db
+    .update(messages)
+    .set({ isRead: true, readAt: new Date() })
+    .where(
+      and(
+        eq(messages.id, messageId),
+        eq(messages.toUserId, userId)
+      )
+    );
+  return { success: true };
+}
+
+export async function createMessage(data: {
+  fromUserId: number;
+  toUserId: number;
+  subject: string;
+  body: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const [message] = await db.insert(messages).values(data).$returningId();
+  return message;
+}
+
+export async function getPurchasesWithDetails() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select({
+      id: purchases.id,
+      userId: purchases.userId,
+      courseId: purchases.courseId,
+      amount: purchases.amount,
+      status: purchases.status,
+      createdAt: purchases.purchasedAt,
+      userName: users.name,
+      userEmail: users.email,
+      courseName: courses.title,
+    })
+    .from(purchases)
+    .leftJoin(users, eq(purchases.userId, users.id))
+    .leftJoin(courses, eq(purchases.courseId, courses.id))
+    .orderBy(desc(purchases.purchasedAt));
+  
+  return result;
+}
+
+export async function getBookingsWithDetails() {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select({
+      id: bookings.id,
+      userId: bookings.userId,
+      slotId: bookings.slotId,
+      sessionType: bookings.sessionType,
+      status: bookings.status,
+      notes: bookings.notes,
+      createdAt: bookings.bookedAt,
+      userName: users.name,
+      userEmail: users.email,
+      slotStartTime: availabilitySlots.startTime,
+      slotEndTime: availabilitySlots.endTime,
+      eventType: availabilitySlots.eventType,
+    })
+    .from(bookings)
+    .leftJoin(users, eq(bookings.userId, users.id))
+    .leftJoin(availabilitySlots, eq(bookings.slotId, availabilitySlots.id))
+    .orderBy(desc(bookings.bookedAt));
+  
+  return result;
 }

@@ -22,12 +22,14 @@ import AdminTestimonials from "./pages/admin/Testimonials";
 import AdminSettings from "./pages/admin/Settings";
 import AdminUsers from "./pages/admin/Users";
 import AdminUserManagement from "./pages/admin/UserManagementNew";
+import AdminUserActivity from "./pages/admin/UserActivity";
 import CourseContentManager from "./pages/admin/CourseContentManager";
 import BookSession from "./pages/BookSession";
 import Feedback from "./pages/Feedback";
 import Messages from "./pages/Messages";
 import Activity from "./pages/Activity";
 import MyBookings from "./pages/MyBookings";
+import MyMessages from "./pages/MyMessages";
 
 
 function Router() {
@@ -41,6 +43,7 @@ function Router() {
       <Route path="/courses/:id/learn" component={CourseLearn} />
       <Route path="/my-courses" component={MyCourses} />
       <Route path="/my-bookings" component={MyBookings} />
+      <Route path="/my-messages" component={MyMessages} />
       <Route path="/messages" component={Messages} />
       <Route path="/activity" component={Activity} />
       <Route path="/book-session" component={BookSession} />
@@ -53,6 +56,7 @@ function Router() {
       <Route path="/admin/availability" component={AdminAvailability} />
       <Route path="/admin/testimonials" component={AdminTestimonials} />
       <Route path="/admin/users" component={AdminUserManagement} />
+      <Route path="/admin/user-activity" component={AdminUserActivity} />
       <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

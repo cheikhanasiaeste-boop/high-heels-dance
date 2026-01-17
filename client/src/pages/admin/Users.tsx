@@ -10,6 +10,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Search, UserCog, Shield, User, Mail, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SendMessageModal } from "@/components/SendMessageModal";
 
 export default function AdminUsers() {
   const { user, isAuthenticated } = useAuth();
@@ -21,6 +22,8 @@ export default function AdminUsers() {
   );
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [messageModalOpen, setMessageModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<{ id: number; name: string } | null>(null);
 
   const updateRoleMutation = trpc.admin.users.updateRole.useMutation({
     onSuccess: () => {
@@ -54,10 +57,9 @@ export default function AdminUsers() {
     }
   };
 
-  const handleSendMessage = (userEmail: string, userName: string) => {
-    // Open email client with pre-filled recipient
-    window.location.href = `mailto:${userEmail}?subject=Message from ${user?.name || 'Admin'}`;
-    toast.success(`Opening email client to message ${userName}`);
+  const handleSendMessage = (userId: number, userName: string) => {
+    setSelectedUser({ id: userId, name: userName });
+    setMessageModalOpen(true);
   };
 
   const filteredUsers = users.filter((u) => {
@@ -204,9 +206,8 @@ export default function AdminUsers() {
                         size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleSendMessage(u.email || '', u.name || 'User');
+                          handleSendMessage(u.id, u.name || 'User');
                         }}
-                        disabled={!u.email}
                       >
                         <Mail className="h-4 w-4 mr-2" />
                         Message
@@ -233,6 +234,15 @@ export default function AdminUsers() {
           </CardContent>
         </Card>
       </div>
+
+      {selectedUser && (
+        <SendMessageModal
+          open={messageModalOpen}
+          onOpenChange={setMessageModalOpen}
+          recipientId={selectedUser.id}
+          recipientName={selectedUser.name}
+        />
+      )}
     </AdminLayout>
   );
 }

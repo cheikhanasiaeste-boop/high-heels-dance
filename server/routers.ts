@@ -498,9 +498,15 @@ export const appRouter = router({
     }),
     
     // Booking management
+    purchases: router({
+      list: adminProcedure.query(async () => {
+        return await db.getPurchasesWithDetails();
+      }),
+    }),
+
     bookings: router({
       list: adminProcedure.query(async () => {
-        return await db.getAllBookings();
+        return await db.getBookingsWithDetails();
       }),
       
       cancel: adminProcedure
@@ -1375,6 +1381,42 @@ Be friendly, professional, and helpful. If you don't know something specific, of
         const result = await storagePut(fileKey, buffer, input.contentType);
         
         return { url: result.url, key: fileKey };
+      }),
+  }),
+
+  // Messages router
+  messages: router({
+    // Protected: Get user's messages
+    myMessages: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getUserMessages(ctx.user.id);
+    }),
+
+    // Protected: Get unread message count
+    unreadCount: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getUnreadMessageCount(ctx.user.id);
+    }),
+
+    // Protected: Mark message as read
+    markAsRead: protectedProcedure
+      .input(z.object({ messageId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.markMessageAsRead(input.messageId, ctx.user.id);
+      }),
+
+    // Admin: Send message to user
+    sendToUser: adminProcedure
+      .input(z.object({
+        toUserId: z.number(),
+        subject: z.string().min(1).max(255),
+        body: z.string().min(1),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.createMessage({
+          fromUserId: ctx.user.id,
+          toUserId: input.toUserId,
+          subject: input.subject,
+          body: input.body,
+        });
       }),
   }),
 });
