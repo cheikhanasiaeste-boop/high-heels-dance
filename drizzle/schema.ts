@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, boolean } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, boolean, unique, index } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -221,3 +221,28 @@ export const pageAnalytics = mysqlTable("page_analytics", {
 
 export type PageAnalytics = typeof pageAnalytics.$inferSelect;
 export type InsertPageAnalytics = typeof pageAnalytics.$inferInsert;
+
+/**
+ * User course enrollments - tracks which users are enrolled in which courses
+ * Separate from purchases to allow manual enrollment by admins
+ */
+export const userCourseEnrollments = mysqlTable("user_course_enrollments", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  courseId: int("courseId").notNull(),
+  enrolledAt: timestamp("enrolledAt").defaultNow().notNull(),
+  enrolledBy: int("enrolledBy"), // Admin user ID who enrolled them (null if self-enrolled via purchase)
+  status: mysqlEnum("status", ["active", "completed", "cancelled"]).default("active").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  // Unique constraint to prevent duplicate enrollments
+  uniqueEnrollment: unique().on(table.userId, table.courseId),
+  // Index for fast user → courses lookup
+  userIdIdx: index("userId_idx").on(table.userId),
+  // Index for fast course → users lookup
+  courseIdIdx: index("courseId_idx").on(table.courseId),
+}));
+
+export type UserCourseEnrollment = typeof userCourseEnrollments.$inferSelect;
+export type InsertUserCourseEnrollment = typeof userCourseEnrollments.$inferInsert;

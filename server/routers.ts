@@ -423,9 +423,47 @@ export const appRouter = router({
 
     // User management
     users: router({
+      // List all users (legacy - for simple admin pages)
       list: adminProcedure.query(async () => {
         return await db.getAllUsers();
       }),
+
+      // List users with pagination, search, and filters (new - for User Management page)
+      listPaginated: adminProcedure
+        .input(z.object({
+          page: z.number().min(1).default(1),
+          limit: z.number().min(1).max(100).default(20),
+          search: z.string().optional(),
+          roleFilter: z.enum(['all', 'admin', 'user']).default('all'),
+          courseFilter: z.number().optional(),
+        }))
+        .query(async ({ input }) => {
+          return await db.listUsers(input);
+        }),
+
+      // Create new user (manual admin creation)
+      create: adminProcedure
+        .input(z.object({
+          name: z.string().min(1),
+          email: z.string().email(),
+          role: z.enum(['user', 'admin']).default('user'),
+        }))
+        .mutation(async ({ ctx, input }) => {
+          return await db.createUserManually(input, ctx.user.id);
+        }),
+
+      // Delete user
+      delete: adminProcedure
+        .input(z.object({ userId: z.number() }))
+        .mutation(async ({ ctx, input }) => {
+          if (input.userId === ctx.user.id) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Cannot delete your own account',
+            });
+          }
+          return await db.deleteUser(input.userId);
+        }),
 
       updateRole: adminProcedure
         .input(z.object({
@@ -445,6 +483,64 @@ export const appRouter = router({
             throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
           }
           return user;
+        }),
+    }),
+
+    // Course Assignment Management
+    courseAssignment: router({
+      // Get all courses enrolled by a specific user
+      getUserCourses: adminProcedure
+        .input(z.object({ userId: z.number() }))
+        .query(async ({ input }) => {
+          return await db.getUserEnrolledCourses(input.userId);
+        }),
+
+      // Assign a course to a user
+      assign: adminProcedure
+        .input(z.object({
+          userId: z.number(),
+          courseId: z.number(),
+        }))
+        .mutation(async ({ ctx, input }) => {
+          return await db.assignCourseToUser(
+            input.userId,
+            input.courseId,
+            ctx.user.id
+          );
+        }),
+
+      // Remove a course from a user
+      remove: adminProcedure
+        .input(z.object({
+          userId: z.number(),
+          courseId: z.number(),
+        }))
+        .mutation(async ({ ctx, input }) => {
+          return await db.removeCourseFromUser(input.userId, input.courseId);
+        }),
+
+      // Bulk assign courses to multiple users
+      bulkAssign: adminProcedure
+        .input(z.object({
+          userIds: z.array(z.number()).min(1),
+          courseIds: z.array(z.number()).min(1),
+        }))
+        .mutation(async ({ ctx, input }) => {
+          return await db.bulkAssignCourses(
+            input.userIds,
+            input.courseIds,
+            ctx.user.id
+          );
+        }),
+
+      // Bulk remove courses from multiple users
+      bulkRemove: adminProcedure
+        .input(z.object({
+          userIds: z.array(z.number()).min(1),
+          courseIds: z.array(z.number()).min(1),
+        }))
+        .mutation(async ({ ctx, input }) => {
+          return await db.bulkRemoveCourses(input.userIds, input.courseIds);
         }),
     }),
 
@@ -832,6 +928,8 @@ Be friendly, professional, and helpful. If you don't know something specific, of
       return await db.getChatHistory(ctx.user.id);
     }),
   }),
+
+
 
   // Testimonials
   testimonials: router({

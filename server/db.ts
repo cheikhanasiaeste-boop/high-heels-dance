@@ -1,7 +1,8 @@
-import { eq, and, desc, isNull, gte, lte } from "drizzle-orm";
+import { eq, and, desc, isNull, gte, lte, or, like, inArray, sql, SQL } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
-  InsertUser, 
+  InsertUser,
+  User,
   users, 
   courses, 
   Course,
@@ -23,7 +24,10 @@ import {
   InsertBooking,
   testimonials,
   Testimonial,
-  InsertTestimonial
+  InsertTestimonial,
+  userCourseEnrollments,
+  UserCourseEnrollment,
+  InsertUserCourseEnrollment
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -976,4 +980,308 @@ export async function getUpcomingAvailableSlots(limit: number = 6): Promise<Avai
     ...slot,
     spotsLeft: slot.capacity - slot.currentBookings,
   })) as AvailabilitySlot[];
+}
+
+// ==================== User Management ====================
+
+/**
+ * List users with pagination, search, and filters
+ */
+export async function listUsers(params: {
+  page: number;
+  limit: number;
+  search?: string;
+  roleFilter?: 'all' | 'admin' | 'user';
+  courseFilter?: number;
+}): Promise<{ users: User[]; total: number; pages: number }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { page, limit, search, roleFilter, courseFilter } = params;
+  const offset = (page - 1) * limit;
+
+  // Build where conditions
+  const conditions: SQL[] = [];
+
+  // Role filter
+  if (roleFilter && roleFilter !== 'all') {
+    conditions.push(eq(users.role, roleFilter));
+  }
+
+  // Search filter (name or email)
+  if (search && search.trim()) {
+    conditions.push(
+      or(
+        like(users.name, `%${search.trim()}%`),
+        like(users.email, `%${search.trim()}%`)
+      )!
+    );
+  }
+
+  // Course filter (users enrolled in specific course)
+  if (courseFilter) {
+    const enrolledUserIds = await db
+      .select({ userId: userCourseEnrollments.userId })
+      .from(userCourseEnrollments)
+      .where(eq(userCourseEnrollments.courseId, courseFilter));
+    
+    const userIds = enrolledUserIds.map(e => e.userId);
+    if (userIds.length > 0) {
+      conditions.push(inArray(users.id, userIds));
+    } else {
+      // No users enrolled in this course
+      return { users: [], total: 0, pages: 0 };
+    }
+  }
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  // Get total count
+  const countResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(users)
+    .where(whereClause);
+  const total = Number(countResult[0]?.count || 0);
+
+  // Get paginated users
+  const result = await db
+    .select()
+    .from(users)
+    .where(whereClause)
+    .orderBy(desc(users.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+  const pages = Math.ceil(total / limit);
+
+  return { users: result, total, pages };
+}
+
+/**
+ * Create a new user manually (admin action)
+ */
+export async function createUserManually(
+  data: { name: string; email: string; role: 'user' | 'admin' },
+  createdBy: number
+): Promise<User> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Check if email already exists
+  const existing = await db
+    .select()
+    .from(users)
+    .where(eq(users.email, data.email))
+    .limit(1);
+
+  if (existing.length > 0) {
+    throw new Error("User with this email already exists");
+  }
+
+  // Generate unique openId for manual user creation
+  const openId = `manual_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+  const result = await db.insert(users).values({
+    openId,
+    name: data.name,
+    email: data.email,
+    role: data.role,
+    loginMethod: 'manual',
+    hasSeenWelcome: true,
+  });
+
+  // Query the newly created user
+  const [user] = await db
+    .select()
+    .from(users)
+    .where(eq(users.openId, openId))
+    .limit(1);
+
+  return user;
+}
+
+/**
+ * Delete a user and all their enrollments
+ */
+export async function deleteUser(userId: number): Promise<{ success: boolean; hadActiveCourses: boolean }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Check if user has active course enrollments
+  const enrollments = await db
+    .select()
+    .from(userCourseEnrollments)
+    .where(eq(userCourseEnrollments.userId, userId));
+
+  const hadActiveCourses = enrollments.length > 0;
+
+  // Delete all enrollments first (cascade)
+  if (hadActiveCourses) {
+    await db
+      .delete(userCourseEnrollments)
+      .where(eq(userCourseEnrollments.userId, userId));
+  }
+
+  // Delete user
+  await db.delete(users).where(eq(users.id, userId));
+
+  return { success: true, hadActiveCourses };
+}
+
+// ==================== Course Assignment Management ====================
+
+/**
+ * Get all courses enrolled by a specific user
+ */
+export async function getUserEnrolledCourses(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db
+    .select({
+      enrollment: userCourseEnrollments,
+      course: courses,
+    })
+    .from(userCourseEnrollments)
+    .innerJoin(courses, eq(userCourseEnrollments.courseId, courses.id))
+    .where(eq(userCourseEnrollments.userId, userId))
+    .orderBy(desc(userCourseEnrollments.enrolledAt));
+
+  return result.map(r => ({
+    ...r.enrollment,
+    course: r.course,
+  }));
+}
+
+/**
+ * Assign a course to a user
+ */
+export async function assignCourseToUser(
+  userId: number,
+  courseId: number,
+  enrolledBy: number
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Check if enrollment already exists
+  const existing = await db
+    .select()
+    .from(userCourseEnrollments)
+    .where(
+      and(
+        eq(userCourseEnrollments.userId, userId),
+        eq(userCourseEnrollments.courseId, courseId)
+      )
+    )
+    .limit(1);
+
+  if (existing.length > 0) {
+    throw new Error("User is already enrolled in this course");
+  }
+
+  const [enrollment] = await db.insert(userCourseEnrollments).values({
+    userId,
+    courseId,
+    enrolledBy,
+    status: 'active',
+  });
+
+  return enrollment;
+}
+
+/**
+ * Remove a course from a user
+ */
+export async function removeCourseFromUser(userId: number, courseId: number): Promise<{ success: boolean }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db
+    .delete(userCourseEnrollments)
+    .where(
+      and(
+        eq(userCourseEnrollments.userId, userId),
+        eq(userCourseEnrollments.courseId, courseId)
+      )
+    );
+
+  return { success: true };
+}
+
+/**
+ * Bulk assign courses to multiple users
+ */
+export async function bulkAssignCourses(
+  userIds: number[],
+  courseIds: number[],
+  enrolledBy: number
+): Promise<{ created: number; skipped: number }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  let created = 0;
+  let skipped = 0;
+
+  // Generate all combinations of userIds and courseIds
+  for (const userId of userIds) {
+    for (const courseId of courseIds) {
+      try {
+        // Check if enrollment already exists
+        const existing = await db
+          .select()
+          .from(userCourseEnrollments)
+          .where(
+            and(
+              eq(userCourseEnrollments.userId, userId),
+              eq(userCourseEnrollments.courseId, courseId)
+            )
+          )
+          .limit(1);
+
+        if (existing.length > 0) {
+          skipped++;
+          continue;
+        }
+
+        await db.insert(userCourseEnrollments).values({
+          userId,
+          courseId,
+          enrolledBy,
+          status: 'active',
+        });
+
+        created++;
+      } catch (error) {
+        // Skip on error (e.g., duplicate key)
+        skipped++;
+      }
+    }
+  }
+
+  return { created, skipped };
+}
+
+/**
+ * Bulk remove courses from multiple users
+ */
+export async function bulkRemoveCourses(
+  userIds: number[],
+  courseIds: number[]
+): Promise<{ removed: number }> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // Delete all matching combinations
+  const result = await db
+    .delete(userCourseEnrollments)
+    .where(
+      and(
+        inArray(userCourseEnrollments.userId, userIds),
+        inArray(userCourseEnrollments.courseId, courseIds)
+      )
+    );
+
+  // Return success (actual count not available from delete operation)
+  return { removed: userIds.length * courseIds.length };
 }

@@ -599,3 +599,20 @@
 - [x] Optimize filters for strong visual presence + text readability (60% opacity, 80% saturation, 90% brightness, 1px blur, 40% white overlay)
 - [x] Test performance (loading speed, animation smoothness) - 2.0MB file size acceptable
 - [x] Verify prefers-reduced-motion fallback works (implemented)
+
+## Build Comprehensive User Management System
+- [x] Design user-course enrollment relationship schema
+- [x] Add userCourseEnrollments table to drizzle schema
+- [x] Run database migration for new table
+- [x] Create tRPC procedures: listUsers (listPaginated), createUser, deleteUser, searchUsers
+- [x] Create tRPC procedures: getUserCourses, assignCourse, removeCourse
+- [x] Create tRPC procedures: bulkAssignCourses, bulkRemoveCourses
+- [x] Create database helper functions in db.ts for all operations
+- [ ] Build User Management page UI with search, filters, pagination
+- [ ] Implement inline course assignment panel (expandable row or side panel)
+- [ ] Add bulk selection checkboxes for multi-user operations
+- [ ] Implement bulk course assignment with confirmation dialog
+- [ ] Implement bulk course removal with confirmation dialog
+- [ ] Add delete user confirmation with active courses warning
+- [ ] Test all single and bulk operations
+- [ ] Add optimistic updates for instant feedback
