@@ -1240,6 +1240,42 @@ Be friendly, professional, and helpful. If you don't know something specific, of
       return testimonials.filter(t => t.videoUrl);
     }),
 
+    // Protected: Submit course completion testimonial
+    submitCourseTestimonial: protectedProcedure
+      .input(z.object({
+        courseId: z.number(),
+        rating: z.number().min(1).max(5),
+        content: z.string().min(10),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Check if user already submitted feedback for this course
+        const existing = await db.getUserTestimonialForItem(
+          ctx.user.id,
+          "course",
+          input.courseId
+        );
+
+        if (existing) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'You have already submitted feedback for this course',
+          });
+        }
+
+        const testimonial = await db.createTestimonial({
+          userId: ctx.user.id,
+          userName: ctx.user.name || 'Anonymous',
+          userEmail: ctx.user.email || undefined,
+          rating: input.rating,
+          review: input.content,
+          type: "course",
+          relatedId: input.courseId,
+          status: 'pending',
+        });
+
+        return testimonial;
+      }),
+    
     // Protected: Submit feedback
     submit: protectedProcedure
       .input(z.object({

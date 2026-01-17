@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { getLoginUrl } from "@/const";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Lock, CheckCircle } from "lucide-react";
+import { ArrowLeft, Lock, CheckCircle, Play } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { toast } from "sonner";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
@@ -215,24 +215,15 @@ export default function CourseDetail() {
                 )}
 
                 {canAccess && (
-                  <Button 
-                    className="w-full" 
-                    size="lg" 
-                    variant="secondary"
-                    onClick={() => {
-                      if (!isAuthenticated) {
-                        const contextDetails = course ? `${course.title} (Free)` : 'Free Course';
-                        requireAuth('course', contextDetails, () => {
-                          toast.success("You now have access to this course!");
-                          window.location.reload();
-                        });
-                      } else {
-                        toast.info("Course content coming soon! You have access to this course.");
-                      }
-                    }}
-                  >
-                    Start Learning
-                  </Button>
+                  <Link href={`/course/${courseId}/learn`}>
+                    <Button 
+                      className="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700" 
+                      size="lg"
+                    >
+                      <Play className="w-4 h-4 mr-2" />
+                      Start Learning
+                    </Button>
+                  </Link>
                 )}
 
                 <div className="pt-4 border-t space-y-3 text-sm">

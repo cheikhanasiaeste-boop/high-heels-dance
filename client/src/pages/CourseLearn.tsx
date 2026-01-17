@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { ChevronDown, ChevronUp, Check, Home, Play, Lock, CheckCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { CourseCompletionModal } from "@/components/CourseCompletionModal";
 
 export default function CourseLearn() {
   const { id } = useParams<{ id: string }>();
@@ -41,6 +42,7 @@ export default function CourseLearn() {
   
   const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set());
   const [currentLessonId, setCurrentLessonId] = useState<number | null>(null);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
   
   // Auto-expand first module and select first lesson
   useEffect(() => {
@@ -113,6 +115,17 @@ export default function CourseLearn() {
   const markCompleteMutation = trpc.courses.markLessonComplete.useMutation({
     onSuccess: () => {
       toast.success("Lesson marked as complete!");
+      
+      // Check if course is 100% complete
+      const totalLessons = modules?.reduce((sum: number, module: any) => sum + module.lessons.length, 0) || 0;
+      const completedLessons = progress?.filter((p: any) => p.isCompleted).length || 0;
+      
+      if (totalLessons > 0 && completedLessons + 1 >= totalLessons) {
+        // Show completion modal after a short delay
+        setTimeout(() => {
+          setShowCompletionModal(true);
+        }, 1000);
+      }
     },
     onError: (error) => {
       toast.error("Failed to mark lesson as complete");
@@ -164,7 +177,8 @@ export default function CourseLearn() {
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-lavender-50 to-purple-50">
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-lavender-50 to-purple-50">
       <div className="flex h-screen">
         {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto">
@@ -351,9 +365,20 @@ export default function CourseLearn() {
                 );
               })}
             </div>
-          </div>
+           </div>
         </div>
       </div>
-    </div>
+      </div>
+      
+      {/* Course Completion Modal */}
+      {course && (
+        <CourseCompletionModal
+          isOpen={showCompletionModal}
+          onClose={() => setShowCompletionModal(false)}
+          courseId={courseId}
+          courseTitle={course.title}
+        />
+      )}
+    </>
   );
 }
