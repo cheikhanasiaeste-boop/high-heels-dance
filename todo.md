@@ -870,3 +870,14 @@
 - [x] Update admin thumbnail editor default zoom
 - [x] Test background animation is fluid with no lag
 - [x] Test thumbnails show significantly more image content
+
+## Hero Background and Thumbnail Adjustments
+- [x] Remove lazy loading from hero background (change loading="eager" if present)
+- [x] Ensure hero background loads immediately
+- [x] Reduce thumbnail zoom from 40% to 20%
+- [x] Update homepage course card default zoom
+- [x] Update admin thumbnail editor default zoom
+- [x] Remove hover zoom effect on course thumbnails
+- [x] Test hero background loads immediately
+- [x] Test thumbnails show maximum image content
+- [x] Test hover effect is removed

@@ -376,7 +376,7 @@ export default function Home() {
                           src={course.imageUrl} 
                           alt={course.title} 
                           loading="lazy"
-                          className="absolute group-hover:scale-110 transition-transform duration-700" 
+                          className="absolute transition-transform duration-700" 
                           style={{
                             top: '50%',
                             left: '50%',
@@ -386,7 +386,7 @@ export default function Home() {
                             maxHeight: 'none',
                             minWidth: '100%',
                             minHeight: '100%',
-                            transform: `translate(-50%, -50%) scale(${parseFloat(course.imageCropZoom || "0.4")}) translate(${parseFloat(course.imageCropOffsetX || "0")}px, ${parseFloat(course.imageCropOffsetY || "0")}px)`,
+                            transform: `translate(-50%, -50%) scale(${parseFloat(course.imageCropZoom || "0.2")}) translate(${parseFloat(course.imageCropOffsetX || "0")}px, ${parseFloat(course.imageCropOffsetY || "0")}px)`,
                             transformOrigin: 'center center',
                           }}
                         />
@@ -412,7 +412,7 @@ export default function Home() {
                         )}
                       </>
                     ) : (                      <>
-                        <span className="text-8xl group-hover:scale-110 transition-transform duration-500">💃</span>
+                        <span className="text-8xl transition-transform duration-500">💃</span>
                         {course.isTopPick && (
                           <div className="absolute top-4 left-4 z-10 animate-pulse-slow">
                             <div className="relative">
