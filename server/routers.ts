@@ -68,6 +68,56 @@ export const appRouter = router({
         // Check if user purchased the course
         return await db.hasUserPurchasedCourse(ctx.user.id, input.courseId);
       }),
+    
+    // Get modules with lessons for course learning page
+    getModulesWithLessons: protectedProcedure
+      .input(z.object({ courseId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getCourseModulesWithLessons(input.courseId);
+      }),
+    
+    // Get user progress for a course
+    getUserProgress: protectedProcedure
+      .input(z.object({ courseId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        return await db.getUserCourseProgress(ctx.user.id, input.courseId);
+      }),
+    
+    // Check if user has access (alias for hasAccess)
+    checkAccess: protectedProcedure
+      .input(z.object({ courseId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const course = await db.getCourseById(input.courseId);
+        if (!course) return false;
+        if (course.isFree) return true;
+        return await db.hasUserPurchasedCourse(ctx.user.id, input.courseId);
+      }),
+    
+    // Mark lesson as completed
+    markLessonComplete: protectedProcedure
+      .input(z.object({
+        lessonId: z.number(),
+        courseId: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.markLessonComplete(ctx.user.id, input.lessonId, input.courseId);
+      }),
+    
+    // Update lesson watch progress
+    updateLessonProgress: protectedProcedure
+      .input(z.object({
+        lessonId: z.number(),
+        courseId: z.number(),
+        watchedDuration: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.updateLessonProgress(
+          ctx.user.id,
+          input.lessonId,
+          input.courseId,
+          input.watchedDuration
+        );
+      }),
   }),
 
   // User purchase procedures

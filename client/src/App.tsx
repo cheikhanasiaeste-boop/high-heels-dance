@@ -11,6 +11,7 @@ import { useState, useEffect } from "react";
 import Home from "./pages/Home";
 import Courses from "./pages/Courses";
 import CourseDetail from "./pages/CourseDetail";
+import CourseLearn from "./pages/CourseLearn";
 import MyCourses from "./pages/MyCourses";
 import Admin from "./pages/Admin";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -35,6 +36,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/courses" component={Courses} />
       <Route path="/course/:id" component={CourseDetail} />
+      <Route path="/course/:id/learn" component={CourseLearn} />
       <Route path="/my-courses" component={MyCourses} />
       <Route path="/my-bookings" component={MyBookings} />
       <Route path="/messages" component={Messages} />

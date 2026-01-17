@@ -1,0 +1,359 @@
+import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
+import { useParams, useLocation, Link } from "wouter";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { ChevronDown, ChevronUp, Check, Home, Play, Lock, CheckCircle } from "lucide-react";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
+
+export default function CourseLearn() {
+  const { id } = useParams<{ id: string }>();
+  const [, setLocation] = useLocation();
+  const { user, isAuthenticated } = useAuth();
+  
+  const courseId = parseInt(id || "0");
+  
+  // Fetch course data
+  const { data: course, isLoading: courseLoading } = trpc.courses.getById.useQuery(
+    { id: courseId },
+    { enabled: !!courseId }
+  );
+  
+  // Fetch modules with lessons
+  const { data: modules, isLoading: modulesLoading } = trpc.courses.getModulesWithLessons.useQuery(
+    { courseId },
+    { enabled: !!courseId }
+  );
+  
+  // Fetch user progress
+  const { data: progress } = trpc.courses.getUserProgress.useQuery(
+    { courseId },
+    { enabled: isAuthenticated && !!courseId }
+  );
+  
+  // Check if user has access
+  const { data: hasAccess } = trpc.courses.checkAccess.useQuery(
+    { courseId },
+    { enabled: isAuthenticated && !!courseId }
+  );
+  
+  const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set());
+  const [currentLessonId, setCurrentLessonId] = useState<number | null>(null);
+  
+  // Auto-expand first module and select first lesson
+  useEffect(() => {
+    if (modules && modules.length > 0) {
+      const firstModule = modules[0];
+      setExpandedModules(new Set([firstModule.id]));
+      
+      if (firstModule.lessons && firstModule.lessons.length > 0) {
+        setCurrentLessonId(firstModule.lessons[0].id);
+      }
+    }
+  }, [modules]);
+  
+  const toggleModule = (moduleId: number) => {
+    setExpandedModules(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(moduleId)) {
+        newSet.delete(moduleId);
+      } else {
+        newSet.add(moduleId);
+      }
+      return newSet;
+    });
+  };
+  
+  // Calculate progress
+  const calculateProgress = () => {
+    if (!modules || !progress) return 0;
+    
+    const totalLessons = modules.reduce((acc, module) => 
+      acc + (module.lessons?.length || 0), 0
+    );
+    
+    if (totalLessons === 0) return 0;
+    
+    const completedLessons = progress.filter(p => p.isCompleted).length;
+    return Math.round((completedLessons / totalLessons) * 100);
+  };
+  
+  const isLessonCompleted = (lessonId: number) => {
+    return progress?.some(p => p.lessonId === lessonId && p.isCompleted) || false;
+  };
+  
+  const getModuleProgress = (module: any) => {
+    if (!module.lessons || !progress) return { completed: 0, total: 0 };
+    
+    const total = module.lessons.length;
+    const completed = module.lessons.filter((lesson: any) => 
+      isLessonCompleted(lesson.id)
+    ).length;
+    
+    return { completed, total };
+  };
+  
+  const getCurrentLesson = () => {
+    if (!modules || !currentLessonId) return null;
+    
+    for (const module of modules) {
+      const lesson = module.lessons?.find((l: any) => l.id === currentLessonId);
+      if (lesson) return { ...lesson, moduleName: module.title };
+    }
+    
+    return null;
+  };
+  
+  const currentLesson = getCurrentLesson();
+  const progressPercentage = calculateProgress();
+  
+  // Mark lesson complete mutation
+  const markCompleteMutation = trpc.courses.markLessonComplete.useMutation({
+    onSuccess: () => {
+      toast.success("Lesson marked as complete!");
+    },
+    onError: (error) => {
+      toast.error("Failed to mark lesson as complete");
+    },
+  });
+  
+  const handleMarkComplete = () => {
+    if (!currentLessonId || !courseId) return;
+    markCompleteMutation.mutate({ lessonId: currentLessonId, courseId });
+  };
+  
+  // Redirect if no access
+  if (!courseLoading && !hasAccess && isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-lavender-50 to-purple-50">
+        <Card className="p-8 max-w-md text-center">
+          <Lock className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+          <h2 className="text-2xl font-bold mb-2">Course Access Required</h2>
+          <p className="text-muted-foreground mb-6">
+            You need to purchase this course to access the content.
+          </p>
+          <Link href={`/courses/${courseId}`}>
+            <Button>View Course Details</Button>
+          </Link>
+        </Card>
+      </div>
+    );
+  }
+  
+  if (courseLoading || modulesLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Loading course...</p>
+      </div>
+    );
+  }
+  
+  if (!course) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="p-8 max-w-md text-center">
+          <h2 className="text-2xl font-bold mb-2">Course Not Found</h2>
+          <Link href="/courses">
+            <Button>Browse Courses</Button>
+          </Link>
+        </Card>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-lavender-50 to-purple-50">
+      <div className="flex h-screen">
+        {/* Main Content Area */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="max-w-4xl mx-auto p-8">
+            {/* Course Thumbnail */}
+            {course.imageUrl && (
+              <img
+                src={course.imageUrl}
+                alt={course.title}
+                className="w-full h-64 object-cover rounded-lg shadow-lg mb-6"
+              />
+            )}
+            
+            {/* Course Title */}
+            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+              {course.title}
+            </h1>
+            
+            {/* Welcome Message */}
+            <p className="text-xl mb-4">Hi there!</p>
+            
+            {/* Course Description */}
+            <div className="prose prose-lg max-w-none mb-8">
+              <p>{course.description}</p>
+            </div>
+            
+            {/* Current Lesson Content */}
+            {currentLesson && (
+              <Card className="p-6 mb-8">
+                <div className="mb-4">
+                  <p className="text-sm text-muted-foreground mb-1">{currentLesson.moduleName}</p>
+                  <h2 className="text-2xl font-bold">{currentLesson.title}</h2>
+                  {currentLesson.duration && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Duration: {currentLesson.duration} minutes
+                    </p>
+                  )}
+                </div>
+                
+                {/* Video Player */}
+                {currentLesson.videoUrl && (
+                  <div className="aspect-video bg-black rounded-lg overflow-hidden mb-4">
+                    <video
+                      src={currentLesson.videoUrl}
+                      controls
+                      className="w-full h-full"
+                      controlsList="nodownload"
+                    >
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+                )}
+                
+                {/* Lesson Content */}
+                {currentLesson.content && (
+                  <div className="prose max-w-none mb-6">
+                    <div dangerouslySetInnerHTML={{ __html: currentLesson.content }} />
+                  </div>
+                )}
+                
+                {/* Mark Complete Button */}
+                <div className="flex justify-end">
+                  <Button
+                    onClick={handleMarkComplete}
+                    disabled={!currentLessonId || isLessonCompleted(currentLessonId) || markCompleteMutation.isPending}
+                    className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700"
+                  >
+                    {currentLessonId && isLessonCompleted(currentLessonId) ? (
+                      <>
+                        <CheckCircle className="w-4 h-4 mr-2" />
+                        Completed
+                      </>
+                    ) : (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        Mark as Complete
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </Card>
+            )}
+          </div>
+        </div>
+        
+        {/* Right Sidebar */}
+        <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto">
+          <div className="p-6">
+            {/* Course Title in Sidebar */}
+            <h2 className="text-xl font-bold mb-4">{course.title}</h2>
+            
+            {/* Progress Bar */}
+            <div className="mb-6">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-sm font-medium text-purple-600">
+                  {progressPercentage}% complete
+                </span>
+              </div>
+              <Progress value={progressPercentage} className="h-2" />
+            </div>
+            
+            {/* Course Home Button */}
+            <Link href={`/courses/${courseId}`}>
+              <Button variant="outline" className="w-full mb-6 flex items-center justify-center gap-2">
+                <Home className="w-4 h-4" />
+                Course Home
+              </Button>
+            </Link>
+            
+            {/* Modules and Lessons */}
+            <div className="space-y-2">
+              {modules?.map((module, moduleIndex) => {
+                const { completed, total } = getModuleProgress(module);
+                const isExpanded = expandedModules.has(module.id);
+                
+                return (
+                  <div key={module.id} className="border rounded-lg overflow-hidden">
+                    {/* Module Header */}
+                    <button
+                      onClick={() => toggleModule(module.id)}
+                      className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          completed === total && total > 0
+                            ? 'bg-purple-600 text-white'
+                            : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {completed === total && total > 0 ? (
+                            <Check className="w-5 h-5" />
+                          ) : (
+                            <Play className="w-5 h-5" />
+                          )}
+                        </div>
+                        <div className="text-left">
+                          <p className="text-xs text-muted-foreground">Module {moduleIndex + 1}</p>
+                          <p className="font-semibold">{module.title}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-muted-foreground">{completed}/{total}</span>
+                        {isExpanded ? (
+                          <ChevronUp className="w-5 h-5" />
+                        ) : (
+                          <ChevronDown className="w-5 h-5" />
+                        )}
+                      </div>
+                    </button>
+                    
+                    {/* Lessons List */}
+                    {isExpanded && module.lessons && (
+                      <div className="bg-gray-50">
+                        {module.lessons.map((lesson: any) => {
+                          const completed = isLessonCompleted(lesson.id);
+                          const isCurrent = currentLessonId === lesson.id;
+                          
+                          return (
+                            <button
+                              key={lesson.id}
+                              onClick={() => setCurrentLessonId(lesson.id)}
+                              className={`w-full p-4 pl-16 flex items-center justify-between hover:bg-gray-100 transition-colors border-t ${
+                                isCurrent ? 'bg-purple-50 border-l-4 border-l-purple-600' : ''
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                                  completed
+                                    ? 'bg-purple-600 text-white'
+                                    : 'border-2 border-gray-300'
+                                }`}>
+                                  {completed && <Check className="w-4 h-4" />}
+                                </div>
+                                <span className={`text-sm ${isCurrent ? 'font-semibold' : ''}`}>
+                                  {lesson.title}
+                                  {lesson.duration && ` (${lesson.duration}min)`}
+                                </span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

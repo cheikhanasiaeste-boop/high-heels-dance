@@ -1580,3 +1580,167 @@ export async function upsertVisualSettings(data: Partial<InsertVisualSettings> &
     return created[0];
   }
 }
+
+/**
+ * Get course modules with their lessons for the course learning page
+ */
+export async function getCourseModulesWithLessons(courseId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const modules = await db
+    .select()
+    .from(courseModules)
+    .where(and(
+      eq(courseModules.courseId, courseId),
+      eq(courseModules.isPublished, true)
+    ))
+    .orderBy(courseModules.order);
+  
+  const modulesWithLessons = await Promise.all(
+    modules.map(async (module) => {
+      const lessons = await db
+        .select()
+        .from(courseLessons)
+        .where(and(
+          eq(courseLessons.moduleId, module.id),
+          eq(courseLessons.isPublished, true)
+        ))
+        .orderBy(courseLessons.order);
+      
+      return {
+        ...module,
+        lessons,
+      };
+    })
+  );
+  
+  return modulesWithLessons;
+}
+
+/**
+ * Get user's progress for a specific course
+ */
+export async function getUserCourseProgress(userId: number, courseId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db
+    .select()
+    .from(userLessonProgress)
+    .where(and(
+      eq(userLessonProgress.userId, userId),
+      eq(userLessonProgress.courseId, courseId)
+    ));
+}
+
+/**
+ * Mark a lesson as completed for a user
+ */
+export async function markLessonComplete(userId: number, lessonId: number, courseId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const existing = await db
+    .select()
+    .from(userLessonProgress)
+    .where(and(
+      eq(userLessonProgress.userId, userId),
+      eq(userLessonProgress.lessonId, lessonId)
+    ))
+    .limit(1);
+  
+  if (existing.length > 0) {
+    // Update existing progress
+    await db
+      .update(userLessonProgress)
+      .set({
+        isCompleted: true,
+        completedAt: new Date(),
+        lastWatchedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(userLessonProgress.id, existing[0].id));
+    
+    return existing[0];
+  } else {
+    // Create new progress entry
+    const [inserted] = await db
+      .insert(userLessonProgress)
+      .values({
+        userId,
+        lessonId,
+        courseId,
+        isCompleted: true,
+        completedAt: new Date(),
+        lastWatchedAt: new Date(),
+        watchedDuration: 0,
+      })
+      .$returningId();
+    
+    const created = await db
+      .select()
+      .from(userLessonProgress)
+      .where(eq(userLessonProgress.id, inserted.id))
+      .limit(1);
+    
+    return created[0];
+  }
+}
+
+/**
+ * Update lesson watch progress for a user
+ */
+export async function updateLessonProgress(
+  userId: number,
+  lessonId: number,
+  courseId: number,
+  watchedDuration: number
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const existing = await db
+    .select()
+    .from(userLessonProgress)
+    .where(and(
+      eq(userLessonProgress.userId, userId),
+      eq(userLessonProgress.lessonId, lessonId)
+    ))
+    .limit(1);
+  
+  if (existing.length > 0) {
+    // Update existing progress
+    await db
+      .update(userLessonProgress)
+      .set({
+        watchedDuration,
+        lastWatchedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(eq(userLessonProgress.id, existing[0].id));
+    
+    return existing[0];
+  } else {
+    // Create new progress entry
+    const [inserted] = await db
+      .insert(userLessonProgress)
+      .values({
+        userId,
+        lessonId,
+        courseId,
+        isCompleted: false,
+        lastWatchedAt: new Date(),
+        watchedDuration,
+      })
+      .$returningId();
+    
+    const created = await db
+      .select()
+      .from(userLessonProgress)
+      .where(eq(userLessonProgress.id, inserted.id))
+      .limit(1);
+    
+    return created[0];
+  }
+}

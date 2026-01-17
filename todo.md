@@ -987,3 +987,19 @@
 - [x] Fix AnimatedWebP component to prevent empty string src
 - [x] Add conditional rendering when src is empty
 - [x] Test that error no longer appears in console
+
+## Course Learning Interface Development
+- [x] Analyze existing course/module/lesson database schema
+- [x] Create /courses/:id/learn route for course player
+- [x] Design left content area with course thumbnail, title, description
+- [x] Design right sidebar with progress bar and module/lesson tree
+- [x] Implement collapsible module sections with lesson lists
+- [x] Add checkmark icons for completed lessons
+- [x] Create video player component for lesson content
+- [x] Implement lesson navigation (click to switch lessons)
+- [x] Add progress tracking (% complete calculation)
+- [x] Create lesson completion API endpoints (markLessonComplete, updateLessonProgress)
+- [x] Persist user progress in database (userLessonProgress table)
+- [x] Add "Course Home" button to return to course overview
+- [x] Style with purple/pink theme matching website identity
+- [x] Test course learning flow end-to-end
