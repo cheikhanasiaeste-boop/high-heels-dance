@@ -1,0 +1,9 @@
+{
+  "query": "UPDATE siteSettings SET value = '/hero-bg-new.webp' WHERE `key` = 'backgroundAnimationUrl';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4HtU1c2nK4A5Wb2.root --database M2v4Dnk4LCsJQ3Qwy7fUfL --execute UPDATE siteSettings SET value = '/hero-bg-new.webp' WHERE `key` = 'backgroundAnimationUrl';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 59
+}

@@ -688,3 +688,8 @@
 - [x] Remove or disable the timed prompt for guest users
 - [x] Check for any other automatic authentication prompts
 - [x] Test guest can browse website without any timed interruptions
+
+## Replace Hero Background Image
+- [x] Copy new background image to public directory
+- [x] Update Home page to reference new background
+- [x] Test new background displays correctly
