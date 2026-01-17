@@ -693,3 +693,9 @@
 - [x] Copy new background image to public directory
 - [x] Update Home page to reference new background
 - [x] Test new background displays correctly
+
+## Fix Hero Page Discrepancy Between Signed-in and Guest Views
+- [x] Identify what's different in hero page for signed-in vs guest users
+- [x] Fix hero page to show consistently for all users
+- [x] Check other pages for similar authentication-based display issues
+- [x] Test both views to ensure consistency

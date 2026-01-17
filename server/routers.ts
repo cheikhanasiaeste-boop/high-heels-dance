@@ -344,7 +344,7 @@ export const appRouter = router({
 
     // Settings management
     settings: router({
-      get: adminProcedure
+      get: publicProcedure
         .input(z.object({ key: z.string() }))
         .query(async ({ input }) => {
           return await db.getSetting(input.key);
@@ -614,7 +614,7 @@ export const appRouter = router({
     
     // Site content management
     content: router({
-      get: adminProcedure
+      get: publicProcedure
         .input(z.object({ key: z.string() }))
         .query(async ({ input }) => {
           return await db.getSetting(input.key);
