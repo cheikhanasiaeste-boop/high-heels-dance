@@ -910,3 +910,13 @@
 - [x] Apply hero profile picture URL to homepage
 - [x] Test file upload for hero background (11/11 tests passing)
 - [x] Test file upload for hero profile picture (11/11 tests passing)
+
+## Homepage Design Refinement
+- [x] Match homepage course thumbnails to admin section style
+- [x] Increase hero section CTA button sizes
+- [x] Sharpen hero section CTA button colors
+- [x] Deepen hero tagline text color to black
+- [x] Improve hero tagline text centering and visual split
+- [x] Make bottom buttons and filters thinner
+- [x] Refine bottom UI elements for elegant appearance
+- [x] Test all design changes across screen sizes

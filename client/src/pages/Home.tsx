@@ -258,8 +258,9 @@ export default function Home() {
           <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
             {heroTitle || 'Elizabeth Zolotova'}
           </h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto leading-relaxed font-serif text-muted-foreground">
-            {heroTagline || "I'm a professional dancer and dance teacher who can make you fall in love with dance."}
+          <p className="text-2xl mb-10 max-w-3xl mx-auto leading-relaxed text-gray-900 font-medium text-center">
+            <span className="block mb-2">{(heroTagline || "I'm a professional dancer and dance teacher").split('.')[0]}.</span>
+            <span className="block">{(heroTagline || "I'm a professional dancer and dance teacher who can make you fall in love with dance.").split('.').slice(1).join('.').trim() || "Who can make you fall in love with dance."}</span>
           </p>
           <div className="flex justify-center gap-4 mb-8">
             <a href="https://www.instagram.com/elizabeth_zolotova/" target="_blank" rel="noopener noreferrer">
@@ -278,12 +279,12 @@ export default function Home() {
               </Button>
             </a>
           </div>
-          <div className="flex justify-center gap-4">
+          <div className="flex justify-center gap-6">
             <Link href="/book-session">
-              <Button size="lg" className="shadow-lg">Book a Dance Session</Button>
+              <Button size="lg" className="shadow-2xl px-10 py-7 text-lg font-bold bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 transition-all duration-300 hover:scale-105">Book a Dance Session</Button>
             </Link>
             <Link href="/courses">
-              <Button size="lg" variant="outline" className="shadow-lg border-2 border-primary hover:bg-primary hover:text-primary-foreground">Explore Courses</Button>
+              <Button size="lg" variant="outline" className="shadow-2xl px-10 py-7 text-lg font-bold border-3 border-pink-600 text-pink-600 hover:bg-pink-600 hover:text-white transition-all duration-300 hover:scale-105">Explore Courses</Button>
             </Link>
           </div>
         </div>
@@ -309,13 +310,13 @@ export default function Home() {
             <div className="inline-flex items-center gap-2 bg-white/80 backdrop-blur-md p-2 rounded-full shadow-lg border border-pink-100">
               <button
                 onClick={() => setCourseFilter('all')}
-                className={`px-6 py-3 rounded-full font-medium transition-all duration-300 flex items-center gap-2 ${
+                className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-1.5 ${
                   courseFilter === 'all'
-                    ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-md scale-105'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-50 border border-gray-200'
                 }`}
               >
-                <span className="text-lg">✧</span>
+                <span className="text-base">🌟</span>
                 All Courses
                 {courseFilter === 'all' && courses && (
                   <span className="ml-1 px-2 py-0.5 bg-white/30 rounded-full text-xs font-bold">
@@ -325,13 +326,13 @@ export default function Home() {
               </button>
               <button
                 onClick={() => setCourseFilter('free')}
-                className={`px-6 py-3 rounded-full font-medium transition-all duration-300 flex items-center gap-2 ${
+                className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-1.5 ${
                   courseFilter === 'free'
-                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md scale-105'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-50 border border-gray-200'
                 }`}
               >
-                <span className="text-lg">🎁</span>
+                <span className="text-base">🎁</span>
                 Free
                 {courseFilter === 'free' && (
                   <span className="ml-1 px-2 py-0.5 bg-white/30 rounded-full text-xs font-bold">
@@ -341,13 +342,13 @@ export default function Home() {
               </button>
               <button
                 onClick={() => setCourseFilter('premium')}
-                className={`px-6 py-3 rounded-full font-medium transition-all duration-300 flex items-center gap-2 ${
+                className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 flex items-center gap-1.5 ${
                   courseFilter === 'premium'
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md scale-105'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm'
+                    : 'text-gray-600 hover:bg-gray-50 border border-gray-200'
                 }`}
               >
-                <span className="text-lg">✨</span>
+                <span className="text-base">✨</span>
                 Premium
                 {courseFilter === 'premium' && (
                   <span className="ml-1 px-2 py-0.5 bg-white/30 rounded-full text-xs font-bold">
@@ -378,28 +379,14 @@ export default function Home() {
                   key={course.id} 
                   className="group overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 bg-white/90 backdrop-blur-sm"
                 >
-                  <div className="h-64 bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center relative overflow-hidden">
+                  <div className="relative">
                     {course.imageUrl ? (
                       <>
                         <img 
                           src={course.imageUrl} 
                           alt={course.title} 
-                          loading="lazy"
-                          className="absolute transition-transform duration-700" 
-                          style={{
-                            top: '50%',
-                            left: '50%',
-                            width: 'auto',
-                            height: 'auto',
-                            maxWidth: 'none',
-                            maxHeight: 'none',
-                            minWidth: '100%',
-                            minHeight: '100%',
-                            transform: `translate(-50%, -50%) scale(${parseFloat(course.imageCropZoom || "0.2")}) translate(${parseFloat(course.imageCropOffsetX || "0")}px, ${parseFloat(course.imageCropOffsetY || "0")}px)`,
-                            transformOrigin: 'center center',
-                          }}
+                          className="w-full h-48 object-cover rounded-t-lg"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
                         {course.isTopPick && (
                           <div className="absolute top-4 left-4 z-10 animate-pulse-slow">
                             <div className="relative">
@@ -420,28 +407,10 @@ export default function Home() {
                           </div>
                         )}
                       </>
-                    ) : (                      <>
-                        <span className="text-8xl transition-transform duration-500">💃</span>
-                        {course.isTopPick && (
-                          <div className="absolute top-4 left-4 z-10 animate-pulse-slow">
-                            <div className="relative">
-                              {/* Glitter effects */}
-                              <div className="absolute -inset-2 bg-gradient-to-r from-pink-400 via-purple-400 to-pink-400 rounded-full blur-md opacity-75 animate-spin-slow"></div>
-                              <div className="absolute -inset-1 bg-gradient-to-r from-pink-300 via-purple-300 to-pink-300 rounded-full blur-sm opacity-50"></div>
-                              {/* Badge */}
-                              <div className="relative bg-gradient-to-r from-pink-500 via-purple-500 to-pink-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-2xl flex items-center gap-1.5 border-2 border-white/50">
-                                <span className="text-base animate-bounce-subtle">⭐</span>
-                                <span className="tracking-wide">TOP PICK</span>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        {!course.isFree && (
-                          <div className="absolute top-4 right-4 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-1">
-                            <span>✨</span> PREMIUM
-                          </div>
-                        )}
-                      </>
+                    ) : (
+                      <div className="w-full h-48 bg-gradient-to-br from-pink-100 to-purple-100 rounded-t-lg flex items-center justify-center">
+                        <span className="text-6xl">💃</span>
+                      </div>
                     )}
                   </div>
                   <CardHeader className="pb-4">
@@ -488,7 +457,7 @@ export default function Home() {
               {filteredCourses.length > 6 && (
                 <div className="flex justify-center mt-8">
                   <Link href="/courses">
-                    <Button size="lg" variant="outline" className="shadow-lg">
+                    <Button size="sm" variant="outline" className="shadow-sm border-gray-300 text-gray-700 hover:bg-gray-50 font-medium">
                       View All {filteredCourses.length} Courses
                     </Button>
                   </Link>
@@ -505,8 +474,9 @@ export default function Home() {
               {courseFilter !== 'all' && (
                 <Button
                   variant="outline"
+                  size="sm"
                   onClick={() => setCourseFilter('all')}
-                  className="mt-4"
+                  className="mt-4 border-gray-300 text-gray-700 hover:bg-gray-50 font-medium"
                 >
                   View All Courses
                 </Button>
