@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { useAdaptiveTextStyling } from "@/hooks/useAdaptiveTextStyling";
 import "@/styles/adaptiveText.css";
 
@@ -83,6 +83,7 @@ export function WebsitePopup({ settings, onDismiss, onEmailSubmit }: WebsitePopu
         className="sm:max-w-2xl p-0 overflow-hidden border-0 gap-0"
         aria-describedby={undefined}
       >
+        <DialogTitle className="sr-only">{settings.title}</DialogTitle>
         {hasImage ? (
           // Image-based popup with adaptive text overlay
           <div className="relative min-h-[400px] sm:min-h-[500px] flex items-center justify-center">

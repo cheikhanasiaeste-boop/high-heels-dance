@@ -484,3 +484,6 @@
 
 ## Refine Widget Vibration Animation
 - [x] Replace shake with subtle vibration that grabs attention without excessive movement
+
+## Fix DialogTitle Accessibility Error
+- [x] Add DialogTitle with sr-only class to WebsitePopup component for screen reader accessibility
