@@ -842,3 +842,12 @@
 - [x] Test Top Pick toggle functionality
 - [x] Test 2-row grid layout on different screen sizes
 - [x] Test navigation arrows behavior
+
+## Top Pick Display Enhancements
+- [x] Sort courses to display Top Picks first in homepage
+- [x] Ensure Top Picks appear before non-Top Pick courses
+- [x] Redesign Top Pick badge with pink/purple gradient (site identity)
+- [x] Add glitter/sparkle effects around badge
+- [x] Add subtle animation to badge for attention
+- [x] Test Top Pick sorting with mixed courses
+- [x] Verify badge visibility and attractiveness
