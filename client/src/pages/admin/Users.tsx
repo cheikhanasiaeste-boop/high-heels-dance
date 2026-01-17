@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { trpc } from "@/lib/trpc";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Search, UserCog, Shield, User } from "lucide-react";
+import { Search, UserCog, Shield, User, Mail, BookOpen } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function AdminUsers() {
   const { user, isAuthenticated } = useAuth();
@@ -38,6 +39,25 @@ export default function AdminUsers() {
     }
 
     updateRoleMutation.mutate({ userId, role });
+  };
+
+  const markViewedMutation = trpc.admin.users.markUserViewed.useMutation({
+    onSuccess: () => {
+      utils.admin.users.list.invalidate();
+      utils.admin.users.newUserCount.invalidate();
+    },
+  });
+
+  const handleUserClick = (userId: number, lastViewedByAdmin: Date | null) => {
+    if (!lastViewedByAdmin) {
+      markViewedMutation.mutate({ userId });
+    }
+  };
+
+  const handleSendMessage = (userEmail: string, userName: string) => {
+    // Open email client with pre-filled recipient
+    window.location.href = `mailto:${userEmail}?subject=Message from ${user?.name || 'Admin'}`;
+    toast.success(`Opening email client to message ${userName}`);
   };
 
   const filteredUsers = users.filter((u) => {
@@ -137,7 +157,11 @@ export default function AdminUsers() {
                 filteredUsers.map((u) => (
                   <div
                     key={u.id}
-                    className="flex items-center justify-between p-4 border rounded-lg"
+                    onClick={() => handleUserClick(u.id, u.lastViewedByAdmin)}
+                    className={cn(
+                      "flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-all",
+                      !u.lastViewedByAdmin && "border-yellow-400 shadow-lg shadow-yellow-100 dark:shadow-yellow-900/20 bg-yellow-50/50 dark:bg-yellow-900/10"
+                    )}
                   >
                     <div className="flex-1">
                       <div className="flex items-center gap-3">
@@ -152,6 +176,17 @@ export default function AdminUsers() {
                     </div>
 
                     <div className="flex items-center gap-4">
+                      {!u.lastViewedByAdmin && (
+                        <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-300">
+                          NEW
+                        </Badge>
+                      )}
+
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <BookOpen className="h-4 w-4" />
+                        <span>{u.enrollmentCount || 0} courses</span>
+                      </div>
+
                       <div className="text-sm text-muted-foreground">
                         Joined {new Date(u.createdAt).toLocaleDateString()}
                       </div>
@@ -163,6 +198,19 @@ export default function AdminUsers() {
                           <><User className="h-3 w-3 mr-1" /> User</>
                         )}
                       </Badge>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleSendMessage(u.email || '', u.name || 'User');
+                        }}
+                        disabled={!u.email}
+                      >
+                        <Mail className="h-4 w-4 mr-2" />
+                        Message
+                      </Button>
 
                       <Select
                         value={u.role}

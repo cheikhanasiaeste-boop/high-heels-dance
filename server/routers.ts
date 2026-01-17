@@ -666,6 +666,17 @@ export const appRouter = router({
           }
           return user;
         }),
+
+      newUserCount: adminProcedure.query(async () => {
+        return await db.getNewUserCount();
+      }),
+
+      markUserViewed: adminProcedure
+        .input(z.object({ userId: z.number() }))
+        .mutation(async ({ input }) => {
+          await db.markUserViewedByAdmin(input.userId);
+          return { success: true };
+        }),
     }),
 
     // Course Assignment Management

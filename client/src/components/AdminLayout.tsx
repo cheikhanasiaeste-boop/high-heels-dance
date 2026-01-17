@@ -32,6 +32,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   
   // Get pending testimonials count
   const { data: pendingCount = 0 } = trpc.admin.testimonials.pendingCount.useQuery();
+  
+  // Get new/unviewed users count
+  const { data: newUserCount = 0 } = trpc.admin.users.newUserCount.useQuery();
 
   return (
     <>
@@ -73,6 +76,11 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                     {item.path === '/admin/testimonials' && pendingCount > 0 && (
                       <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse">
                         {pendingCount}
+                      </span>
+                    )}
+                    {item.path === '/admin/users' && newUserCount > 0 && (
+                      <span className="ml-auto flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-bold text-white bg-red-500 rounded-full animate-pulse">
+                        {newUserCount}
                       </span>
                     )}
                   </Link>

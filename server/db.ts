@@ -510,16 +510,35 @@ export async function getUserTestimonialForItem(userId: number, type: "session" 
 }
 
 // User Management Functions
-export async function getAllUsers(): Promise<typeof users.$inferSelect[]> {
+export async function getAllUsers(): Promise<(typeof users.$inferSelect & { enrollmentCount: number })[]> {
   const db = await getDb();
   if (!db) return [];
   
+  const { sql } = await import("drizzle-orm");
+  
   const result = await db
-    .select()
+    .select({
+      id: users.id,
+      openId: users.openId,
+      name: users.name,
+      email: users.email,
+      loginMethod: users.loginMethod,
+      role: users.role,
+      hasSeenWelcome: users.hasSeenWelcome,
+      lastViewedByAdmin: users.lastViewedByAdmin,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      lastSignedIn: users.lastSignedIn,
+      enrollmentCount: sql<number>`(
+        SELECT COUNT(*) 
+        FROM ${userCourseEnrollments} 
+        WHERE ${userCourseEnrollments.userId} = ${users.id}
+      )`,
+    })
     .from(users)
     .orderBy(desc(users.createdAt));
   
-  return result;
+  return result as (typeof users.$inferSelect & { enrollmentCount: number })[];
 }
 
 export async function updateUserRole(userId: number, role: "admin" | "user"): Promise<void> {
@@ -1760,4 +1779,40 @@ export async function updateLessonProgress(
     
     return created[0];
   }
+}
+
+export async function getNewUserCount(): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  
+  const { sql } = await import("drizzle-orm");
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(users)
+    .where(isNull(users.lastViewedByAdmin));
+  
+  return Number(result[0]?.count || 0);
+}
+
+export async function markUserViewedByAdmin(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .update(users)
+    .set({ lastViewedByAdmin: new Date() })
+    .where(eq(users.id, userId));
+}
+
+export async function getUserEnrollmentCount(userId: number): Promise<number> {
+  const db = await getDb();
+  if (!db) return 0;
+  
+  const { sql } = await import("drizzle-orm");
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(userCourseEnrollments)
+    .where(eq(userCourseEnrollments.userId, userId));
+  
+  return Number(result[0]?.count || 0);
 }

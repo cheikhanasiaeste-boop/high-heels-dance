@@ -120,6 +120,13 @@
       "when": 1768669488707,
       "tag": "0016_bent_golden_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "5",
+      "when": 1768685900682,
+      "tag": "0017_loose_fenris",
+      "breakpoints": true
     }
   ]
 }

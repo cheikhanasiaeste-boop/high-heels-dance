@@ -1054,3 +1054,30 @@
 - [x] Include course name in testimonial data
 - [x] Replace "Course Feedback" with actual course name in admin page
 - [x] Test course name displays correctly for all testimonials
+
+## User Management Enhancements
+- [ ] Add lastViewedByAdmin timestamp to users table schema
+- [ ] Create API endpoint to get new/unviewed users count
+- [ ] Add notification badge to User Management submenu showing new user count
+- [ ] Add visual indicator (border/highlight) for unviewed users in user list
+- [ ] Mark user as viewed when admin opens user details
+- [ ] Display enrolled course count instead of "Courses" placeholder
+- [ ] Create API endpoint to get user's enrolled course count
+- [ ] Add "Message" button to each user row in user list
+- [ ] Implement direct messaging modal/interface
+- [ ] Test notification badge updates when new users register
+- [ ] Test course count displays correctly
+- [ ] Test direct messaging functionality
+
+## User Management Enhancements
+- [x] Add lastViewedByAdmin field to users table schema
+- [x] Create API endpoint to get new/unviewed users count (admin.users.newUserCount)
+- [x] Add notification badge to User Management submenu (red pulsing badge)
+- [x] Add visual indicator (yellow border/highlight + NEW badge) for new users
+- [x] Display enrolled course count in user list (with BookOpen icon)
+- [x] Add "Message" button to user list
+- [x] Implement direct messaging via email client (mailto: link)
+- [x] Mark user as viewed when admin clicks on user row
+- [x] Test notification badge updates
+- [x] Test course count display
+- [x] Test message button functionality
