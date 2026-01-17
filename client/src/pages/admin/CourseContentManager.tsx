@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { VideoUpload } from "@/components/VideoUpload";
 import {
   GraduationCap,
   ShoppingCart,
@@ -26,6 +27,7 @@ import {
   ChevronRight,
   Eye,
   EyeOff,
+  Pencil,
 } from "lucide-react";
 
 type Tab = "thumbnail" | "checkout" | "course" | "options";
@@ -166,15 +168,23 @@ export default function CourseContentManager() {
                 </div>
               </div>
 
-              <div className="ml-10 mt-6 flex items-center gap-4 bg-muted/30 p-4 rounded-lg">
-                <div className="w-24 h-16 bg-muted rounded flex items-center justify-center">
-                  <ImageIcon className="w-8 h-8 text-muted-foreground" />
+              <div className="ml-10 mt-6 space-y-4">
+                <div className="flex items-center gap-4 bg-muted/30 p-4 rounded-lg">
+                  <div className="w-24 h-16 bg-muted rounded flex items-center justify-center">
+                    <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground">Homepage</p>
+                    <p className="font-medium">{course.title}</p>
+                  </div>
+                  <Button variant="outline">Edit Page →</Button>
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm text-muted-foreground">Homepage</p>
-                  <p className="font-medium">{course.title}</p>
+                
+                <div>
+                  <h3 className="text-sm font-medium mb-2">Preview Video</h3>
+                  <p className="text-xs text-muted-foreground mb-3">Upload a preview video to showcase your course</p>
+                  <CoursePreviewVideo courseId={courseId} currentVideoUrl={course.previewVideoUrl} />
                 </div>
-                <Button variant="outline">Edit Page →</Button>
               </div>
             </Card>
 
@@ -279,6 +289,7 @@ function ModuleCard({
               <p className="text-sm text-muted-foreground mt-1">{module.description}</p>
             )}
           </div>
+          <EditModuleDialog module={module} />
           <Button
             variant="ghost"
             size="icon"
@@ -307,6 +318,7 @@ function ModuleCard({
                     <p className="text-xs text-muted-foreground">{lesson.duration}min</p>
                   )}
                 </div>
+                <EditLessonDialog lesson={lesson} />
                 <Button
                   variant="ghost"
                   size="icon"
@@ -430,6 +442,276 @@ function AddLessonDialog({ onAdd }: { onAdd: (title: string) => void }) {
               Cancel
             </Button>
             <Button onClick={handleAdd}>Add Lesson</Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Course Preview Video Component
+function CoursePreviewVideo({ courseId, currentVideoUrl }: { courseId: number; currentVideoUrl?: string | null }) {
+  const utils = trpc.useUtils();
+  const uploadMutation = trpc.media.uploadCourseVideo.useMutation({
+    onSuccess: () => {
+      utils.admin.courses.list.invalidate();
+    },
+  });
+
+  const handleUpload = async (file: File) => {
+    return new Promise<void>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const base64 = reader.result?.toString().split(',')[1];
+          if (!base64) throw new Error("Failed to read file");
+          
+          await uploadMutation.mutateAsync({
+            courseId,
+            filename: file.name,
+            contentType: file.type,
+            data: base64,
+          });
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  return <VideoUpload onUpload={handleUpload} currentVideoUrl={currentVideoUrl} />;
+}
+
+// Edit Module Dialog
+function EditModuleDialog({ module }: { module: any }) {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState(module.title);
+  const [description, setDescription] = useState(module.description || "");
+  const utils = trpc.useUtils();
+  
+  const updateMutation = trpc.admin.courseContent.updateModule.useMutation({
+    onSuccess: () => {
+      utils.admin.courseContent.getModules.invalidate();
+      toast.success("Module updated successfully");
+      setOpen(false);
+    },
+  });
+
+  const uploadMutation = trpc.media.uploadModuleVideo.useMutation({
+    onSuccess: () => {
+      utils.admin.courseContent.getModules.invalidate();
+    },
+  });
+
+  const handleUpload = async (file: File) => {
+    return new Promise<void>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const base64 = reader.result?.toString().split(',')[1];
+          if (!base64) throw new Error("Failed to read file");
+          
+          await uploadMutation.mutateAsync({
+            moduleId: module.id,
+            filename: file.name,
+            contentType: file.type,
+            data: base64,
+          });
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleSave = () => {
+    if (!title.trim()) {
+      toast.error("Module title is required");
+      return;
+    }
+    updateMutation.mutate({
+      id: module.id,
+      title,
+      description,
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <Pencil className="w-4 h-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Module</DialogTitle>
+          <DialogDescription>Update module details and upload video content.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="edit-module-title">Module Title</Label>
+            <Input
+              id="edit-module-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g., Warm-Up"
+            />
+          </div>
+          <div>
+            <Label htmlFor="edit-module-description">Description</Label>
+            <Textarea
+              id="edit-module-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Brief description of this module"
+              rows={3}
+            />
+          </div>
+          <div>
+            <Label>Module Video</Label>
+            <VideoUpload 
+              onUpload={handleUpload} 
+              currentVideoUrl={module.videoUrl} 
+              label="Upload Module Video"
+            />
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Edit Lesson Dialog
+function EditLessonDialog({ lesson }: { lesson: any }) {
+  const [open, setOpen] = useState(false);
+  const [title, setTitle] = useState(lesson.title);
+  const [description, setDescription] = useState(lesson.description || "");
+  const [duration, setDuration] = useState(lesson.duration?.toString() || "");
+  const utils = trpc.useUtils();
+  
+  const updateMutation = trpc.admin.courseContent.updateLesson.useMutation({
+    onSuccess: () => {
+      utils.admin.courseContent.getLessons.invalidate();
+      toast.success("Lesson updated successfully");
+      setOpen(false);
+    },
+  });
+
+  const uploadMutation = trpc.media.uploadLessonVideo.useMutation({
+    onSuccess: () => {
+      utils.admin.courseContent.getLessons.invalidate();
+    },
+  });
+
+  const handleUpload = async (file: File) => {
+    return new Promise<void>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const base64 = reader.result?.toString().split(',')[1];
+          if (!base64) throw new Error("Failed to read file");
+          
+          await uploadMutation.mutateAsync({
+            lessonId: lesson.id,
+            filename: file.name,
+            contentType: file.type,
+            data: base64,
+          });
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleSave = () => {
+    if (!title.trim()) {
+      toast.error("Lesson title is required");
+      return;
+    }
+    updateMutation.mutate({
+      id: lesson.id,
+      title,
+      description,
+      duration: duration ? parseInt(duration) : undefined,
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="ghost" size="icon">
+          <Pencil className="w-3 h-3" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Lesson</DialogTitle>
+          <DialogDescription>Update lesson details and upload video content.</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="edit-lesson-title">Lesson Title</Label>
+            <Input
+              id="edit-lesson-title"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g., Warm-Up (8min)"
+            />
+          </div>
+          <div>
+            <Label htmlFor="edit-lesson-description">Description</Label>
+            <Textarea
+              id="edit-lesson-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Brief description of this lesson"
+              rows={3}
+            />
+          </div>
+          <div>
+            <Label htmlFor="edit-lesson-duration">Duration (minutes)</Label>
+            <Input
+              id="edit-lesson-duration"
+              type="number"
+              value={duration}
+              onChange={(e) => setDuration(e.target.value)}
+              placeholder="e.g., 8"
+            />
+          </div>
+          <div>
+            <Label>Lesson Video</Label>
+            <VideoUpload 
+              onUpload={handleUpload} 
+              currentVideoUrl={lesson.videoUrl} 
+              label="Upload Lesson Video"
+            />
+          </div>
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={updateMutation.isPending}>
+              {updateMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
           </div>
         </div>
       </DialogContent>

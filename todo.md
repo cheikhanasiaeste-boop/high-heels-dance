@@ -719,3 +719,14 @@
 - [x] Build course content management UI with tabs
 - [x] Test module and lesson creation
 - [x] Test module and lesson deletion
+
+## Course Content Enhancement - Videos and Descriptions
+- [x] Add previewVideoUrl field to courses table
+- [x] Add videoUrl field to courseModules table
+- [x] Add videoUrl field to courseLessons table (already existed)
+- [x] Create video upload endpoints for courses, modules, and lessons
+- [x] Build course preview video upload UI in Course Homepage section
+- [x] Build module video and description upload UI
+- [x] Build lesson video and description upload UI
+- [x] Test video upload for all content types
+- [ ] Test video playback in course viewer

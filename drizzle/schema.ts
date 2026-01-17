@@ -30,6 +30,8 @@ export const courses = mysqlTable("courses", {
   originalPrice: decimal("originalPrice", { precision: 10, scale: 2 }), // For showing discounts
   imageUrl: text("imageUrl"), // S3 URL for course image
   imageKey: text("imageKey"), // S3 key for course image
+  previewVideoUrl: text("previewVideoUrl"), // S3 URL for course preview video
+  previewVideoKey: text("previewVideoKey"), // S3 key for course preview video
   isFree: boolean("isFree").default(false).notNull(),
   isPublished: boolean("isPublished").default(true).notNull(), // Admin can unpublish courses
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -255,6 +257,8 @@ export const courseModules = mysqlTable("course_modules", {
   courseId: int("courseId").notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
+  videoUrl: text("videoUrl"), // S3 URL for module video
+  videoKey: text("videoKey"), // S3 key for module video
   order: int("order").notNull().default(0), // For ordering modules within a course
   isPublished: boolean("isPublished").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

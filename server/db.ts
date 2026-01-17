@@ -1361,6 +1361,8 @@ export async function updateCourseModule(
   updates: {
     title?: string;
     description?: string;
+    videoUrl?: string;
+    videoKey?: string;
     order?: number;
     isPublished?: boolean;
   }
