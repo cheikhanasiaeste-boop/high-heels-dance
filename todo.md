@@ -942,3 +942,9 @@
 - [x] Add glitter/sparkle effects to Top Pick badge (3 glow layers + shimmer)
 - [x] Test Top Pick sorting on both pages
 - [x] Test Top Pick badge animations and visibility
+
+## Top Pick Badge Refinement
+- [x] Remove yellow/gold outer glow layer from homepage badge
+- [x] Remove yellow/gold outer glow layer from Explore Courses badge
+- [x] Keep pink/purple gradient effects
+- [x] Test refined badge appearance
