@@ -343,9 +343,18 @@ export default function Home() {
                           src={course.imageUrl} 
                           alt={course.title} 
                           loading="lazy"
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                          className="absolute group-hover:scale-110 transition-transform duration-700" 
                           style={{
-                            transform: `scale(${parseFloat(course.imageCropZoom || "1.00")}) translate(${parseFloat(course.imageCropOffsetX || "0.00") / parseFloat(course.imageCropZoom || "1.00")}%, ${parseFloat(course.imageCropOffsetY || "0.00") / parseFloat(course.imageCropZoom || "1.00")}%)`,
+                            top: '50%',
+                            left: '50%',
+                            width: 'auto',
+                            height: 'auto',
+                            maxWidth: 'none',
+                            maxHeight: 'none',
+                            minWidth: '100%',
+                            minHeight: '100%',
+                            transform: `translate(-50%, -50%) scale(${parseFloat(course.imageCropZoom || "1.00")}) translate(${parseFloat(course.imageCropOffsetX || "0")}px, ${parseFloat(course.imageCropOffsetY || "0")}px)`,
+                            transformOrigin: 'center center',
                           }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>

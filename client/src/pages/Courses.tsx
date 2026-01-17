@@ -97,14 +97,23 @@ export default function Courses() {
             {filteredCourses.map((course) => (
               <Card key={course.id} className="flex flex-col hover:shadow-lg transition-shadow">
                 {course.imageUrl && (
-                  <div className="relative h-48 overflow-hidden rounded-t-lg">
+                  <div className="relative h-48 overflow-hidden rounded-t-lg bg-muted/20">
                     <img
                       src={course.imageUrl}
                       alt={course.title}
                       loading="lazy"
-                      className="w-full h-full object-cover"
+                      className="absolute"
                       style={{
-                        transform: `scale(${parseFloat(course.imageCropZoom || "1.00")}) translate(${parseFloat(course.imageCropOffsetX || "0.00") / parseFloat(course.imageCropZoom || "1.00")}%, ${parseFloat(course.imageCropOffsetY || "0.00") / parseFloat(course.imageCropZoom || "1.00")}%)`,
+                        top: '50%',
+                        left: '50%',
+                        width: 'auto',
+                        height: 'auto',
+                        maxWidth: 'none',
+                        maxHeight: 'none',
+                        minWidth: '100%',
+                        minHeight: '100%',
+                        transform: `translate(-50%, -50%) scale(${parseFloat(course.imageCropZoom || "1.00")}) translate(${parseFloat(course.imageCropOffsetX || "0")}px, ${parseFloat(course.imageCropOffsetY || "0")}px)`,
+                        transformOrigin: 'center center',
                       }}
                     />
                     {!course.isFree && (

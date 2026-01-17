@@ -756,3 +756,19 @@
 - [x] Add "Cancel" button to discard selection
 - [x] Save crop settings together with image upload
 - [x] Test complete pre-upload adjustment workflow
+
+## Verify No Image Cropping on Upload
+- [ ] Confirm full original image uploads to S3 (no cropping)
+- [ ] Verify crop settings only affect CSS transform (display only)
+- [ ] Test that adjustments never show white space
+- [ ] Document that original image is always preserved
+
+## Fix Non-Destructive Thumbnail Rendering
+- [x] Diagnose current CSS clipping issue (object-fit: cover)
+- [x] Remove destructive object-fit property
+- [x] Implement viewport frame with overflow: hidden
+- [x] Ensure full image renders behind fixed frame
+- [x] Fix transform origin for proper zoom behavior
+- [x] Test that repositioning never shows white space
+- [x] Verify full image data is always accessible
+- [x] Document corrected rendering model

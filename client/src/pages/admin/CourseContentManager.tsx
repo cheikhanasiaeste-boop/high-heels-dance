@@ -724,9 +724,9 @@ function CourseThumbnailUpload({ course }: { course: any }) {
   const [previewMode, setPreviewMode] = useState(false); // New: pre-upload preview mode
   const [selectedFile, setSelectedFile] = useState<File | null>(null); // New: selected file
   const [previewUrl, setPreviewUrl] = useState<string | null>(null); // New: client-side preview
-  const [zoom, setZoom] = useState(1.0);
-  const [offsetX, setOffsetX] = useState(0);
-  const [offsetY, setOffsetY] = useState(0);
+  const [zoom, setZoom] = useState(parseFloat(course.imageCropZoom || "1.00"));
+  const [offsetX, setOffsetX] = useState(parseFloat(course.imageCropOffsetX || "0"));
+  const [offsetY, setOffsetY] = useState(parseFloat(course.imageCropOffsetY || "0"));
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const utils = trpc.useUtils();
@@ -808,8 +808,8 @@ function CourseThumbnailUpload({ course }: { course: any }) {
         id: course.id,
         imageUrl: result.url,
         imageCropZoom: zoom.toFixed(2),
-        imageCropOffsetX: offsetX.toFixed(2),
-        imageCropOffsetY: offsetY.toFixed(2),
+        imageCropOffsetX: Math.round(offsetX).toString(),
+        imageCropOffsetY: Math.round(offsetY).toString(),
       });
       
       // Clean up
@@ -834,8 +834,8 @@ function CourseThumbnailUpload({ course }: { course: any }) {
       await updateCourseMutation.mutateAsync({
         id: course.id,
         imageCropZoom: zoom.toFixed(2),
-        imageCropOffsetX: offsetX.toFixed(2),
-        imageCropOffsetY: offsetY.toFixed(2),
+        imageCropOffsetX: Math.round(offsetX).toString(),
+        imageCropOffsetY: Math.round(offsetY).toString(),
       });
     } catch (error) {
       console.error("Save error:", error);
@@ -860,11 +860,12 @@ function CourseThumbnailUpload({ course }: { course: any }) {
     if (!isDragging) return;
     if (!isEditing && !previewMode) return;
     
-    const deltaX = (e.clientX - dragStart.x) / 3; // Reduce sensitivity
-    const deltaY = (e.clientY - dragStart.y) / 3;
+    const deltaX = e.clientX - dragStart.x;
+    const deltaY = e.clientY - dragStart.y;
     
-    setOffsetX(prev => Math.max(-100, Math.min(100, prev + deltaX)));
-    setOffsetY(prev => Math.max(-100, Math.min(100, prev + deltaY)));
+    // No bounds checking - full image can move freely behind viewport
+    setOffsetX(prev => prev + deltaX);
+    setOffsetY(prev => prev + deltaY);
     
     setDragStart({ x: e.clientX, y: e.clientY });
   };
@@ -887,8 +888,8 @@ function CourseThumbnailUpload({ course }: { course: any }) {
 
   const hasChanges = 
     zoom.toFixed(2) !== (course.imageCropZoom || "1.00") ||
-    offsetX.toFixed(2) !== (course.imageCropOffsetX || "0.00") ||
-    offsetY.toFixed(2) !== (course.imageCropOffsetY || "0.00");
+    Math.round(offsetX).toString() !== (course.imageCropOffsetX || "0") ||
+    Math.round(offsetY).toString() !== (course.imageCropOffsetY || "0");
 
   // Determine which image to show and whether to show crop controls
   const displayImageUrl = previewMode ? previewUrl : course.imageUrl;
@@ -922,7 +923,7 @@ function CourseThumbnailUpload({ course }: { course: any }) {
               {previewMode ? "Adjust your thumbnail before uploading" : (isEditing ? "Drag to reposition • Use slider to zoom" : "Current Thumbnail")}
             </Label>
             <div 
-              className="relative w-full max-w-2xl aspect-video rounded-lg overflow-hidden border-2 transition-colors"
+              className="relative w-full max-w-2xl aspect-video rounded-lg overflow-hidden border-2 transition-colors bg-muted/20"
               style={{
                 borderColor: showCropControls ? "hsl(var(--primary))" : "hsl(var(--border))",
                 cursor: showCropControls ? (isDragging ? "grabbing" : "grab") : "default",
@@ -935,9 +936,18 @@ function CourseThumbnailUpload({ course }: { course: any }) {
               <img
                 src={displayImageUrl}
                 alt={previewMode ? "Preview" : course.title}
-                className="w-full h-full object-cover transition-transform"
+                className="absolute transition-transform"
                 style={{
-                  transform: `scale(${zoom}) translate(${offsetX / zoom}%, ${offsetY / zoom}%)`,
+                  top: '50%',
+                  left: '50%',
+                  width: 'auto',
+                  height: 'auto',
+                  maxWidth: 'none',
+                  maxHeight: 'none',
+                  minWidth: '100%',
+                  minHeight: '100%',
+                  transform: `translate(-50%, -50%) scale(${zoom}) translate(${offsetX}px, ${offsetY}px)`,
+                  transformOrigin: 'center center',
                   userSelect: "none",
                   pointerEvents: showCropControls ? "none" : "auto",
                 }}

@@ -116,15 +116,24 @@ export default function CourseDetail() {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
-            <div className="aspect-video bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg mb-8 flex items-center justify-center overflow-hidden">
+            <div className="aspect-video bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg mb-8 flex items-center justify-center overflow-hidden relative">
               {course.imageUrl ? (
                 <img 
                   src={course.imageUrl} 
                   alt={course.title} 
                   loading="lazy" 
-                  className="w-full h-full object-cover"
+                  className="absolute"
                   style={{
-                    transform: `scale(${parseFloat(course.imageCropZoom || "1.00")}) translate(${parseFloat(course.imageCropOffsetX || "0.00") / parseFloat(course.imageCropZoom || "1.00")}%, ${parseFloat(course.imageCropOffsetY || "0.00") / parseFloat(course.imageCropZoom || "1.00")}%)`,
+                    top: '50%',
+                    left: '50%',
+                    width: 'auto',
+                    height: 'auto',
+                    maxWidth: 'none',
+                    maxHeight: 'none',
+                    minWidth: '100%',
+                    minHeight: '100%',
+                    transform: `translate(-50%, -50%) scale(${parseFloat(course.imageCropZoom || "1.00")}) translate(${parseFloat(course.imageCropOffsetX || "0")}px, ${parseFloat(course.imageCropOffsetY || "0")}px)`,
+                    transformOrigin: 'center center',
                   }}
                 />
               ) : (
