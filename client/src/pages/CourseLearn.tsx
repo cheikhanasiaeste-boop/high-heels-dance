@@ -16,6 +16,14 @@ export default function CourseLearn() {
   
   const courseId = parseInt(id || "0");
   
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      toast.error("Please log in to access course content");
+      setLocation(`/courses/${courseId}`);
+    }
+  }, [isAuthenticated, courseId, setLocation]);
+  
   // Fetch course data
   const { data: course, isLoading: courseLoading } = trpc.courses.getById.useQuery(
     { id: courseId },
@@ -25,7 +33,7 @@ export default function CourseLearn() {
   // Fetch modules with lessons
   const { data: modules, isLoading: modulesLoading } = trpc.courses.getModulesWithLessons.useQuery(
     { courseId },
-    { enabled: !!courseId }
+    { enabled: isAuthenticated && !!courseId }
   );
   
   // Fetch user progress
@@ -39,6 +47,15 @@ export default function CourseLearn() {
     { courseId },
     { enabled: isAuthenticated && !!courseId }
   );
+  
+  // Show loading while checking authentication
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-muted-foreground">Redirecting to course page...</p>
+      </div>
+    );
+  }
   
   const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set());
   const [currentLessonId, setCurrentLessonId] = useState<number | null>(null);
