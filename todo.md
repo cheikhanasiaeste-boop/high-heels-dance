@@ -487,3 +487,8 @@
 
 ## Fix DialogTitle Accessibility Error
 - [x] Add DialogTitle with sr-only class to WebsitePopup component for screen reader accessibility
+
+## Restore Upcoming Events Widget
+- [x] Investigate why widget was not showing on homepage
+- [x] Create sample upcoming events in database to make widget visible
+- [x] Verify widget displays correctly with rose-gold gradient and vibration animation
