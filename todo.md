@@ -502,3 +502,11 @@
 - [x] Add keyboard focus support mirroring hover behavior
 - [x] Implement prefers-reduced-motion accessibility support
 - [x] Remove old vibration animation, replace with intentional premium motion
+
+## Replace Arrow and Eye Emojis with Dance-Inspired Icons
+- [x] Audit all pages and components for arrow (→, ➜) and eye (👀) emoji usage
+- [x] Design elegant icon replacement system inspired by dance, movement, and elegance
+- [x] Map old icons to new icons by use case (CTAs, course cards, navigation)
+- [x] Implement replacements consistently across all components
+- [x] Ensure icons remain instantly understandable and maintain visual weight
+- [x] Test visual coherence and brand alignment

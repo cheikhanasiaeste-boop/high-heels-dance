@@ -320,7 +320,7 @@ export default function BookSession() {
                               rel="noopener noreferrer"
                               className="text-sm text-primary hover:underline mt-2 inline-block"
                             >
-                              Join Zoom Meeting →
+                              Join Zoom Meeting ✦
                             </a>
                           )}
                           {slot.location && slot.eventType === 'in-person' && (

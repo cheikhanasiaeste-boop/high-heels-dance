@@ -234,7 +234,7 @@ export default function Home() {
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
-                <span className="text-lg">🎯</span>
+                <span className="text-lg">✧</span>
                 All Courses
                 {courseFilter === 'all' && courses && (
                   <span className="ml-1 px-2 py-0.5 bg-white/30 rounded-full text-xs font-bold">
@@ -356,7 +356,7 @@ export default function Home() {
                   <CardFooter>
                     <Link href={`/course/${course.id}`} className="w-full">
                       <Button className="w-full text-lg py-6 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105">
-                        {course.isFree ? '🎯 Start Learning' : '👀 View Details'}
+                        {course.isFree ? '✧ Start Learning' : '◇ View Details'}
                       </Button>
                     </Link>
                   </CardFooter>

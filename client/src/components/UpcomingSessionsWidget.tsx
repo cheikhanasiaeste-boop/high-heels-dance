@@ -195,7 +195,7 @@ export function UpcomingSessionsWidget() {
             href="/book-session"
             className="block text-center text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors"
           >
-            View All Available Sessions →
+            View All Available Sessions ✦
           </a>
         </div>
       </div>
