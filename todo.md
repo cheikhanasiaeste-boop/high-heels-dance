@@ -559,3 +559,8 @@
 - [x] Insert testimonials into database (10 total testimonials)
 - [x] Mark some as featured for homepage prominence (4 featured)
 - [x] Verify testimonials display correctly in carousel
+
+## Fix Duplicate React Keys in Testimonials Carousel
+- [x] Identify why keys 90010 and 90009 appear twice in testimonials rendering (testimonials with both text and video appeared in both query results)
+- [x] Fix key generation to ensure each testimonial has unique key (use composite key: type-id-index)
+- [x] Verify no duplicate key warnings in console (clean console confirmed)

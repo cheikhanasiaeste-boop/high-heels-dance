@@ -418,8 +418,8 @@ export default function Home() {
               className="w-full max-w-6xl mx-auto"
             >
               <CarouselContent>
-                {allTestimonials.map((testimonial) => (
-                  <CarouselItem key={testimonial.id} className="md:basis-1/2 lg:basis-1/3">
+                {allTestimonials.map((testimonial, index) => (
+                  <CarouselItem key={`${testimonial.type}-${testimonial.id}-${index}`} className="md:basis-1/2 lg:basis-1/3">
                     {testimonial.type === 'video' && testimonial.videoUrl ? (
                       <Card 
                         className="h-full cursor-pointer hover:shadow-xl transition-shadow group"
