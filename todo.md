@@ -982,3 +982,8 @@
 - [x] Add file size and spec warnings in admin (toast notifications)
 - [x] Document recommended animated WebP specifications (specs card in admin)
 - [x] Test animation smoothness and performance
+
+## Fix Empty Src Attribute Error
+- [x] Fix AnimatedWebP component to prevent empty string src
+- [x] Add conditional rendering when src is empty
+- [x] Test that error no longer appears in console

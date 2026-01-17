@@ -117,6 +117,20 @@ export function AnimatedWebP({
   // Determine which source to use
   const imageSrc = useFallback && fallbackSrc ? fallbackSrc : (isVisible ? src : '');
 
+  // Don't render if no valid src
+  if (!imageSrc) {
+    return (
+      <div
+        ref={imgRef as any}
+        className={className}
+        style={{
+          ...style,
+          backgroundColor: 'transparent',
+        }}
+      />
+    );
+  }
+
   return (
     <img
       ref={imgRef}
