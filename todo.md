@@ -954,3 +954,10 @@
 - [x] Remove pulse animation from Explore Courses Premium badge
 - [x] Keep Premium badge styling but make it static
 - [x] Test static Premium badge appearance
+
+## Badge Vertical Centering
+- [x] Change Top Pick badge from top-4 to top-1/2 -translate-y-1/2 on homepage
+- [x] Change Premium badge from top-4 to top-1/2 -translate-y-1/2 on homepage
+- [x] Change Top Pick badge from top-4 to top-1/2 -translate-y-1/2 on Explore Courses
+- [x] Change Premium badge from top-4 to top-1/2 -translate-y-1/2 on Explore Courses
+- [x] Test vertically centered badges at same height
