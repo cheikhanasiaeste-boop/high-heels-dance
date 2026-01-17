@@ -1,0 +1,8 @@
+{
+  "query": "\n-- First upload to S3 manually, then update database\n-- For now, let's prepare by checking current value\nSELECT * FROM settings WHERE `key` IN ('backgroundAnimationUrl', 'backgroundVideoUrl');\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4HtU1c2nK4A5Wb2.root --database M2v4Dnk4LCsJQ3Qwy7fUfL --execute \n-- First upload to S3 manually, then update database\n-- For now, let's prepare by checking current value\nSELECT * FROM settings WHERE `key` IN ('backgroundAnimationUrl', 'backgroundVideoUrl');\n",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 4: Table 'm2v4dnk4lcsjq3qwy7fufl.settings' doesn't exist"
+  ]
+}

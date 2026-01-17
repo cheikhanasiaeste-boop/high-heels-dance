@@ -1,0 +1,22 @@
+{
+  "query": "SELECT * FROM siteSettings WHERE `key` IN ('backgroundAnimationUrl', 'backgroundVideoUrl');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4HtU1c2nK4A5Wb2.root --database M2v4Dnk4LCsJQ3Qwy7fUfL --execute SELECT * FROM siteSettings WHERE `key` IN ('backgroundAnimationUrl', 'backgroundVideoUrl');",
+  "rows": [
+    {
+      "id": "120001",
+      "key": "backgroundAnimationUrl",
+      "value": "https://d2xsxph8kpxj0f.cloudfront.net/310519663298901455/M2v4Dnk4LCsJQ3Qwy7fUfL/animations/background-1768641309084.webp",
+      "updatedAt": "2026-01-17 09:15:14"
+    },
+    {
+      "id": "90011",
+      "key": "backgroundVideoUrl",
+      "value": "https://d2xsxph8kpxj0f.cloudfront.net/310519663298901455/M2v4Dnk4LCsJQ3Qwy7fUfL/videos/background-1768604903267.mp4",
+      "updatedAt": "2026-01-16 23:08:34"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tkey\tvalue\tupdatedAt\n120001\tbackgroundAnimationUrl\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663298901455/M2v4Dnk4LCsJQ3Qwy7fUfL/animations/background-1768641309084.webp\t2026-01-17 09:15:14\n90011\tbackgroundVideoUrl\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663298901455/M2v4Dnk4LCsJQ3Qwy7fUfL/videos/background-1768604903267.mp4\t2026-01-16 23:08:34\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

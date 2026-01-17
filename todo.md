@@ -592,3 +592,10 @@
 - [x] Remove all related state variables and handlers
 - [x] Keep hero section background rendering (current animation stays visible)
 - [x] Test admin settings page loads without errors
+
+## Update Hero Background with New WebP
+- [x] Upload new dance animation WebP to S3 (CDN URL: https://files.manuscdn.com/user_upload_by_module/session_file/310519663298901455/AyqsbvDZxdaxoTyB.webp)
+- [x] Update database backgroundAnimationUrl
+- [x] Optimize filters for strong visual presence + text readability (60% opacity, 80% saturation, 90% brightness, 1px blur, 40% white overlay)
+- [x] Test performance (loading speed, animation smoothness) - 2.0MB file size acceptable
+- [x] Verify prefers-reduced-motion fallback works (implemented)
