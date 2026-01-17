@@ -1103,9 +1103,28 @@ export async function listUsers(params: {
     .limit(limit)
     .offset(offset);
 
+  // Get course counts for each user
+  const userIds = result.map(u => u.id);
+  const courseCounts = userIds.length > 0 ? await db
+    .select({
+      userId: userCourseEnrollments.userId,
+      count: sql<number>`count(*)`
+    })
+    .from(userCourseEnrollments)
+    .where(inArray(userCourseEnrollments.userId, userIds))
+    .groupBy(userCourseEnrollments.userId) : [];
+
+  const courseCountMap = new Map(courseCounts.map(c => [c.userId, Number(c.count)]));
+
+  // Add courseCount to each user
+  const usersWithCounts = result.map(user => ({
+    ...user,
+    courseCount: courseCountMap.get(user.id) || 0
+  }));
+
   const pages = Math.ceil(total / limit);
 
-  return { users: result, total, pages };
+  return { users: usersWithCounts, total, pages };
 }
 
 /**

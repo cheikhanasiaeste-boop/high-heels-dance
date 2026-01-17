@@ -1102,3 +1102,9 @@
 - [x] Add event type icons and styling
 - [x] Add date/time formatting for events
 - [x] Test activity timeline display
+
+## Course Count Display Bug
+- [x] Investigate course count query in User Management
+- [x] Fix course count calculation to include all enrolled courses
+- [x] Test course count display with actual data
+- [x] Verify count updates when courses are assigned/removed
