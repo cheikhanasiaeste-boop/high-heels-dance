@@ -122,6 +122,7 @@ export default function AdminCourses() {
       imageKey: editingCourse.imageKey || undefined,
       isFree: editingCourse.isFree || false,
       isPublished: editingCourse.isPublished !== false,
+      isTopPick: editingCourse.isTopPick || false,
     };
 
     if (editingCourse.id) {

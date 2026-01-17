@@ -920,3 +920,10 @@
 - [x] Make bottom buttons and filters thinner
 - [x] Refine bottom UI elements for elegant appearance
 - [x] Test all design changes across screen sizes
+
+## Top Pick Toggle Bug Fix
+- [x] Investigate why isTopPick toggle doesn't persist after update
+- [x] Fix admin course update to save isTopPick field
+- [x] Verify isTopPick displays correctly in admin after save
+- [x] Verify Top Pick badge shows on homepage
+- [x] Test Top Pick toggle on/off functionality (5/5 tests passing)
