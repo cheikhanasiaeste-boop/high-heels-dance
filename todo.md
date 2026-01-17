@@ -1022,3 +1022,10 @@
 - [x] Add proper redirect to course detail page when user is not authenticated
 - [x] Prevent API calls before authentication check completes
 - [x] Test course learning page with logged out users
+
+## Fix 404 Error on Course Detail Route
+- [x] Check App.tsx routing configuration
+- [x] Fix course detail route pattern to match /courses/:id
+- [x] Add /courses/:id/learn route for consistency
+- [x] Verify route works with course IDs
+- [x] Test course detail page access
