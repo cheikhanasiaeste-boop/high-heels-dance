@@ -616,3 +616,55 @@
 - [ ] Add delete user confirmation with active courses warning
 - [ ] Test all single and bulk operations
 - [ ] Add optimistic updates for instant feedback
+
+## Complete User Management UI Implementation
+- [ ] Create /admin/users page component
+- [ ] Add search bar with real-time filtering
+- [ ] Add role filter dropdown (All/Admin/User)
+- [ ] Add course filter dropdown (All/Specific Course)
+- [ ] Implement paginated user table
+- [ ] Add user row expansion for course assignment panel
+- [ ] Add bulk selection checkboxes
+- [ ] Implement bulk course assignment dialog
+- [ ] Implement bulk course removal dialog
+- [ ] Add delete user confirmation with active courses warning
+- [ ] Add optimistic updates for instant feedback
+- [ ] Test all single and bulk operations
+
+## Automated Session Reminder System
+- [ ] Design notification scheduling system
+- [ ] Create backend job scheduler for 24-hour reminders
+- [ ] Implement email notification template with calendar attachment
+- [ ] Add SMS notification support (optional)
+- [ ] Create notification preferences in user settings
+- [ ] Add notification history tracking
+- [ ] Test reminder delivery timing
+- [ ] Test calendar attachment generation
+
+## Student Progress Dashboard
+- [ ] Design dashboard layout and components
+- [ ] Create progress tracking database schema
+- [ ] Add achievement/badge system to database
+- [ ] Implement progress calculation logic
+- [ ] Create dashboard UI with metrics cards
+- [ ] Add completed courses section
+- [ ] Add upcoming sessions calendar widget
+- [ ] Add practice streak tracker
+- [ ] Add achievement badges display
+- [ ] Implement progress charts/visualizations
+- [ ] Test all dashboard features
+
+## User-Course Management (Feature 1)
+- [x] Design database schema for user-course relationships
+- [x] Create backend API endpoints for course assignment operations
+- [x] Create backend API endpoints for bulk course operations
+- [x] Build comprehensive User Management UI with expandable rows
+- [x] Implement inline course assignment/removal per user
+- [x] Add bulk course assignment dialog
+- [x] Add bulk course removal dialog
+- [x] Add user creation dialog
+- [x] Add user deletion with warning for enrolled courses
+- [x] Implement search and filtering (by name, email, role, course)
+- [x] Add pagination for user list
+- [x] Write vitest tests for user-course management procedures
+- [x] Test all user-course management flows
