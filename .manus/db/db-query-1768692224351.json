@@ -1,0 +1,28 @@
+{
+  "query": "SELECT id, name, email, role FROM users WHERE email LIKE '%anas%' OR email LIKE '%elizabeth%' OR role = 'admin' ORDER BY id DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4HtU1c2nK4A5Wb2.root --database M2v4Dnk4LCsJQ3Qwy7fUfL --execute SELECT id, name, email, role FROM users WHERE email LIKE '%anas%' OR email LIKE '%elizabeth%' OR role = 'admin' ORDER BY id DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "330195",
+      "name": "Admin User",
+      "email": "admin-1768691560274@example.com",
+      "role": "admin"
+    },
+    {
+      "id": "124298",
+      "name": "Yelizaveta Zolotova",
+      "email": "elizabethzolotova777@gmail.com",
+      "role": "admin"
+    },
+    {
+      "id": "1",
+      "name": "Anas",
+      "email": "cheikhanas.iaeste@gmail.com",
+      "role": "admin"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\temail\trole\n330195\tAdmin User\tadmin-1768691560274@example.com\tadmin\n124298\tYelizaveta Zolotova\telizabethzolotova777@gmail.com\tadmin\n1\tAnas\tcheikhanas.iaeste@gmail.com\tadmin\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

@@ -31,6 +31,7 @@ export function MessageComposeModal({
 }: MessageComposeModalProps) {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const utils = trpc.useUtils();
 
   const sendMessageMutation = trpc.messages.sendToUser.useMutation({
     onSuccess: () => {
@@ -38,6 +39,8 @@ export function MessageComposeModal({
       setSubject("");
       setBody("");
       onOpenChange(false);
+      // Invalidate myMessages query so sent message appears immediately
+      utils.messages.myMessages.invalidate();
     },
     onError: (error: any) => {
       toast.error(`Failed to send message: ${error.message}`);

@@ -1126,3 +1126,10 @@
 - [x] Fix query to include sent messages for admin users
 - [x] Update My Messages UI to distinguish sent vs received
 - [x] Test message display for both admin and regular users
+
+## My Messages Still Not Showing Sent Messages (Debug)
+- [x] Check database for actual message records
+- [x] Verify getUserMessages query is being called correctly
+- [x] Check if frontend is filtering out sent messages
+- [x] Test with actual user data in database
+- [x] Fix any remaining issues - Added cache invalidation to MessageComposeModal

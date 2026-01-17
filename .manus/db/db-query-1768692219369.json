@@ -1,0 +1,64 @@
+{
+  "query": "SELECT id, fromUserId, toUserId, subject, body, isRead, createdAt FROM messages ORDER BY createdAt DESC LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4HtU1c2nK4A5Wb2.root --database M2v4Dnk4LCsJQ3Qwy7fUfL --execute SELECT id, fromUserId, toUserId, subject, body, isRead, createdAt FROM messages ORDER BY createdAt DESC LIMIT 10;",
+  "rows": [
+    {
+      "id": "30004",
+      "fromUserId": "1",
+      "toUserId": "1",
+      "subject": "OK",
+      "body": "TEST",
+      "isRead": "0",
+      "createdAt": "2026-01-17 23:22:23"
+    },
+    {
+      "id": "30002",
+      "fromUserId": "330195",
+      "toUserId": "330196",
+      "subject": "Test Sent Message",
+      "body": "This is a message sent by admin",
+      "isRead": "0",
+      "createdAt": "2026-01-17 23:12:40"
+    },
+    {
+      "id": "30003",
+      "fromUserId": "330196",
+      "toUserId": "330195",
+      "subject": "Test Received Message",
+      "body": "This is a message received by admin",
+      "isRead": "0",
+      "createdAt": "2026-01-17 23:12:40"
+    },
+    {
+      "id": "30001",
+      "fromUserId": "1",
+      "toUserId": "1",
+      "subject": "Hello",
+      "body": "Hello",
+      "isRead": "0",
+      "createdAt": "2026-01-17 23:00:36"
+    },
+    {
+      "id": "2",
+      "fromUserId": "300803",
+      "toUserId": "300802",
+      "subject": "Test Message",
+      "body": "This is a test message from admin to user.",
+      "isRead": "1",
+      "createdAt": "2026-01-17 22:03:38"
+    },
+    {
+      "id": "1",
+      "fromUserId": "300801",
+      "toUserId": "300800",
+      "subject": "Test Message",
+      "body": "This is a test message from admin to user.",
+      "isRead": "1",
+      "createdAt": "2026-01-17 22:02:20"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfromUserId\ttoUserId\tsubject\tbody\tisRead\tcreatedAt\n30004\t1\t1\tOK\tTEST\t0\t2026-01-17 23:22:23\n30002\t330195\t330196\tTest Sent Message\tThis is a message sent by admin\t0\t2026-01-17 23:12:40\n30003\t330196\t330195\tTest Received Message\tThis is a message received by admin\t0\t2026-01-17 23:12:40\n30001\t1\t1\tHello\tHello\t0\t2026-01-17 23:00:36\n2\t300803\t300802\tTest Message\tThis is a test message from admin to user.\t1\t2026-01-17 22:03:38\n1\t300801\t300800\tTest Message\tThis is a test message from admin to user.\t1\t2026-01-17 22:02:20\n",
+  "stderr": "",
+  "execution_time_ms": 77
+}
