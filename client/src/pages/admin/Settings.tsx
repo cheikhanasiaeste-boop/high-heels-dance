@@ -21,10 +21,22 @@ export default function AdminSettings() {
     { enabled: isAuthenticated && user?.role === 'admin' }
   );
 
+  const { data: heroBackgroundData } = trpc.admin.settings.get.useQuery(
+    { key: 'heroBackgroundUrl' },
+    { enabled: isAuthenticated && user?.role === 'admin' }
+  );
+
 
 
   const [bannerText, setBannerText] = useState(bannerData?.text || "");
   const [bannerEnabled, setBannerEnabled] = useState(bannerData?.enabled || false);
+  const [heroBackgroundUrl, setHeroBackgroundUrl] = useState("");
+
+  useEffect(() => {
+    if (heroBackgroundData) {
+      setHeroBackgroundUrl(heroBackgroundData);
+    }
+  }, [heroBackgroundData]);
 
 
 
@@ -42,6 +54,23 @@ export default function AdminSettings() {
     updateBannerMutation.mutate({
       text: bannerText,
       enabled: bannerEnabled,
+    });
+  };
+
+  const updateHeroBackgroundMutation = trpc.admin.settings.update.useMutation({
+    onSuccess: () => {
+      toast.success("Hero background updated successfully!");
+      utils.admin.settings.get.invalidate();
+    },
+    onError: (error: any) => {
+      toast.error(error.message || "Failed to update hero background");
+    },
+  });
+
+  const handleUpdateHeroBackground = () => {
+    updateHeroBackgroundMutation.mutate({
+      key: 'heroBackgroundUrl',
+      value: heroBackgroundUrl,
     });
   };
 
@@ -73,6 +102,29 @@ export default function AdminSettings() {
           </CardHeader>
           <CardContent>
             <PopupSettings />
+          </CardContent>
+        </Card>
+
+        {/* Hero Background Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Hero Background</CardTitle>
+            <CardDescription>Set the homepage hero section background image URL</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label htmlFor="hero-background-url">Background Image URL</Label>
+              <Input
+                id="hero-background-url"
+                value={heroBackgroundUrl}
+                onChange={(e) => setHeroBackgroundUrl(e.target.value)}
+                placeholder="https://example.com/background.webp"
+              />
+              <p className="text-sm text-muted-foreground mt-1">
+                Enter a direct URL to an image (WebP, JPG, or PNG). For best results, use a high-resolution image.
+              </p>
+            </div>
+            <Button onClick={handleUpdateHeroBackground}>Save Hero Background</Button>
           </CardContent>
         </Card>
 

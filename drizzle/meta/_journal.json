@@ -113,6 +113,13 @@
       "when": 1768666205150,
       "tag": "0015_flat_green_goblin",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "5",
+      "when": 1768669488707,
+      "tag": "0016_bent_golden_guardian",
+      "breakpoints": true
     }
   ]
 }

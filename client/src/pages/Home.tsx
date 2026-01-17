@@ -47,9 +47,14 @@ export default function Home() {
     { key: "backgroundVideoUrl" },
     { enabled: true }
   );
+  const { data: heroBackgroundUrl } = trpc.admin.settings.get.useQuery(
+    { key: "heroBackgroundUrl" },
+    { enabled: true }
+  );
   
   // Use new animation format if available, fallback to old video
-  const backgroundUrl = bgAnimationUrl || bgVideoUrl;
+  // Priority: heroBackgroundUrl > bgAnimationUrl > bgVideoUrl
+  const backgroundUrl = heroBackgroundUrl || bgAnimationUrl || bgVideoUrl;
   
   // Detect reduced motion preference
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => {

@@ -881,3 +881,10 @@
 - [x] Test hero background loads immediately
 - [x] Test thumbnails show maximum image content
 - [x] Test hover effect is removed
+
+## Simple Hero Background Customization
+- [x] Add heroBackgroundUrl field to existing siteSettings table
+- [x] Update site settings API to handle hero background URL
+- [x] Add hero background URL input field to admin settings page
+- [x] Apply hero background URL to homepage
+- [x] Test hero background customization workflow

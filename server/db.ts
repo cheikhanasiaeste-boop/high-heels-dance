@@ -36,7 +36,10 @@ import {
   InsertCourseLesson,
   userLessonProgress,
   UserLessonProgress,
-  InsertUserLessonProgress
+  InsertUserLessonProgress,
+  visualSettings,
+  VisualSettings,
+  InsertVisualSettings
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1528,4 +1531,52 @@ export async function reorderModuleLessons(moduleId: number, lessonIds: number[]
   }
   
   return { success: true };
+}
+
+/**
+ * Get visual settings (returns first row or null)
+ */
+export async function getVisualSettings(): Promise<VisualSettings | null> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const settings = await db.select().from(visualSettings).limit(1);
+  return settings[0] || null;
+}
+
+/**
+ * Update or create visual settings
+ */
+export async function upsertVisualSettings(data: Partial<InsertVisualSettings> & { updatedBy: number }): Promise<VisualSettings> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const existing = await getVisualSettings();
+  
+  if (existing) {
+    // Update existing
+    await db
+      .update(visualSettings)
+      .set(data)
+      .where(eq(visualSettings.id, existing.id));
+    
+    const updated = await getVisualSettings();
+    if (!updated) throw new Error("Failed to retrieve updated settings");
+    return updated;
+  } else {
+    // Insert new
+    const [inserted] = await db
+      .insert(visualSettings)
+      .values(data as InsertVisualSettings)
+      .$returningId();
+    
+    const created = await db
+      .select()
+      .from(visualSettings)
+      .where(eq(visualSettings.id, inserted.id))
+      .limit(1);
+    
+    if (!created[0]) throw new Error("Failed to retrieve created settings");
+    return created[0];
+  }
 }

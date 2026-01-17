@@ -325,3 +325,27 @@ export const userLessonProgress = mysqlTable("user_lesson_progress", {
 
 export type UserLessonProgress = typeof userLessonProgress.$inferSelect;
 export type InsertUserLessonProgress = typeof userLessonProgress.$inferInsert;
+
+/**
+ * Visual settings - stores visual customizations for the website
+ */
+export const visualSettings = mysqlTable("visual_settings", {
+  id: int("id").autoincrement().primaryKey(),
+  // Hero background customization
+  heroBackgroundUrl: text("heroBackgroundUrl"),
+  heroBackgroundKey: text("heroBackgroundKey"),
+  heroBackgroundZoom: decimal("heroBackgroundZoom", { precision: 5, scale: 2 }).default("1.00"),
+  heroBackgroundOffsetX: decimal("heroBackgroundOffsetX", { precision: 10, scale: 2 }).default("0.00"),
+  heroBackgroundOffsetY: decimal("heroBackgroundOffsetY", { precision: 10, scale: 2 }).default("0.00"),
+  // Logo customization
+  logoUrl: text("logoUrl"),
+  logoKey: text("logoKey"),
+  logoZoom: decimal("logoZoom", { precision: 5, scale: 2 }).default("1.00"),
+  logoOffsetX: decimal("logoOffsetX", { precision: 10, scale: 2 }).default("0.00"),
+  logoOffsetY: decimal("logoOffsetY", { precision: 10, scale: 2 }).default("0.00"),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedBy: int("updatedBy"), // User ID of admin who made the change
+});
+
+export type VisualSettings = typeof visualSettings.$inferSelect;
+export type InsertVisualSettings = typeof visualSettings.$inferInsert;
