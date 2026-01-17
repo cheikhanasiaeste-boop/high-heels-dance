@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Calendar, Clock } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { useProgressiveAuth } from '@/hooks/useProgressiveAuth';
+import { ProgressiveAuthModal } from '@/components/ProgressiveAuthModal';
 import { useLocation } from 'wouter';
 import { format } from '@/lib/dateUtils';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,7 @@ export function UpcomingSessionsWidget() {
   const [isFocused, setIsFocused] = useState(false);
   const [, setLocation] = useLocation();
   const { data: events, isLoading } = trpc.admin.availability.upcoming.useQuery({ limit: 5 });
-  const { requireAuth } = useProgressiveAuth();
+  const { isAuthModalOpen, authContext, authContextDetails, requireAuth, closeAuthModal } = useProgressiveAuth();
   const widgetRef = useRef<HTMLDivElement>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -199,6 +200,14 @@ export function UpcomingSessionsWidget() {
           </a>
         </div>
       </div>
+
+      {/* Progressive Authentication Modal */}
+      <ProgressiveAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={closeAuthModal}
+        context={authContext || 'booking'}
+        contextDetails={authContextDetails}
+      />
     </div>
   );
 }

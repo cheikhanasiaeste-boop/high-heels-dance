@@ -798,3 +798,9 @@
 - [x] Test guest flow for free course enrollment
 - [x] Test guest flow for event booking from hover widget
 - [x] Verify auth modal appears with correct context
+
+## Fix Widget Auth Modal Rendering
+- [x] Add ProgressiveAuthModal to UpcomingSessionsWidget component
+- [x] Ensure widget's own hook instance connects to its own modal
+- [x] Test guest clicking Book button shows auth modal
+- [x] Verify auth flow completes and redirects to booking page
