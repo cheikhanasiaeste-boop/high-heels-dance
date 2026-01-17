@@ -586,3 +586,9 @@
 - [x] Invalidate cache to trigger homepage refresh (specific keys)
 - [x] Show confirmation message after successful removal (success toast)
 - [x] Test that homepage reverts to default gradient background (ready for user testing)
+
+## Remove Homepage Background Animation from Admin
+- [x] Remove entire background animation section from admin Settings.tsx
+- [x] Remove all related state variables and handlers
+- [x] Keep hero section background rendering (current animation stays visible)
+- [x] Test admin settings page loads without errors
