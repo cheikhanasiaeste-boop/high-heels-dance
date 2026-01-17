@@ -30,9 +30,10 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ChevronDown, ChevronRight, Trash2, Plus, X, AlertTriangle } from "lucide-react";
+import { ChevronDown, ChevronRight, Trash2, Plus, X, AlertTriangle, Mail } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import { MessageComposeModal } from "@/components/MessageComposeModal";
 
 // User Row Component with expansion
 function UserRow({
@@ -42,6 +43,7 @@ function UserRow({
   onToggleExpand,
   onToggleSelect,
   onDelete,
+  onMessage,
   onAssignCourse,
   onRemoveCourse,
   allCourses,
@@ -91,6 +93,14 @@ function UserRow({
               onClick={() => onToggleExpand(user.id)}
             >
               {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onMessage(user.id, user.name, user.email)}
+              title="Send message"
+            >
+              <Mail className="w-4 h-4 text-primary" />
             </Button>
             <Button
               variant="ghost"
@@ -179,8 +189,10 @@ export default function UserManagementNew() {
   const [showBulkAssignDialog, setShowBulkAssignDialog] = useState(false);
   const [showBulkRemoveDialog, setShowBulkRemoveDialog] = useState(false);
   const [showRemoveCourseDialog, setShowRemoveCourseDialog] = useState(false);
+  const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [userToDelete, setUserToDelete] = useState<{ id: number; name: string; courseCount: number } | null>(null);
   const [courseToRemove, setCourseToRemove] = useState<{ userId: number; courseId: number; courseName: string } | null>(null);
+  const [messageRecipient, setMessageRecipient] = useState<{ id: number; name: string; email: string } | null>(null);
   
   // Form states
   const [newUserName, setNewUserName] = useState("");
@@ -298,6 +310,11 @@ export default function UserManagementNew() {
     if (userToDelete) {
       deleteUserMutation.mutate({ userId: userToDelete.id });
     }
+  };
+
+  const handleMessage = (userId: number, userName: string, userEmail: string) => {
+    setMessageRecipient({ id: userId, name: userName, email: userEmail });
+    setShowMessageDialog(true);
   };
 
   const handleAssignCourse = (userId: number, courseId: number) => {
@@ -495,6 +512,7 @@ export default function UserManagementNew() {
                         onToggleExpand={toggleRowExpansion}
                         onToggleSelect={toggleUserSelection}
                         onDelete={() => handleDeleteUser(user.id, user.name, user.courseCount || 0)}
+                        onMessage={handleMessage}
                         onAssignCourse={handleAssignCourse}
                         onRemoveCourse={handleRemoveCourse}
                         allCourses={allCourses}
@@ -761,6 +779,17 @@ export default function UserManagementNew() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Message Compose Modal */}
+        {messageRecipient && (
+          <MessageComposeModal
+            open={showMessageDialog}
+            onOpenChange={setShowMessageDialog}
+            recipientId={messageRecipient.id}
+            recipientName={messageRecipient.name}
+            recipientEmail={messageRecipient.email}
+          />
+        )}
       </div>
     </AdminLayout>
   );

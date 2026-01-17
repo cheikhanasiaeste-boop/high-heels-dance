@@ -1108,3 +1108,8 @@
 - [x] Fix course count calculation to include all enrolled courses
 - [x] Test course count display with actual data
 - [x] Verify count updates when courses are assigned/removed
+
+## Missing Message Button in User Management
+- [x] Add Message button to user table rows in UserManagementNew
+- [x] Ensure button opens MessageComposeModal
+- [x] Test message sending from user list
