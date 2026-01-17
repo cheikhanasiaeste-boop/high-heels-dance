@@ -137,10 +137,7 @@ export default function CourseContentManager() {
       {/* Tab Content */}
       <div className="space-y-6">
         {activeTab === "thumbnail" && (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Course Thumbnail</h2>
-            <p className="text-muted-foreground">Thumbnail management coming soon...</p>
-          </div>
+          <CourseThumbnailUpload course={course} />
         )}
 
         {activeTab === "checkout" && (
@@ -452,7 +449,7 @@ function AddLessonDialog({ onAdd }: { onAdd: (title: string) => void }) {
 // Course Preview Video Component
 function CoursePreviewVideo({ courseId, currentVideoUrl }: { courseId: number; currentVideoUrl?: string | null }) {
   const utils = trpc.useUtils();
-  const uploadMutation = trpc.media.uploadCourseVideo.useMutation({
+  const uploadMutation = trpc.admin.media.uploadCourseVideo.useMutation({
     onSuccess: () => {
       utils.admin.courses.list.invalidate();
     },
@@ -500,7 +497,7 @@ function EditModuleDialog({ module }: { module: any }) {
     },
   });
 
-  const uploadMutation = trpc.media.uploadModuleVideo.useMutation({
+  const uploadMutation = trpc.admin.media.uploadModuleVideo.useMutation({
     onSuccess: () => {
       utils.admin.courseContent.getModules.invalidate();
     },
@@ -612,7 +609,7 @@ function EditLessonDialog({ lesson }: { lesson: any }) {
     },
   });
 
-  const uploadMutation = trpc.media.uploadLessonVideo.useMutation({
+  const uploadMutation = trpc.admin.media.uploadLessonVideo.useMutation({
     onSuccess: () => {
       utils.admin.courseContent.getLessons.invalidate();
     },
@@ -716,5 +713,131 @@ function EditLessonDialog({ lesson }: { lesson: any }) {
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+
+// Course Thumbnail Upload Component
+function CourseThumbnailUpload({ course }: { course: any }) {
+  const [uploading, setUploading] = useState(false);
+  const utils = trpc.useUtils();
+  
+  const uploadMutation = trpc.admin.media.uploadImage.useMutation({
+    onSuccess: () => {
+      utils.admin.courses.list.invalidate();
+      toast.success("Thumbnail uploaded successfully");
+    },
+  });
+  
+  const updateCourseMutation = trpc.admin.courses.update.useMutation({
+    onSuccess: () => {
+      utils.admin.courses.list.invalidate();
+      toast.success("Thumbnail updated successfully");
+      setUploading(false);
+    },
+  });
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image must be less than 5MB");
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      // Upload to S3
+      const result = await uploadMutation.mutateAsync({
+        fileName: file.name,
+        fileType: file.type,
+        fileData: await fileToBase64(file),
+      });
+
+      // Update course with new image URL
+      await updateCourseMutation.mutateAsync({
+        id: course.id,
+        imageUrl: result.url,
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error("Failed to upload thumbnail");
+      setUploading(false);
+    }
+  };
+
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const base64 = reader.result as string;
+        // Remove data:image/...;base64, prefix
+        resolve(base64.split(",")[1]);
+      };
+      reader.onerror = reject;
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card className="p-6">
+        <h2 className="text-xl font-semibold mb-4">Course Thumbnail</h2>
+        <p className="text-sm text-muted-foreground mb-6">
+          Upload a thumbnail image that will be displayed on the courses listing page. Recommended size: 800x600px.
+        </p>
+
+        {/* Current Thumbnail */}
+        {course.imageUrl && (
+          <div className="mb-6">
+            <Label className="mb-2 block">Current Thumbnail</Label>
+            <div className="relative w-full max-w-md aspect-video rounded-lg overflow-hidden border">
+              <img
+                src={course.imageUrl}
+                alt={course.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Upload Button */}
+        <div>
+          <Label htmlFor="thumbnail-upload" className="mb-2 block">
+            {course.imageUrl ? "Replace Thumbnail" : "Upload Thumbnail"}
+          </Label>
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              disabled={uploading}
+              onClick={() => document.getElementById("thumbnail-upload")?.click()}
+            >
+              <ImageIcon className="w-4 h-4 mr-2" />
+              {uploading ? "Uploading..." : "Choose Image"}
+            </Button>
+            <span className="text-sm text-muted-foreground">
+              Max 5MB - JPG, PNG, or WebP
+            </span>
+          </div>
+          <input
+            id="thumbnail-upload"
+            type="file"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+            disabled={uploading}
+          />
+        </div>
+      </Card>
+    </div>
   );
 }

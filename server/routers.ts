@@ -752,6 +752,126 @@ export const appRouter = router({
           return { success: true };
         }),
     }),
+
+    // Media upload endpoints
+    media: router({
+      // Upload course preview video
+      uploadCourseVideo: adminProcedure
+        .input(z.object({
+          courseId: z.number(),
+          filename: z.string(),
+          contentType: z.string(),
+          data: z.string(), // base64 encoded
+        }))
+        .mutation(async ({ input }) => {
+          const { storagePut } = await import('./storage');
+          
+          // Decode base64 data
+          const buffer = Buffer.from(input.data, 'base64');
+          
+          // Generate unique filename
+          const timestamp = Date.now();
+          const randomSuffix = Math.random().toString(36).substring(7);
+          const fileKey = `courses/${input.courseId}/preview-${timestamp}-${randomSuffix}-${input.filename}`;
+          
+          // Upload to S3
+          const result = await storagePut(fileKey, buffer, input.contentType);
+          
+          // Update course with video URL
+          await db.updateCourse(input.courseId, {
+            previewVideoUrl: result.url,
+            previewVideoKey: fileKey,
+          });
+          
+          return { url: result.url, key: fileKey };
+        }),
+
+      // Upload module video
+      uploadModuleVideo: adminProcedure
+        .input(z.object({
+          moduleId: z.number(),
+          filename: z.string(),
+          contentType: z.string(),
+          data: z.string(), // base64 encoded
+        }))
+        .mutation(async ({ input }) => {
+          const { storagePut } = await import('./storage');
+          
+          // Decode base64 data
+          const buffer = Buffer.from(input.data, 'base64');
+          
+          // Generate unique filename
+          const timestamp = Date.now();
+          const randomSuffix = Math.random().toString(36).substring(7);
+          const fileKey = `modules/${input.moduleId}/video-${timestamp}-${randomSuffix}-${input.filename}`;
+          
+          // Upload to S3
+          const result = await storagePut(fileKey, buffer, input.contentType);
+          
+          // Update module with video URL
+          await db.updateCourseModule(input.moduleId, {
+            videoUrl: result.url,
+            videoKey: fileKey,
+          });
+          
+          return { url: result.url, key: fileKey };
+        }),
+
+      // Upload lesson video
+      uploadLessonVideo: adminProcedure
+        .input(z.object({
+          lessonId: z.number(),
+          filename: z.string(),
+          contentType: z.string(),
+          data: z.string(), // base64 encoded
+        }))
+        .mutation(async ({ input }) => {
+          const { storagePut } = await import('./storage');
+          
+          // Decode base64 data
+          const buffer = Buffer.from(input.data, 'base64');
+          
+          // Generate unique filename
+          const timestamp = Date.now();
+          const randomSuffix = Math.random().toString(36).substring(7);
+          const fileKey = `lessons/${input.lessonId}/video-${timestamp}-${randomSuffix}-${input.filename}`;
+          
+          // Upload to S3
+          const result = await storagePut(fileKey, buffer, input.contentType);
+          
+          // Update lesson with video URL
+          await db.updateCourseLesson(input.lessonId, {
+            videoUrl: result.url,
+            videoKey: fileKey,
+          });
+          
+          return { url: result.url, key: fileKey };
+        }),
+
+      // Upload image (for thumbnails, etc.)
+      uploadImage: adminProcedure
+        .input(z.object({
+          fileName: z.string(),
+          fileType: z.string(),
+          fileData: z.string(), // base64 encoded
+        }))
+        .mutation(async ({ input }) => {
+          const { storagePut } = await import('./storage');
+          
+          // Decode base64 data
+          const buffer = Buffer.from(input.fileData, 'base64');
+          
+          // Generate unique filename
+          const timestamp = Date.now();
+          const randomSuffix = Math.random().toString(36).substring(7);
+          const fileKey = `images/${timestamp}-${randomSuffix}-${input.fileName}`;
+          
+          // Upload to S3
+          const result = await storagePut(fileKey, buffer, input.fileType);
+          
+          return { url: result.url, key: fileKey };
+        }),
+    }),
   }),
 
   // Public banner status
@@ -1142,102 +1262,6 @@ Be friendly, professional, and helpful. If you don't know something specific, of
         
         // Upload to S3
         const result = await storagePut(fileKey, buffer, input.contentType);
-        
-        return { url: result.url, key: fileKey };
-      }),
-  }),
-
-  // Media upload endpoints
-  media: router({
-    // Upload course preview video
-    uploadCourseVideo: adminProcedure
-      .input(z.object({
-        courseId: z.number(),
-        filename: z.string(),
-        contentType: z.string(),
-        data: z.string(), // base64 encoded
-      }))
-      .mutation(async ({ input }) => {
-        const { storagePut } = await import('./storage');
-        
-        // Decode base64 data
-        const buffer = Buffer.from(input.data, 'base64');
-        
-        // Generate unique filename
-        const timestamp = Date.now();
-        const randomSuffix = Math.random().toString(36).substring(7);
-        const fileKey = `courses/${input.courseId}/preview-${timestamp}-${randomSuffix}-${input.filename}`;
-        
-        // Upload to S3
-        const result = await storagePut(fileKey, buffer, input.contentType);
-        
-        // Update course with video URL
-        await db.updateCourse(input.courseId, {
-          previewVideoUrl: result.url,
-          previewVideoKey: fileKey,
-        });
-        
-        return { url: result.url, key: fileKey };
-      }),
-
-    // Upload module video
-    uploadModuleVideo: adminProcedure
-      .input(z.object({
-        moduleId: z.number(),
-        filename: z.string(),
-        contentType: z.string(),
-        data: z.string(), // base64 encoded
-      }))
-      .mutation(async ({ input }) => {
-        const { storagePut } = await import('./storage');
-        
-        // Decode base64 data
-        const buffer = Buffer.from(input.data, 'base64');
-        
-        // Generate unique filename
-        const timestamp = Date.now();
-        const randomSuffix = Math.random().toString(36).substring(7);
-        const fileKey = `modules/${input.moduleId}/video-${timestamp}-${randomSuffix}-${input.filename}`;
-        
-        // Upload to S3
-        const result = await storagePut(fileKey, buffer, input.contentType);
-        
-        // Update module with video URL
-        await db.updateCourseModule(input.moduleId, {
-          videoUrl: result.url,
-          videoKey: fileKey,
-        });
-        
-        return { url: result.url, key: fileKey };
-      }),
-
-    // Upload lesson video
-    uploadLessonVideo: adminProcedure
-      .input(z.object({
-        lessonId: z.number(),
-        filename: z.string(),
-        contentType: z.string(),
-        data: z.string(), // base64 encoded
-      }))
-      .mutation(async ({ input }) => {
-        const { storagePut } = await import('./storage');
-        
-        // Decode base64 data
-        const buffer = Buffer.from(input.data, 'base64');
-        
-        // Generate unique filename
-        const timestamp = Date.now();
-        const randomSuffix = Math.random().toString(36).substring(7);
-        const fileKey = `lessons/${input.lessonId}/video-${timestamp}-${randomSuffix}-${input.filename}`;
-        
-        // Upload to S3
-        const result = await storagePut(fileKey, buffer, input.contentType);
-        
-        // Update lesson with video URL
-        await db.updateCourseLesson(input.lessonId, {
-          videoUrl: result.url,
-          videoKey: fileKey,
-        });
         
         return { url: result.url, key: fileKey };
       }),

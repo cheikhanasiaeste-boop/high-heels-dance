@@ -730,3 +730,8 @@
 - [x] Build lesson video and description upload UI
 - [x] Test video upload for all content types
 - [ ] Test video playback in course viewer
+
+## Course Thumbnail Upload
+- [x] Add media router with uploadImage endpoint to admin router
+- [x] Build thumbnail upload UI in Thumbnail tab
+- [x] Test thumbnail upload functionality
