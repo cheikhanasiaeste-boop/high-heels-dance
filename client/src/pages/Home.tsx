@@ -106,23 +106,25 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      {/* Website Popup */}
-      <WebsitePopup
-        settings={popupSettings || null}
-        onDismiss={(popupId) => {
-          recordInteractionMutation.mutate({
-            popupId,
-            action: 'dismissed',
-          });
-        }}
-        onEmailSubmit={(popupId, email) => {
-          recordInteractionMutation.mutate({
-            popupId,
-            email,
-            action: 'email_submitted',
-          });
-        }}
-      />
+      {/* Website Popup - Only show for authenticated users */}
+      {isAuthenticated && (
+        <WebsitePopup
+          settings={popupSettings || null}
+          onDismiss={(popupId) => {
+            recordInteractionMutation.mutate({
+              popupId,
+              action: 'dismissed',
+            });
+          }}
+          onEmailSubmit={(popupId, email) => {
+            recordInteractionMutation.mutate({
+              popupId,
+              action: 'email_submitted',
+              email,
+            });
+          }}
+        />
+      )}
       
       {/* Discount Banner */}
       {banner?.enabled && banner.text && (

@@ -668,3 +668,9 @@
 - [x] Add pagination for user list
 - [x] Write vitest tests for user-course management procedures
 - [x] Test all user-course management flows
+
+## Remove Guest Sign-in Prompts
+- [x] Identify all locations where sign-in prompts appear for guests
+- [x] Remove or conditionally hide prompts on public pages (home, courses, etc.)
+- [x] Ensure protected features still require authentication
+- [x] Test guest navigation flow without unwanted prompts
