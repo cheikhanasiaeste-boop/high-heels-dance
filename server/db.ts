@@ -439,16 +439,33 @@ export async function getApprovedTestimonials(): Promise<Testimonial[]> {
   return result;
 }
 
-export async function getAllTestimonials(): Promise<Testimonial[]> {
+export async function getAllTestimonials(): Promise<(Testimonial & { courseName?: string })[]> {
   const db = await getDb();
   if (!db) return [];
   
   const result = await db
-    .select()
+    .select({
+      id: testimonials.id,
+      userId: testimonials.userId,
+      userName: testimonials.userName,
+      userEmail: testimonials.userEmail,
+      rating: testimonials.rating,
+      review: testimonials.review,
+      photoUrl: testimonials.photoUrl,
+      videoUrl: testimonials.videoUrl,
+      type: testimonials.type,
+      relatedId: testimonials.relatedId,
+      status: testimonials.status,
+      isFeatured: testimonials.isFeatured,
+      createdAt: testimonials.createdAt,
+      updatedAt: testimonials.updatedAt,
+      courseName: courses.title,
+    })
     .from(testimonials)
+    .leftJoin(courses, eq(testimonials.relatedId, courses.id))
     .orderBy(desc(testimonials.createdAt));
   
-  return result;
+  return result as (Testimonial & { courseName?: string })[];
 }
 
 export async function getTestimonialById(id: number): Promise<Testimonial | undefined> {

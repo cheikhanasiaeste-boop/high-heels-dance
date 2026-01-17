@@ -148,9 +148,9 @@ export default function AdminTestimonials() {
                     <div className="flex-1">
                       <CardTitle className="flex items-center gap-2">
                         {testimonial.userName}
-                        {testimonial.type === 'course' && testimonial.relatedId && (
+                        {testimonial.type === 'course' && testimonial.courseName && (
                           <span className="text-sm font-normal text-muted-foreground">
-                            • Course Feedback
+                            • {testimonial.courseName}
                           </span>
                         )}
                       </CardTitle>

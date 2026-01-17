@@ -1048,3 +1048,9 @@
 - [x] Add visual indicator (border/highlight) for new/unread testimonials (yellow border + shadow)
 - [x] Test notification badge updates when testimonials are submitted
 - [x] Test badge disappears when all testimonials are reviewed
+
+## Display Course Name in Testimonials
+- [x] Update testimonials query to join with courses table
+- [x] Include course name in testimonial data
+- [x] Replace "Course Feedback" with actual course name in admin page
+- [x] Test course name displays correctly for all testimonials
