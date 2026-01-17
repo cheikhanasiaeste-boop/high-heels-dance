@@ -21,6 +21,12 @@ export default function AdminSettings() {
     { enabled: isAuthenticated && user?.role === 'admin' }
   );
 
+  const { data: bgAnimationData } = trpc.admin.settings.get.useQuery(
+    { key: 'backgroundAnimationUrl' },
+    { enabled: isAuthenticated && user?.role === 'admin' }
+  );
+  
+  // Backward compatibility: also check old backgroundVideoUrl
   const { data: bgVideoData } = trpc.admin.settings.get.useQuery(
     { key: 'backgroundVideoUrl' },
     { enabled: isAuthenticated && user?.role === 'admin' }
@@ -30,20 +36,20 @@ export default function AdminSettings() {
   const [bannerEnabled, setBannerEnabled] = useState(bannerData?.enabled || false);
   const [bgVideoUrl, setBgVideoUrl] = useState("");
 
-  // Update bgVideoUrl when data loads
-  if (bgVideoData && bgVideoUrl === "") {
-    setBgVideoUrl(bgVideoData);
+  // Update bgVideoUrl when data loads (prioritize new animation format)
+  if ((bgAnimationData || bgVideoData) && bgVideoUrl === "") {
+    setBgVideoUrl(bgAnimationData || bgVideoData || "");
   }
   const [isUploadingVideo, setIsUploadingVideo] = useState(false);
 
   const uploadMutation = trpc.upload.useMutation();
   const updateVideoMutation = trpc.admin.settings.update.useMutation({
     onSuccess: () => {
-      toast.success("Background video updated successfully!");
+      toast.success("Background animation updated successfully!");
       utils.admin.settings.get.invalidate();
     },
     onError: (error) => {
-      toast.error(error.message || "Failed to update background video");
+      toast.error(error.message || "Failed to update background animation");
     },
   });
 
@@ -123,22 +129,31 @@ export default function AdminSettings() {
           </CardContent>
         </Card>
 
-        {/* Background Video Settings */}
+        {/* Background Animation Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>Homepage Background Video</CardTitle>
-            <CardDescription>Upload a video to play in the background of the light pink section</CardDescription>
+            <CardTitle>Homepage Background Animation</CardTitle>
+            <CardDescription>
+              Upload an animated WebP to display as a subtle background animation in the courses section.
+              For best performance, keep file size under 2MB. Recommended dimensions: 1920x1080px.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="bg-video">Background Video</Label>
+              <Label htmlFor="bg-animation">Background Animation</Label>
               <Input
-                id="bg-video"
+                id="bg-animation"
                 type="file"
-                accept="video/*"
+                accept="image/webp"
                 onChange={async (e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
+                  
+                  // Validate file size (2MB limit)
+                  if (file.size > 2 * 1024 * 1024) {
+                    toast.error("File size must be under 2MB for optimal performance");
+                    return;
+                  }
                   
                   setIsUploadingVideo(true);
                   try {
@@ -146,31 +161,38 @@ export default function AdminSettings() {
                     reader.onload = async () => {
                       const base64 = reader.result as string;
                       const result = await uploadMutation.mutateAsync({ 
-                        key: `videos/background-${Date.now()}.mp4`,
+                        key: `animations/background-${Date.now()}.webp`,
                         data: base64,
                         contentType: file.type
                       });
                       setBgVideoUrl(result.url);
                       await updateVideoMutation.mutateAsync({
-                        key: 'backgroundVideoUrl',
+                        key: 'backgroundAnimationUrl',
                         value: result.url,
                       });
-                      toast.success("Video uploaded successfully!");
+                      toast.success("Animation uploaded successfully!");
                     };
                     reader.readAsDataURL(file);
                   } catch (error) {
-                    toast.error("Failed to upload video");
+                    toast.error("Failed to upload animation");
                   } finally {
                     setIsUploadingVideo(false);
                   }
                 }}
                 disabled={isUploadingVideo}
               />
-              {isUploadingVideo && <p className="text-sm text-muted-foreground mt-2">Uploading video...</p>}
+              {isUploadingVideo && <p className="text-sm text-muted-foreground mt-2">Uploading animation...</p>}
               {bgVideoUrl && (
                 <div className="mt-4">
-                  <p className="text-sm text-muted-foreground mb-2">Current video:</p>
-                  <video src={bgVideoUrl} controls className="w-full max-w-md rounded-lg" />
+                  <p className="text-sm text-muted-foreground mb-2">Current animation preview:</p>
+                  <img 
+                    src={bgVideoUrl} 
+                    alt="Background animation preview" 
+                    className="w-full max-w-md rounded-lg border border-border" 
+                  />
+                  <p className="text-xs text-muted-foreground mt-2">
+                    The animation will appear more subtle on the homepage with automatic color adjustments.
+                  </p>
                 </div>
               )}
             </div>

@@ -35,10 +35,23 @@ export default function Home() {
     { key: "heroVideoUrl" },
     { enabled: true }
   );
+  // Fetch background animation (prioritize new WebP format)
+  const { data: bgAnimationUrl } = trpc.admin.settings.get.useQuery(
+    { key: "backgroundAnimationUrl" },
+    { enabled: true }
+  );
   const { data: bgVideoUrl } = trpc.admin.settings.get.useQuery(
     { key: "backgroundVideoUrl" },
     { enabled: true }
   );
+  
+  // Use new animation format if available, fallback to old video
+  const backgroundUrl = bgAnimationUrl || bgVideoUrl;
+  
+  // Detect reduced motion preference
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => {
+    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  });
   const [showChat, setShowChat] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [courseFilter, setCourseFilter] = useState<'all' | 'free' | 'premium'>('all');
@@ -196,18 +209,21 @@ export default function Home() {
 
       {/* Courses Section - PROMINENT */}
       <section className="py-20 bg-gradient-to-b from-white via-pink-50/30 to-white relative overflow-hidden">
-        {/* Background Video */}
-        {bgVideoUrl && (
+        {/* Background Animation */}
+        {backgroundUrl && !prefersReducedMotion && (
           <div className="absolute inset-0 z-0">
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full h-full object-cover opacity-30"
-              src={bgVideoUrl}
+            <img
+              src={backgroundUrl}
+              alt=""
+              role="presentation"
+              className="w-full h-full object-cover"
+              style={{
+                opacity: 0.25,
+                filter: 'saturate(0.6) brightness(0.85) blur(2px)',
+              }}
+              loading="lazy"
             />
-            <div className="absolute inset-0 bg-gradient-to-b from-white/60 via-pink-50/60 to-white/60"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-white/80 via-pink-50/50 to-white/80"></div>
           </div>
         )}
         {/* Decorative background elements */}

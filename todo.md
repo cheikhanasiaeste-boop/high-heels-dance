@@ -510,3 +510,13 @@
 - [x] Implement replacements consistently across all components
 - [x] Ensure icons remain instantly understandable and maintain visual weight
 - [x] Test visual coherence and brand alignment
+
+## Update Homepage Background to Animated WebP
+- [x] Audit current background video implementation in admin panel and frontend
+- [x] Change admin upload format from video to animated WebP
+- [x] Rename "Homepage Background Video" to "Homepage Background Animation"
+- [x] Implement frontend rendering with subtle overlay for readability
+- [x] Add automatic color/contrast adjustments (reduce saturation/brightness)
+- [x] Implement prefers-reduced-motion support with static fallback
+- [x] Ensure fast loading and minimal performance impact (2MB limit, lazy loading)
+- [x] Test visual elegance and foreground content readability
