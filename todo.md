@@ -530,3 +530,10 @@
 - [x] Validate file format and size before allowing save (WebP only, 2MB limit)
 - [x] Ensure homepage background updates after save (cache invalidation implemented)
 - [x] Test complete upload → preview → save → homepage update workflow
+
+## Upload Dance Animation as Homepage Background
+- [x] Upload user's animated WebP (dance video with pink/blue lighting) to S3
+- [x] Save URL to database as backgroundAnimationUrl
+- [x] Verify homepage renders animation with elegant filters (desaturated, darkened, blurred)
+- [x] Test prefers-reduced-motion fallback
+- [x] Confirm readability of foreground content over animated background
