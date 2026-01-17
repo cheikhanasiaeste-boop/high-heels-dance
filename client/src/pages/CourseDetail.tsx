@@ -8,11 +8,14 @@ import { trpc } from "@/lib/trpc";
 import { ArrowLeft, Lock, CheckCircle } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { toast } from "sonner";
+import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
+import { ProgressiveAuthModal } from "@/components/ProgressiveAuthModal";
 
 export default function CourseDetail() {
   const params = useParams();
   const courseId = Number(params.id);
   const { user, isAuthenticated } = useAuth();
+  const { isAuthModalOpen, authContext, authContextDetails, requireAuth, closeAuthModal } = useProgressiveAuth();
   
   const { data: course, isLoading } = trpc.courses.getById.useQuery({ id: courseId });
   const { data: hasAccess } = trpc.courses.hasAccess.useQuery(
@@ -33,20 +36,20 @@ export default function CourseDetail() {
   });
 
   const handlePurchase = () => {
-    if (!isAuthenticated) {
-      window.location.href = getLoginUrl();
-      return;
-    }
+    // Allow guests to click the button - auth happens at final step
+    const contextDetails = course ? `${course.title}${course.isFree ? ' (Free)' : ` - €${course.price}`}` : 'Course';
     
-    if (course?.isFree) {
-      // Free courses don't need checkout
-      toast.success("You now have access to this free course!");
-      window.location.reload();
-      return;
-    }
-    
-    // Create Stripe checkout session
-    checkoutMutation.mutate({ courseId });
+    requireAuth('course', contextDetails, () => {
+      if (course?.isFree) {
+        // Free courses don't need checkout
+        toast.success("You now have access to this free course!");
+        window.location.reload();
+        return;
+      }
+      
+      // Create Stripe checkout session
+      checkoutMutation.mutate({ courseId });
+    });
   };
 
   if (isLoading) {
@@ -236,6 +239,14 @@ export default function CourseDetail() {
           </div>
         </div>
       </div>
+
+      {/* Progressive Authentication Modal */}
+      <ProgressiveAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={closeAuthModal}
+        context={authContext || 'course'}
+        contextDetails={authContextDetails}
+      />
     </div>
   );
 }

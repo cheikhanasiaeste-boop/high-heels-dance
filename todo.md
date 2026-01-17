@@ -772,3 +772,17 @@
 - [x] Test that repositioning never shows white space
 - [x] Verify full image data is always accessible
 - [x] Document corrected rendering model
+
+## Late-Stage Authentication Flow
+- [x] Diagnose current auth blocking in course purchase flow
+- [x] Diagnose current auth blocking in session booking flow
+- [x] Remove early auth checks from entry points
+- [x] Allow guests to view course details and pricing
+- [x] Allow guests to select session times and options
+- [x] Implement auth dialog at "Proceed to Payment" step
+- [x] Implement auth dialog at "Confirm Booking" step
+- [x] Preserve user selections after authentication
+- [x] Add contextual auth messaging
+- [x] Handle auth cancellation gracefully
+- [x] Test complete guest-to-authenticated flow
+- [x] Ensure no silent failures on clicks
