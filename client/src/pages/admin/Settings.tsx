@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { trpc } from "@/lib/trpc";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { ContentEditor } from "@/components/ContentEditor";
 import { PopupSettings } from "@/components/PopupSettings";
@@ -37,9 +37,11 @@ export default function AdminSettings() {
   const [bgVideoUrl, setBgVideoUrl] = useState("");
 
   // Update bgVideoUrl when data loads (prioritize new animation format)
-  if ((bgAnimationData || bgVideoData) && bgVideoUrl === "") {
-    setBgVideoUrl(bgAnimationData || bgVideoData || "");
-  }
+  useEffect(() => {
+    if (bgAnimationData || bgVideoData) {
+      setBgVideoUrl(bgAnimationData || bgVideoData || "");
+    }
+  }, [bgAnimationData, bgVideoData]);
   
   // Background animation pending state
   const [pendingAnimationFile, setPendingAnimationFile] = useState<File | null>(null);
@@ -103,7 +105,8 @@ export default function AdminSettings() {
         setHasUnsavedAnimationChanges(false);
         
         // Invalidate cache to force homepage refetch
-        utils.admin.settings.get.invalidate();
+        utils.admin.settings.get.invalidate({ key: 'backgroundAnimationUrl' });
+        utils.admin.settings.get.invalidate({ key: 'backgroundVideoUrl' });
         
         toast.success("Background animation updated successfully!");
       };

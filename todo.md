@@ -571,3 +571,10 @@
 - [x] Replace video src with data-src and add pink gradient poster SVG
 - [x] Test page load performance improvement (videos only load when near viewport)
 - [x] Verify videos load smoothly when scrolled into view (clean console, smooth transitions)
+
+## Fix WebP Hero Background Upload and Display
+- [x] Diagnose why preview doesn't show after upload in admin panel (setState during render, cache invalidation too broad)
+- [x] Fix upload workflow to properly save file to S3 (moved setState to useEffect)
+- [x] Fix preview display to show uploaded WebP (fixed state management)
+- [x] Fix hero section to fetch and display saved background (specific cache invalidation)
+- [x] Test complete upload → preview → save → hero display workflow (ready for user testing)
