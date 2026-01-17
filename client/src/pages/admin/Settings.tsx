@@ -40,6 +40,11 @@ export default function AdminSettings() {
   if ((bgAnimationData || bgVideoData) && bgVideoUrl === "") {
     setBgVideoUrl(bgAnimationData || bgVideoData || "");
   }
+  
+  // Background animation pending state
+  const [pendingAnimationFile, setPendingAnimationFile] = useState<File | null>(null);
+  const [pendingAnimationPreview, setPendingAnimationPreview] = useState<string>("");
+  const [hasUnsavedAnimationChanges, setHasUnsavedAnimationChanges] = useState(false);
   const [isUploadingVideo, setIsUploadingVideo] = useState(false);
 
   const uploadMutation = trpc.upload.useMutation();
@@ -68,6 +73,47 @@ export default function AdminSettings() {
       text: bannerText,
       enabled: bannerEnabled,
     });
+  };
+  
+  const handleSaveBackgroundAnimation = async () => {
+    if (!pendingAnimationFile) return;
+    
+    setIsUploadingVideo(true);
+    try {
+      // Upload to S3
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = reader.result as string;
+        const result = await uploadMutation.mutateAsync({ 
+          key: `animations/background-${Date.now()}.webp`,
+          data: base64,
+          contentType: pendingAnimationFile.type
+        });
+        
+        // Save to database
+        await updateVideoMutation.mutateAsync({
+          key: 'backgroundAnimationUrl',
+          value: result.url,
+        });
+        
+        // Update UI state
+        setBgVideoUrl(result.url);
+        setPendingAnimationFile(null);
+        setPendingAnimationPreview("");
+        setHasUnsavedAnimationChanges(false);
+        
+        // Invalidate cache to force homepage refetch
+        utils.admin.settings.get.invalidate();
+        
+        toast.success("Background animation updated successfully!");
+      };
+      reader.readAsDataURL(pendingAnimationFile);
+    } catch (error) {
+      toast.error("Failed to save background animation");
+      console.error(error);
+    } finally {
+      setIsUploadingVideo(false);
+    }
   };
 
   if (!isAuthenticated || user?.role !== 'admin') {
@@ -145,56 +191,77 @@ export default function AdminSettings() {
                 id="bg-animation"
                 type="file"
                 accept="image/webp"
-                onChange={async (e) => {
+                onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (!file) return;
+                  
+                  // Validate file type
+                  if (!file.type.includes('webp')) {
+                    toast.error("Please upload a WebP file");
+                    e.target.value = ''; // Reset input
+                    return;
+                  }
                   
                   // Validate file size (2MB limit)
                   if (file.size > 2 * 1024 * 1024) {
                     toast.error("File size must be under 2MB for optimal performance");
+                    e.target.value = ''; // Reset input
                     return;
                   }
                   
-                  setIsUploadingVideo(true);
-                  try {
-                    const reader = new FileReader();
-                    reader.onload = async () => {
-                      const base64 = reader.result as string;
-                      const result = await uploadMutation.mutateAsync({ 
-                        key: `animations/background-${Date.now()}.webp`,
-                        data: base64,
-                        contentType: file.type
-                      });
-                      setBgVideoUrl(result.url);
-                      await updateVideoMutation.mutateAsync({
-                        key: 'backgroundAnimationUrl',
-                        value: result.url,
-                      });
-                      toast.success("Animation uploaded successfully!");
-                    };
-                    reader.readAsDataURL(file);
-                  } catch (error) {
-                    toast.error("Failed to upload animation");
-                  } finally {
-                    setIsUploadingVideo(false);
-                  }
+                  // Store file and create preview (don't save yet)
+                  setPendingAnimationFile(file);
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    setPendingAnimationPreview(reader.result as string);
+                    setHasUnsavedAnimationChanges(true);
+                  };
+                  reader.readAsDataURL(file);
                 }}
                 disabled={isUploadingVideo}
               />
-              {isUploadingVideo && <p className="text-sm text-muted-foreground mt-2">Uploading animation...</p>}
-              {bgVideoUrl && (
+              {isUploadingVideo && <p className="text-sm text-muted-foreground mt-2">Saving animation...</p>}
+              
+              {/* Show pending preview if exists, otherwise show saved */}
+              {(pendingAnimationPreview || bgVideoUrl) && (
                 <div className="mt-4">
-                  <p className="text-sm text-muted-foreground mb-2">Current animation preview:</p>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    {pendingAnimationPreview ? "Preview (not saved yet):" : "Current animation:"}
+                  </p>
                   <img 
-                    src={bgVideoUrl} 
+                    src={pendingAnimationPreview || bgVideoUrl} 
                     alt="Background animation preview" 
                     className="w-full max-w-md rounded-lg border border-border" 
                   />
-                  <p className="text-xs text-muted-foreground mt-2">
-                    The animation will appear more subtle on the homepage with automatic color adjustments.
-                  </p>
+                  {pendingAnimationPreview && (
+                    <p className="text-xs text-yellow-600 mt-2 font-medium flex items-center gap-1">
+                      <span>⚠️</span> Preview only - Click "Save Background Animation" to apply
+                    </p>
+                  )}
+                  {!pendingAnimationPreview && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      The animation will appear more subtle on the homepage with automatic color adjustments.
+                    </p>
+                  )}
                 </div>
               )}
+              
+              {/* Save Button */}
+              <div className="mt-4 space-y-2">
+                <Button 
+                  onClick={handleSaveBackgroundAnimation}
+                  disabled={!hasUnsavedAnimationChanges || isUploadingVideo}
+                  className="w-full sm:w-auto"
+                >
+                  {isUploadingVideo ? "Saving..." : "Save Background Animation"}
+                </Button>
+                
+                {hasUnsavedAnimationChanges && !isUploadingVideo && (
+                  <p className="text-sm text-yellow-600 font-medium">
+                    You have unsaved changes
+                  </p>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>

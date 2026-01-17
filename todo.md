@@ -520,3 +520,13 @@
 - [x] Implement prefers-reduced-motion support with static fallback
 - [x] Ensure fast loading and minimal performance impact (2MB limit, lazy loading)
 - [x] Test visual elegance and foreground content readability
+
+## Fix Homepage Background Animation Upload & Preview
+- [x] Diagnose why preview doesn't render after WebP upload (root cause: auto-save prevented clear preview flow)
+- [x] Fix preview rendering to show uploaded WebP immediately
+- [x] Add explicit Save/Apply button (don't auto-save on upload)
+- [x] Implement proper state management for unsaved changes (pendingAnimationFile, pendingAnimationPreview, hasUnsavedAnimationChanges)
+- [x] Add "Background updated successfully" confirmation message
+- [x] Validate file format and size before allowing save (WebP only, 2MB limit)
+- [x] Ensure homepage background updates after save (cache invalidation implemented)
+- [x] Test complete upload → preview → save → homepage update workflow
