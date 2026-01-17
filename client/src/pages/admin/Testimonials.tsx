@@ -3,7 +3,7 @@ import { AdminLayout } from "@/components/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { Check, X, Star } from "lucide-react";
+import { Check, X, Star, Image as ImageIcon, Video, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
@@ -142,9 +142,30 @@ export default function AdminTestimonials() {
                       }}
                     />
                     <div className="flex-1">
-                      <CardTitle>{testimonial.userName}</CardTitle>
-                      <CardDescription>
+                      <CardTitle className="flex items-center gap-2">
+                        {testimonial.userName}
+                        {testimonial.type === 'course' && testimonial.relatedId && (
+                          <span className="text-sm font-normal text-muted-foreground">
+                            • Course Feedback
+                          </span>
+                        )}
+                      </CardTitle>
+                      <CardDescription className="flex items-center gap-2">
                         {new Date(testimonial.createdAt).toLocaleDateString()}
+                        {/* Star Rating */}
+                        <span className="flex items-center gap-1 ml-2">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-3 h-3 ${
+                                i < testimonial.rating
+                                  ? 'fill-yellow-400 text-yellow-400'
+                                  : 'text-gray-300'
+                              }`}
+                            />
+                          ))}
+                          <span className="text-xs ml-1">({testimonial.rating}/5)</span>
+                        </span>
                       </CardDescription>
                     </div>
                     <div className="flex gap-2">
@@ -193,7 +214,40 @@ export default function AdminTestimonials() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm">{testimonial.feedback}</p>
+                  <p className="text-sm whitespace-pre-wrap">{testimonial.review}</p>
+                  
+                  {/* Media Display */}
+                  {(testimonial.photoUrl || testimonial.videoUrl) && (
+                    <div className="mt-4 space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Attached Media:</p>
+                      <div className="flex gap-2">
+                        {testimonial.photoUrl && (
+                          <a
+                            href={testimonial.photoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-3 py-2 border rounded-md hover:bg-accent transition-colors"
+                          >
+                            <ImageIcon className="w-4 h-4" />
+                            <span className="text-sm">View Photo</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                        {testimonial.videoUrl && (
+                          <a
+                            href={testimonial.videoUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-2 px-3 py-2 border rounded-md hover:bg-accent transition-colors"
+                          >
+                            <Video className="w-4 h-4" />
+                            <span className="text-sm">View Video</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-center gap-2 mt-2">
                     <span className={`text-xs px-2 py-1 rounded ${
                       testimonial.status === 'approved' ? 'bg-green-100 text-green-800' :

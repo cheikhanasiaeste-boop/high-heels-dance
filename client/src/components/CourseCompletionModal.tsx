@@ -2,8 +2,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Star, Sparkles, Trophy } from "lucide-react";
-import { useState } from "react";
+import { Star, Sparkles, Trophy, Upload, X, Image as ImageIcon, Video } from "lucide-react";
+import { useState, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 
@@ -23,6 +23,10 @@ export function CourseCompletionModal({
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [hoveredRating, setHoveredRating] = useState(0);
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [mediaPreview, setMediaPreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const submitTestimonialMutation = trpc.testimonials.submitCourseTestimonial.useMutation({
     onSuccess: () => {
@@ -36,7 +40,39 @@ export function CourseCompletionModal({
     },
   });
 
-  const handleSubmit = () => {
+  const handleMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'video/mp4', 'video/webm'];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Please upload a valid image (JPEG, PNG, WebP) or video (MP4, WebM)");
+      return;
+    }
+
+    // Validate file size (max 50MB)
+    if (file.size > 50 * 1024 * 1024) {
+      toast.error("File size must be less than 50MB");
+      return;
+    }
+
+    setMediaFile(file);
+    setMediaPreview(URL.createObjectURL(file));
+  };
+
+  const handleRemoveMedia = () => {
+    setMediaFile(null);
+    if (mediaPreview) {
+      URL.revokeObjectURL(mediaPreview);
+      setMediaPreview(null);
+    }
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleSubmit = async () => {
     if (rating === 0) {
       toast.error("Please select a rating");
       return;
@@ -46,10 +82,45 @@ export function CourseCompletionModal({
       return;
     }
 
+    let photoUrl: string | undefined;
+    let videoUrl: string | undefined;
+
+    // Upload media if provided
+    if (mediaFile) {
+      setIsUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append('file', mediaFile);
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!response.ok) throw new Error('Upload failed');
+
+        const { url } = await response.json();
+        
+        if (mediaFile.type.startsWith('image/')) {
+          photoUrl = url;
+        } else {
+          videoUrl = url;
+        }
+      } catch (error) {
+        toast.error("Failed to upload media. Please try again.");
+        setIsUploading(false);
+        return;
+      } finally {
+        setIsUploading(false);
+      }
+    }
+
     submitTestimonialMutation.mutate({
       courseId,
       rating,
       content: feedback,
+      photoUrl,
+      videoUrl,
     });
   };
 
@@ -115,6 +186,71 @@ export function CourseCompletionModal({
               rows={5}
               className="resize-none"
             />
+          </div>
+
+          {/* Optional Media Upload */}
+          <div className="space-y-2">
+            <Label className="text-sm text-muted-foreground">
+              Share a photo or video (optional)
+            </Label>
+            <p className="text-xs text-muted-foreground">
+              We'd love to see your progress! Feel free to share a picture or video testimonial if you'd like. 📸
+            </p>
+            
+            {!mediaFile ? (
+              <div className="relative">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,video/mp4,video/webm"
+                  onChange={handleMediaSelect}
+                  className="hidden"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full border-dashed"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload Photo or Video
+                </Button>
+              </div>
+            ) : (
+              <div className="relative border rounded-lg p-4">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 right-2 z-10"
+                  onClick={handleRemoveMedia}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+                
+                {mediaFile.type.startsWith('image/') ? (
+                  <div className="flex items-center gap-3">
+                    <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{mediaFile.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(mediaFile.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <Video className="w-8 h-8 text-muted-foreground" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{mediaFile.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {(mediaFile.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

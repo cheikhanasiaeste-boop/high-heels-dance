@@ -1246,6 +1246,8 @@ Be friendly, professional, and helpful. If you don't know something specific, of
         courseId: z.number(),
         rating: z.number().min(1).max(5),
         content: z.string().min(10),
+        photoUrl: z.string().optional(),
+        videoUrl: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         // Check if user already submitted feedback for this course
@@ -1268,6 +1270,8 @@ Be friendly, professional, and helpful. If you don't know something specific, of
           userEmail: ctx.user.email || undefined,
           rating: input.rating,
           review: input.content,
+          photoUrl: input.photoUrl,
+          videoUrl: input.videoUrl,
           type: "course",
           relatedId: input.courseId,
           status: 'pending',

@@ -1029,3 +1029,14 @@
 - [x] Add /courses/:id/learn route for consistency
 - [x] Verify route works with course IDs
 - [x] Test course detail page access
+
+## Testimonial Media Upload Enhancement
+- [x] Add mediaUrl field to testimonials table schema (photoUrl and videoUrl already exist)
+- [x] Update CourseCompletionModal with optional photo/video upload
+- [x] Add friendly, non-pushy prompt for media upload
+- [x] Implement media file upload handler with /api/upload endpoint
+- [x] Update submitCourseTestimonial to save photoUrl and videoUrl
+- [x] Enhance admin testimonials page to display course feedback type
+- [x] Display rating details with star visualization in admin testimonials
+- [x] Show uploaded media (photo/video) with view links in admin testimonials
+- [x] Test media upload and admin display
