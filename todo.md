@@ -735,3 +735,15 @@
 - [x] Add media router with uploadImage endpoint to admin router
 - [x] Build thumbnail upload UI in Thumbnail tab
 - [x] Test thumbnail upload functionality
+
+## Thumbnail Adjustment Interface
+- [x] Add crop metadata fields to courses table (zoom, offsetX, offsetY)
+- [x] Create backend API for saving crop settings
+- [x] Build interactive thumbnail editor with drag and zoom
+- [x] Add zoom slider control
+- [x] Implement drag-to-reposition functionality
+- [x] Add reset to original button
+- [x] Create real-time preview of adjustments
+- [x] Apply crop settings to public course displays
+- [x] Test thumbnail adjustment workflow
+- [x] Ensure keyboard accessibility for controls

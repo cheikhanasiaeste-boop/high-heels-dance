@@ -30,6 +30,9 @@ export const courses = mysqlTable("courses", {
   originalPrice: decimal("originalPrice", { precision: 10, scale: 2 }), // For showing discounts
   imageUrl: text("imageUrl"), // S3 URL for course image
   imageKey: text("imageKey"), // S3 key for course image
+  imageCropZoom: decimal("imageCropZoom", { precision: 5, scale: 2 }).default("1.00"), // Zoom level for thumbnail crop (1.00 = 100%)
+  imageCropOffsetX: decimal("imageCropOffsetX", { precision: 5, scale: 2 }).default("0.00"), // Horizontal offset as percentage (-100 to 100)
+  imageCropOffsetY: decimal("imageCropOffsetY", { precision: 5, scale: 2 }).default("0.00"), // Vertical offset as percentage (-100 to 100)
   previewVideoUrl: text("previewVideoUrl"), // S3 URL for course preview video
   previewVideoKey: text("previewVideoKey"), // S3 key for course preview video
   isFree: boolean("isFree").default(false).notNull(),

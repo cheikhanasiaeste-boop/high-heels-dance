@@ -103,6 +103,9 @@ export default function Courses() {
                       alt={course.title}
                       loading="lazy"
                       className="w-full h-full object-cover"
+                      style={{
+                        transform: `scale(${parseFloat(course.imageCropZoom || "1.00")}) translate(${parseFloat(course.imageCropOffsetX || "0.00") / parseFloat(course.imageCropZoom || "1.00")}%, ${parseFloat(course.imageCropOffsetY || "0.00") / parseFloat(course.imageCropZoom || "1.00")}%)`,
+                      }}
                     />
                     {!course.isFree && (
                       <Badge className="absolute top-3 right-3 bg-purple-600">

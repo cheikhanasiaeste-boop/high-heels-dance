@@ -717,9 +717,15 @@ function EditLessonDialog({ lesson }: { lesson: any }) {
 }
 
 
-// Course Thumbnail Upload Component
+// Course Thumbnail Upload Component with Interactive Crop Editor
 function CourseThumbnailUpload({ course }: { course: any }) {
   const [uploading, setUploading] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [zoom, setZoom] = useState(parseFloat(course.imageCropZoom || "1.00"));
+  const [offsetX, setOffsetX] = useState(parseFloat(course.imageCropOffsetX || "0.00"));
+  const [offsetY, setOffsetY] = useState(parseFloat(course.imageCropOffsetY || "0.00"));
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const utils = trpc.useUtils();
   
   const uploadMutation = trpc.admin.media.uploadImage.useMutation({
@@ -732,8 +738,9 @@ function CourseThumbnailUpload({ course }: { course: any }) {
   const updateCourseMutation = trpc.admin.courses.update.useMutation({
     onSuccess: () => {
       utils.admin.courses.list.invalidate();
-      toast.success("Thumbnail updated successfully");
+      toast.success("Changes saved successfully");
       setUploading(false);
+      setIsEditing(false);
     },
   });
 
@@ -763,16 +770,68 @@ function CourseThumbnailUpload({ course }: { course: any }) {
         fileData: await fileToBase64(file),
       });
 
-      // Update course with new image URL
+      // Update course with new image URL and reset crop settings
       await updateCourseMutation.mutateAsync({
         id: course.id,
         imageUrl: result.url,
+        imageCropZoom: "1.00",
+        imageCropOffsetX: "0.00",
+        imageCropOffsetY: "0.00",
       });
+      
+      // Reset local state
+      setZoom(1.0);
+      setOffsetX(0);
+      setOffsetY(0);
     } catch (error) {
       console.error("Upload error:", error);
       toast.error("Failed to upload thumbnail");
       setUploading(false);
     }
+  };
+
+  const handleSaveCrop = async () => {
+    setUploading(true);
+    try {
+      await updateCourseMutation.mutateAsync({
+        id: course.id,
+        imageCropZoom: zoom.toFixed(2),
+        imageCropOffsetX: offsetX.toFixed(2),
+        imageCropOffsetY: offsetY.toFixed(2),
+      });
+    } catch (error) {
+      console.error("Save error:", error);
+      toast.error("Failed to save crop settings");
+      setUploading(false);
+    }
+  };
+
+  const handleResetCrop = () => {
+    setZoom(1.0);
+    setOffsetX(0);
+    setOffsetY(0);
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!isEditing) return;
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !isEditing) return;
+    
+    const deltaX = (e.clientX - dragStart.x) / 3; // Reduce sensitivity
+    const deltaY = (e.clientY - dragStart.y) / 3;
+    
+    setOffsetX(prev => Math.max(-100, Math.min(100, prev + deltaX)));
+    setOffsetY(prev => Math.max(-100, Math.min(100, prev + deltaY)));
+    
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
   };
 
   const fileToBase64 = (file: File): Promise<string> => {
@@ -781,32 +840,118 @@ function CourseThumbnailUpload({ course }: { course: any }) {
       reader.readAsDataURL(file);
       reader.onload = () => {
         const base64 = reader.result as string;
-        // Remove data:image/...;base64, prefix
         resolve(base64.split(",")[1]);
       };
       reader.onerror = reject;
     });
   };
 
+  const hasChanges = 
+    zoom.toFixed(2) !== (course.imageCropZoom || "1.00") ||
+    offsetX.toFixed(2) !== (course.imageCropOffsetX || "0.00") ||
+    offsetY.toFixed(2) !== (course.imageCropOffsetY || "0.00");
+
   return (
     <div className="space-y-6">
       <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Course Thumbnail</h2>
-        <p className="text-sm text-muted-foreground mb-6">
-          Upload a thumbnail image that will be displayed on the courses listing page. Recommended size: 800x600px.
-        </p>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-xl font-semibold">Course Thumbnail</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Upload and adjust the thumbnail image for your course
+            </p>
+          </div>
+          {course.imageUrl && (
+            <Button
+              variant={isEditing ? "default" : "outline"}
+              onClick={() => setIsEditing(!isEditing)}
+              disabled={uploading}
+            >
+              {isEditing ? "Done Editing" : "Adjust Thumbnail"}
+            </Button>
+          )}
+        </div>
 
-        {/* Current Thumbnail */}
+        {/* Thumbnail Preview with Crop Editor */}
         {course.imageUrl && (
           <div className="mb-6">
-            <Label className="mb-2 block">Current Thumbnail</Label>
-            <div className="relative w-full max-w-md aspect-video rounded-lg overflow-hidden border">
+            <Label className="mb-2 block">
+              {isEditing ? "Drag to reposition • Use slider to zoom" : "Current Thumbnail"}
+            </Label>
+            <div 
+              className="relative w-full max-w-2xl aspect-video rounded-lg overflow-hidden border-2 transition-colors"
+              style={{
+                borderColor: isEditing ? "hsl(var(--primary))" : "hsl(var(--border))",
+                cursor: isEditing ? (isDragging ? "grabbing" : "grab") : "default",
+              }}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+            >
               <img
                 src={course.imageUrl}
                 alt={course.title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-transform"
+                style={{
+                  transform: `scale(${zoom}) translate(${offsetX / zoom}%, ${offsetY / zoom}%)`,
+                  userSelect: "none",
+                  pointerEvents: isEditing ? "none" : "auto",
+                }}
+                draggable={false}
               />
+              {isEditing && (
+                <div className="absolute inset-0 pointer-events-none">
+                  <div className="absolute inset-0 border-2 border-dashed border-primary/50" />
+                  <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                    Zoom: {(zoom * 100).toFixed(0)}%
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Crop Controls */}
+            {isEditing && (
+              <div className="mt-4 space-y-4 p-4 bg-muted/50 rounded-lg">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Zoom Level</Label>
+                    <span className="text-sm text-muted-foreground">{(zoom * 100).toFixed(0)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="1"
+                    max="3"
+                    step="0.01"
+                    value={zoom}
+                    onChange={(e) => setZoom(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-background rounded-lg appearance-none cursor-pointer accent-primary"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>100%</span>
+                    <span>300%</span>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResetCrop}
+                    disabled={!hasChanges}
+                  >
+                    Reset to Original
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleSaveCrop}
+                    disabled={!hasChanges || uploading}
+                  >
+                    {uploading ? "Saving..." : "Apply Changes"}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -825,7 +970,7 @@ function CourseThumbnailUpload({ course }: { course: any }) {
               {uploading ? "Uploading..." : "Choose Image"}
             </Button>
             <span className="text-sm text-muted-foreground">
-              Max 5MB - JPG, PNG, or WebP
+              Max 5MB • JPG, PNG, or WebP • Recommended: 800x600px
             </span>
           </div>
           <input

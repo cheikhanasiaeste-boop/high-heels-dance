@@ -118,7 +118,15 @@ export default function CourseDetail() {
           <div className="lg:col-span-2">
             <div className="aspect-video bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg mb-8 flex items-center justify-center overflow-hidden">
               {course.imageUrl ? (
-                <img src={course.imageUrl} alt={course.title} loading="lazy" className="w-full h-full object-cover" />
+                <img 
+                  src={course.imageUrl} 
+                  alt={course.title} 
+                  loading="lazy" 
+                  className="w-full h-full object-cover"
+                  style={{
+                    transform: `scale(${parseFloat(course.imageCropZoom || "1.00")}) translate(${parseFloat(course.imageCropOffsetX || "0.00") / parseFloat(course.imageCropZoom || "1.00")}%, ${parseFloat(course.imageCropOffsetY || "0.00") / parseFloat(course.imageCropZoom || "1.00")}%)`,
+                  }}
+                />
               ) : (
                 <span className="text-9xl">💃</span>
               )}
