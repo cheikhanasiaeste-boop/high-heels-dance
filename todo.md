@@ -552,3 +552,10 @@
 - [x] Verify admin panel allows changing WebP file in Homepage Background Animation setting
 - [x] Test upload, preview, and save workflow in admin panel
 - [x] Update admin description from "courses section" to "hero section"
+
+## Add Test Testimonials
+- [x] Create diverse text testimonials with realistic content (8 text testimonials)
+- [x] Create video testimonial entries with YouTube URLs (2 video testimonials)
+- [x] Insert testimonials into database (10 total testimonials)
+- [x] Mark some as featured for homepage prominence (4 featured)
+- [x] Verify testimonials display correctly in carousel
