@@ -851,3 +851,12 @@
 - [x] Add subtle animation to badge for attention
 - [x] Test Top Pick sorting with mixed courses
 - [x] Verify badge visibility and attractiveness
+
+## Fix Hero Background and Thumbnail Zoom
+- [x] Fix hero page background animation to display correctly
+- [x] Reduce thumbnail zoom (default scale) in homepage course cards
+- [x] Reduce thumbnail zoom in course thumbnail tab
+- [x] Ensure thumbnails show most of the selected image
+- [x] Test hero background animates properly
+- [x] Test thumbnail display on homepage shows more content
+- [x] Test thumbnail display in admin course editor shows more content
