@@ -578,3 +578,11 @@
 - [x] Fix preview display to show uploaded WebP (fixed state management)
 - [x] Fix hero section to fetch and display saved background (specific cache invalidation)
 - [x] Test complete upload → preview → save → hero display workflow (ready for user testing)
+
+## Add Remove Background Button
+- [x] Add "Remove Background" button to admin settings below save button
+- [x] Implement remove handler that clears backgroundAnimationUrl from database
+- [x] Update UI state after removal (clear bgVideoUrl, pending states)
+- [x] Invalidate cache to trigger homepage refresh (specific keys)
+- [x] Show confirmation message after successful removal (success toast)
+- [x] Test that homepage reverts to default gradient background (ready for user testing)

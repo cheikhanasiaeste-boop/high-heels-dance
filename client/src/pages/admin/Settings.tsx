@@ -77,6 +77,31 @@ export default function AdminSettings() {
     });
   };
   
+  const handleRemoveBackgroundAnimation = async () => {
+    try {
+      // Clear from database
+      await updateVideoMutation.mutateAsync({
+        key: 'backgroundAnimationUrl',
+        value: '',
+      });
+      
+      // Update UI state
+      setBgVideoUrl("");
+      setPendingAnimationFile(null);
+      setPendingAnimationPreview("");
+      setHasUnsavedAnimationChanges(false);
+      
+      // Invalidate cache to force homepage refetch
+      utils.admin.settings.get.invalidate({ key: 'backgroundAnimationUrl' });
+      utils.admin.settings.get.invalidate({ key: 'backgroundVideoUrl' });
+      
+      toast.success("Background animation removed successfully!");
+    } catch (error) {
+      toast.error("Failed to remove background animation");
+      console.error(error);
+    }
+  };
+  
   const handleSaveBackgroundAnimation = async () => {
     if (!pendingAnimationFile) return;
     
@@ -249,15 +274,28 @@ export default function AdminSettings() {
                 </div>
               )}
               
-              {/* Save Button */}
-              <div className="mt-4 space-y-2">
-                <Button 
-                  onClick={handleSaveBackgroundAnimation}
-                  disabled={!hasUnsavedAnimationChanges || isUploadingVideo}
-                  className="w-full sm:w-auto"
-                >
-                  {isUploadingVideo ? "Saving..." : "Save Background Animation"}
-                </Button>
+              {/* Save and Remove Buttons */}
+              <div className="mt-4 space-y-3">
+                <div className="flex flex-wrap gap-2">
+                  <Button 
+                    onClick={handleSaveBackgroundAnimation}
+                    disabled={!hasUnsavedAnimationChanges || isUploadingVideo}
+                    className="flex-1 sm:flex-none"
+                  >
+                    {isUploadingVideo ? "Saving..." : "Save Background Animation"}
+                  </Button>
+                  
+                  {bgVideoUrl && !hasUnsavedAnimationChanges && (
+                    <Button 
+                      onClick={handleRemoveBackgroundAnimation}
+                      disabled={isUploadingVideo}
+                      variant="outline"
+                      className="flex-1 sm:flex-none"
+                    >
+                      Remove Background
+                    </Button>
+                  )}
+                </div>
                 
                 {hasUnsavedAnimationChanges && !isUploadingVideo && (
                   <p className="text-sm text-yellow-600 font-medium">
