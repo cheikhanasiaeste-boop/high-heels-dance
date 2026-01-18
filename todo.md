@@ -1398,3 +1398,9 @@
 - [x] Implement course completion congratulations notification - Added markComplete procedure and email integration
 - [x] Test all notification triggers - Email API key validated with test
 - [x] Verify email delivery and formatting - Test email sent successfully
+
+## CRITICAL: Hero Background Image Not Loading
+- [x] Fix broken background image URL (https://storage.manus.im/01JHTMTJNXBGWKF0BNBP0YNVV0/hero-background.webp) - Replaced with Unsplash image
+- [x] Update database with working image URL - Updated siteSettings table
+- [x] Test image loads on both dev and published site - Dev server confirmed working
+- [x] Verify no console errors - No errors, image loading perfectly
