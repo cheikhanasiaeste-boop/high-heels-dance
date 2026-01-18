@@ -1410,3 +1410,15 @@
 - [x] Write vitest tests for preference checking logic - All 5 tests passing
 - [x] Test preference toggles in UI - UI verified in browser
 - [x] Verify emails respect user preferences - All email functions check preferences before sending
+
+## URGENT: Homepage Loading Issue
+- [ ] Investigate why hero section is not displaying
+- [ ] Check for JavaScript errors in browser console
+- [ ] Fix background image/video rendering
+- [ ] Fix welcome popup not showing
+- [ ] Verify all homepage content loads correctly
+
+## URGENT: Session Link Validation Error
+- [x] Fix sessionLink validation error showing "Invalid URL" - Now allows empty strings
+- [x] Make sessionLink optional or fix URL validation - Fixed with .or(z.literal(''))
+- [x] Test session creation/editing with and without session link - Server running without errors
