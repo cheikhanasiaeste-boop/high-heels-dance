@@ -1168,3 +1168,15 @@
 - [x] Fixed UserProfileDropdown to link to /my-messages instead of /messages
 - [x] Fixed MobileNav to link to /my-messages instead of /messages
 - [x] Test that clicking My Messages now shows all 6 messages for Anas - ✅ ALL 6 MESSAGES VISIBLE
+
+## Conversation System in My Messages
+- [x] Create conversation grouping logic (group messages by sender/recipient pair)
+- [x] Add admin alias "Elizabeth" for display in user conversations
+- [x] Update My Messages UI to show conversations instead of flat list
+- [x] Add "New Conversation" button to start message with admin
+- [x] Add reply functionality to open conversation thread
+- [x] Display conversation thread view with chronological messages
+- [x] Add compose box at bottom of conversation for replies
+- [x] Test user can initiate conversation with admin - ✅ 5 tests passing
+- [x] Test user can reply to admin messages - ✅ Verified in tests
+- [x] Test admin alias "Elizabeth" displays correctly - ✅ Verified in tests

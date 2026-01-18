@@ -1403,6 +1403,34 @@ Be friendly, professional, and helpful. If you don't know something specific, of
         return await db.markMessageAsRead(input.messageId, ctx.user.id);
       }),
 
+    // Protected: Get conversations grouped by sender/recipient
+    conversations: protectedProcedure.query(async ({ ctx }) => {
+      return await db.getConversations(ctx.user.id);
+    }),
+
+    // Protected: Get full conversation thread with another user
+    thread: protectedProcedure
+      .input(z.object({ otherUserId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        return await db.getConversationThread(ctx.user.id, input.otherUserId);
+      }),
+
+    // Protected: Send message to user (can be used by both users and admins)
+    send: protectedProcedure
+      .input(z.object({
+        toUserId: z.number(),
+        subject: z.string().min(1).max(255),
+        body: z.string().min(1),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        return await db.createMessage({
+          fromUserId: ctx.user.id,
+          toUserId: input.toUserId,
+          subject: input.subject,
+          body: input.body,
+        });
+      }),
+
     // Admin: Send message to user
     sendToUser: adminProcedure
       .input(z.object({

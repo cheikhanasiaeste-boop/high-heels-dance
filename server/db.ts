@@ -1,4 +1,4 @@
-import { eq, and, desc, isNull, gte, lte, or, like, inArray, sql, SQL } from "drizzle-orm";
+import { eq, and, desc, asc, isNull, gte, lte, or, like, inArray, sql, SQL } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser,
@@ -1947,4 +1947,68 @@ export async function getBookingsWithDetails() {
     .orderBy(desc(bookings.bookedAt));
   
   return result;
+}
+
+
+// Get conversations grouped by sender/recipient pair with latest message
+export async function getConversations(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  const allMessages = await db
+    .select()
+    .from(messages)
+    .where(or(eq(messages.toUserId, userId), eq(messages.fromUserId, userId)))
+    .orderBy(desc(messages.createdAt));
+
+  // Group messages by conversation (sender-recipient pair)
+  const conversationMap = new Map<string, any>();
+  
+  for (const msg of allMessages) {
+    const otherUserId = msg.fromUserId === userId ? msg.toUserId : msg.fromUserId;
+    const key = `${Math.min(userId, otherUserId)}-${Math.max(userId, otherUserId)}`;
+    
+    if (!conversationMap.has(key)) {
+      // Get the other user's info
+      const otherUser = await getUserById(otherUserId);
+      const displayName = otherUser?.role === 'admin' ? 'Elizabeth' : otherUser?.name || 'Unknown';
+      
+      conversationMap.set(key, {
+        otherUserId,
+        displayName,
+        lastMessage: msg.body,
+        lastMessageSubject: msg.subject,
+        lastMessageDate: msg.createdAt,
+        unreadCount: msg.toUserId === userId && !msg.isRead ? 1 : 0,
+        messages: [msg],
+      });
+    } else {
+      const conv = conversationMap.get(key)!;
+      conv.messages.push(msg);
+      if (msg.toUserId === userId && !msg.isRead) {
+        conv.unreadCount += 1;
+      }
+    }
+  }
+
+  return Array.from(conversationMap.values()).sort(
+    (a, b) => new Date(b.lastMessageDate).getTime() - new Date(a.lastMessageDate).getTime()
+  );
+}
+
+// Get full conversation thread with another user
+export async function getConversationThread(userId: number, otherUserId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  return await db
+    .select()
+    .from(messages)
+    .where(
+      or(
+        and(eq(messages.fromUserId, userId), eq(messages.toUserId, otherUserId)),
+        and(eq(messages.fromUserId, otherUserId), eq(messages.toUserId, userId))
+      )
+    )
+    .orderBy(asc(messages.createdAt));
 }
