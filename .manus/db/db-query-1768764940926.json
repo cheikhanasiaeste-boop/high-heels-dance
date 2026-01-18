@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO visual_settings (heroBackgroundUrl) VALUES ('https://storage.manus.im/01JHTMTJNXBGWKF0BNBP0YNVV0/hero-background.webp');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4HtU1c2nK4A5Wb2.root --database M2v4Dnk4LCsJQ3Qwy7fUfL --execute INSERT INTO visual_settings (heroBackgroundUrl) VALUES ('https://storage.manus.im/01JHTMTJNXBGWKF0BNBP0YNVV0/hero-background.webp');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 78
+}

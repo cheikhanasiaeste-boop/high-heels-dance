@@ -1422,3 +1422,10 @@
 - [x] Fix sessionLink validation error showing "Invalid URL" - Now allows empty strings
 - [x] Make sessionLink optional or fix URL validation - Fixed with .or(z.literal(''))
 - [x] Test session creation/editing with and without session link - Server running without errors
+
+## CRITICAL: Hero Section Not Rendering
+- [x] Investigate why hero section with background is missing - Database had no background URL
+- [x] Check if welcome popup component exists - Popup was only showing for authenticated users
+- [x] Fix hero section rendering - Added fallback background URL
+- [x] Verify background image/video loads - Default background now loads
+- [x] Test on published site - Dev server showing welcome popup and hero background correctly

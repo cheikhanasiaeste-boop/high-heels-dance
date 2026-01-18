@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO visual_settings (heroBackgroundUrl, heroProfilePictureUrl) VALUES ('https://storage.manus.im/01JHTMTJNXBGWKF0BNBP0YNVV0/hero-background.webp', '/profile-photo.jpeg');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4HtU1c2nK4A5Wb2.root --database M2v4Dnk4LCsJQ3Qwy7fUfL --execute INSERT INTO visual_settings (heroBackgroundUrl, heroProfilePictureUrl) VALUES ('https://storage.manus.im/01JHTMTJNXBGWKF0BNBP0YNVV0/hero-background.webp', '/profile-photo.jpeg');",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1054 (42S22) at line 1: Unknown column 'heroProfilePictureUrl' in 'field list'"
+  ]
+}
