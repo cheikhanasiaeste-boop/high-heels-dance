@@ -1447,6 +1447,192 @@ Be friendly, professional, and helpful. If you don't know something specific, of
         });
       }),
   }),
+
+  // Unified Sessions Admin Menu
+  sessions: router({    // List all sessions with enrollment counts (admin only)
+    list: adminProcedure.query(async () => {
+      return await db.getAllSessionsWithEnrollmentCounts();
+    }),
+
+    // Get single session with full details
+    getById: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const session = await db.getAvailabilitySlotById(input.id);
+        if (!session) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Session not found' });
+        }
+        const enrollments = await db.getSessionEnrollments(input.id);
+        return { ...session, enrollments };
+      }),
+
+    // Create new session
+    create: adminProcedure
+      .input(z.object({
+        title: z.string().min(1).max(200),
+        description: z.string().optional(),
+        startTime: z.date(),
+        endTime: z.date(),
+        eventType: z.enum(["online", "in-person"]),
+        location: z.string().optional(),
+        sessionLink: z.string().url().optional(),
+        isFree: z.boolean().default(true),
+        price: z.string().optional(),
+        sessionType: z.enum(["private", "group"]).default("private"),
+        capacity: z.number().int().min(1).default(1),
+        status: z.enum(["draft", "published"]).default("draft"),
+      }))
+      .mutation(async ({ input }) => {
+        // Validation: online sessions must have a link if published
+        if (input.status === 'published' && input.eventType === 'online' && !input.sessionLink) {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: 'Online sessions must have a session link before publishing' 
+          });
+        }
+        
+        // Validation: in-person sessions must have a location if published
+        if (input.status === 'published' && input.eventType === 'in-person' && !input.location) {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: 'In-person sessions must have a location before publishing' 
+          });
+        }
+
+        return await db.createAvailabilitySlot({
+          ...input,
+          currentBookings: 0,
+          isBooked: false,
+        });
+      }),
+
+    // Update existing session
+    update: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().min(1).max(200).optional(),
+        description: z.string().optional(),
+        startTime: z.date().optional(),
+        endTime: z.date().optional(),
+        eventType: z.enum(["online", "in-person"]).optional(),
+        location: z.string().optional(),
+        sessionLink: z.string().url().optional(),
+        isFree: z.boolean().optional(),
+        price: z.string().optional(),
+        sessionType: z.enum(["private", "group"]).optional(),
+        capacity: z.number().int().min(1).optional(),
+        status: z.enum(["draft", "published"]).optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...updates } = input;
+        
+        // Get current session to validate
+        const session = await db.getAvailabilitySlotById(id);
+        if (!session) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Session not found' });
+        }
+
+        // Merge with existing values for validation
+        const merged = { ...session, ...updates };
+        
+        // Validation: online sessions must have a link if published
+        if (merged.status === 'published' && merged.eventType === 'online' && !merged.sessionLink) {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: 'Online sessions must have a session link before publishing' 
+          });
+        }
+        
+        // Validation: in-person sessions must have a location if published
+        if (merged.status === 'published' && merged.eventType === 'in-person' && !merged.location) {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: 'In-person sessions must have a location before publishing' 
+          });
+        }
+
+        await db.updateAvailabilitySlot(id, updates);
+        return { success: true };
+      }),
+
+    // Delete session
+    delete: adminProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        // Check if session has enrollments
+        const enrollments = await db.getSessionEnrollments(input.id);
+        if (enrollments.length > 0) {
+          throw new TRPCError({ 
+            code: 'BAD_REQUEST', 
+            message: `Cannot delete session with ${enrollments.length} active enrollment(s). Remove enrollments first.` 
+          });
+        }
+        
+        await db.deleteAvailabilitySlot(input.id);
+        return { success: true };
+      }),
+
+    // Update session status (draft/published)
+    updateStatus: adminProcedure
+      .input(z.object({
+        id: z.number(),
+        status: z.enum(["draft", "published"]),
+      }))
+      .mutation(async ({ input }) => {
+        const session = await db.getAvailabilitySlotById(input.id);
+        if (!session) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Session not found' });
+        }
+
+        // Validation before publishing
+        if (input.status === 'published') {
+          if (session.eventType === 'online' && !session.sessionLink) {
+            throw new TRPCError({ 
+              code: 'BAD_REQUEST', 
+              message: 'Online sessions must have a session link before publishing' 
+            });
+          }
+          if (session.eventType === 'in-person' && !session.location) {
+            throw new TRPCError({ 
+              code: 'BAD_REQUEST', 
+              message: 'In-person sessions must have a location before publishing' 
+            });
+          }
+        }
+
+        await db.updateAvailabilitySlot(input.id, { status: input.status });
+        return { success: true };
+      }),
+
+    // Get enrollments for a session
+    getEnrollments: adminProcedure
+      .input(z.object({ sessionId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getSessionEnrollments(input.sessionId);
+      }),
+
+    // Add users to session (bulk)
+    addUsers: adminProcedure
+      .input(z.object({
+        sessionId: z.number(),
+        userIds: z.array(z.number()).min(1),
+      }))
+      .mutation(async ({ input }) => {
+        await db.addUsersToSession(input.sessionId, input.userIds);
+        return { success: true };
+      }),
+
+    // Remove users from session (bulk)
+    removeUsers: adminProcedure
+      .input(z.object({
+        sessionId: z.number(),
+        userIds: z.array(z.number()).min(1),
+      }))
+      .mutation(async ({ input }) => {
+        await db.removeUsersFromSession(input.sessionId, input.userIds);
+        return { success: true };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

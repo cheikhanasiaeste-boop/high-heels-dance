@@ -1,4 +1,4 @@
-import { eq, and, desc, asc, isNull, gte, lte, or, like, inArray, sql, SQL } from "drizzle-orm";
+import { eq, and, desc, asc, isNull, gte, lte, or, like, inArray, ne, sql, SQL } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser,
@@ -2011,4 +2011,136 @@ export async function getConversationThread(userId: number, otherUserId: number)
       )
     )
     .orderBy(asc(messages.createdAt));
+}
+
+// ==================== Session Enrollment Management ====================
+
+export async function getSessionEnrollments(slotId: number): Promise<(Booking & { user: User })[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select({
+      booking: bookings,
+      user: users,
+    })
+    .from(bookings)
+    .innerJoin(users, eq(bookings.userId, users.id))
+    .where(and(
+      eq(bookings.slotId, slotId),
+      ne(bookings.status, "cancelled")
+    ))
+    .orderBy(bookings.bookedAt);
+  
+  return result.map(r => ({ ...r.booking, user: r.user }));
+}
+
+export async function addUsersToSession(slotId: number, userIds: number[]): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const slot = await getAvailabilitySlotById(slotId);
+  if (!slot) throw new Error("Session not found");
+  
+  // Check capacity for group sessions
+  if (slot.sessionType === 'group') {
+    const currentEnrollments = await getSessionEnrollments(slotId);
+    const newTotal = currentEnrollments.length + userIds.length;
+    if (newTotal > slot.capacity) {
+      throw new Error(`Cannot add ${userIds.length} users. Session capacity is ${slot.capacity}, currently has ${currentEnrollments.length} enrollments.`);
+    }
+  }
+  
+  // Create bookings for each user
+  const bookingsToInsert = userIds.map(userId => ({
+    userId,
+    slotId,
+    sessionType: slot.title,
+    status: "confirmed" as const,
+    paymentRequired: !slot.isFree,
+    paymentStatus: slot.isFree ? ("not_required" as const) : ("pending" as const),
+  }));
+  
+  await db.insert(bookings).values(bookingsToInsert);
+  
+  // Update slot booking count
+  if (slot.sessionType === 'group') {
+    await updateAvailabilitySlot(slotId, {
+      currentBookings: slot.currentBookings + userIds.length
+    });
+  } else {
+    await updateAvailabilitySlot(slotId, { isBooked: true });
+  }
+}
+
+export async function removeUsersFromSession(slotId: number, userIds: number[]): Promise<void> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const slot = await getAvailabilitySlotById(slotId);
+  if (!slot) throw new Error("Session not found");
+  
+  // Cancel bookings for specified users
+  await db
+    .update(bookings)
+    .set({ status: "cancelled" })
+    .where(and(
+      eq(bookings.slotId, slotId),
+      inArray(bookings.userId, userIds),
+      ne(bookings.status, "cancelled")
+    ));
+  
+  // Update slot booking count
+  if (slot.sessionType === 'group') {
+    const remainingEnrollments = await getSessionEnrollments(slotId);
+    await updateAvailabilitySlot(slotId, {
+      currentBookings: remainingEnrollments.length
+    });
+  } else {
+    await updateAvailabilitySlot(slotId, { isBooked: false });
+  }
+}
+
+export async function getAllSessionsWithEnrollmentCounts(): Promise<(AvailabilitySlot & { enrollmentCount: number })[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const slots = await db.select().from(availabilitySlots).orderBy(desc(availabilitySlots.startTime));
+  
+  const slotsWithCounts = await Promise.all(
+    slots.map(async (slot) => {
+      const enrollments = await getSessionEnrollments(slot.id);
+      return {
+        ...slot,
+        enrollmentCount: enrollments.length,
+      };
+    })
+  );
+  
+  return slotsWithCounts;
+}
+
+export async function getPublishedAvailableSlots(startDate?: Date, endDate?: Date): Promise<AvailabilitySlot[]> {
+  const db = await getDb();
+  if (!db) return [];
+  
+  // Get all published slots
+  const allSlots = await db
+    .select()
+    .from(availabilitySlots)
+    .where(eq(availabilitySlots.status, "published"))
+    .orderBy(availabilitySlots.startTime);
+  
+  // Filter slots based on availability:
+  // - Private sessions: not booked (isBooked = false)
+  // - Group sessions: current bookings < capacity
+  const availableSlots = allSlots.filter(slot => {
+    if (slot.sessionType === 'group') {
+      return slot.currentBookings < slot.capacity;
+    } else {
+      return !slot.isBooked;
+    }
+  });
+  
+  return availableSlots;
 }

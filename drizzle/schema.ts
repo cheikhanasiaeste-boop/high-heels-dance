@@ -98,6 +98,7 @@ export const availabilitySlots = mysqlTable("availabilitySlots", {
   endTime: timestamp("endTime").notNull(),
   eventType: mysqlEnum("eventType", ["online", "in-person"]).default("online").notNull(),
   location: text("location"), // Physical address for in-person events
+  sessionLink: text("sessionLink"), // Zoom/Meet link for online sessions (hidden until enrolled)
   isFree: boolean("isFree").default(true).notNull(),
   price: varchar("price", { length: 20 }), // Price in EUR (e.g., "50.00")
   title: varchar("title", { length: 200 }).default("One-on-One Dance Session").notNull(),
@@ -106,6 +107,7 @@ export const availabilitySlots = mysqlTable("availabilitySlots", {
   capacity: int("capacity").default(1).notNull(), // Max participants (1 for private, >1 for group)
   currentBookings: int("currentBookings").default(0).notNull(), // Number of current bookings
   isBooked: boolean("isBooked").default(false).notNull(), // For private sessions only
+  status: mysqlEnum("status", ["draft", "published"]).default("published").notNull(), // Admin can draft sessions before publishing
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

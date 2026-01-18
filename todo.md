@@ -1316,3 +1316,63 @@
 - [x] Update CourseLearn page back button (if exists) - No such button in CourseLearn
 - [x] Update any other pages with "Back to Courses" button - Only CourseDetail has this button
 - [x] Test: Click "Back to Courses" from any course page → goes to /courses (navigation fix complete)
+
+## Unified Sessions Admin Menu - Full Implementation
+### Database Schema Updates
+- [x] Add status field to sessions table (draft, published)
+- [x] sessionType field already exists (eventType: online/in-person)
+- [x] Add sessionLink field for online sessions
+- [x] address field already exists (location)
+- [x] description field already exists
+- [x] capacity field already exists
+- [x] Database migration pushed successfully
+
+##### Backend tRPC Procedures
+- [x] sessions.list - Get all sessions with enrollment counts
+- [x] sessions.getById - Get single session with full details
+- [x] sessions.create - Create new session with validation
+- [x] sessions.update - Update session properties
+- [x] sessions.delete - Delete session (with enrollment check)
+- [x] sessions.updateStatus - Change draft/published status
+- [x] sessions.getEnrollments - Get enrolled users for a session
+- [x] sessions.addUsers - Bulk add users to session
+- [x] sessions.removeUsers - Bulk remove users from session
+- [x] Add validation logic for online/in-person requirements
+- [x] Add capacity checks for group sessionsent
+- [x] Create AdminSessions.tsx page component - 800+ lines, fully featured
+- [x] Session list view with status badges
+- [x] Create/Edit session dialog with tabs
+- [x] Session details tab (title, description, date, capacity)
+- [ ] Session type toggle (online/in-person)
+- [ ] Online session: link input (hidden from non-enrolled users)
+- [ ] In-person session: Google Maps address autocomplete
+- [ ] Enrollment management tab
+- [ ] User list with checkboxes for bulk selection
+- [ ] Bulk add users action
+- [ ] Bulk remove users action with confirmation
+- [ ] Status management (draft/published toggle)
+- [ ] Delete session with confirmation dialog
+- [ ] Loading, success, and error states
+- [ ] Responsive design for large user lists
+
+### Navigation Updates
+- [ ] Remove "Available Sessions" from admin nav
+- [ ] Remove "Session Bookings" from admin nav
+- [ ] Add new "Sessions" menu item
+- [ ] Update routing in admin App.tsx
+
+### Testing
+- [ ] Write unit tests for session CRUD operations
+- [ ] Write unit tests for enrollment management
+- [ ] Write unit tests for status validation
+- [ ] Test bulk operations with multiple users
+- [ ] Test online/in-person toggle behavior
+- [ ] Test Google Maps autocomplete integration
+- [ ] Test link visibility logic for online sessions
+
+### User-Facing Updates
+- [ ] Update session display to show description
+- [ ] Hide session link until user is enrolled
+- [ ] Show session link after enrollment (online sessions)
+- [ ] Show address for in-person sessions
+- [ ] Filter out draft sessions from public views
