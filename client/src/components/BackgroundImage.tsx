@@ -25,6 +25,7 @@ interface BackgroundImageProps {
  * 
  * PRELOADING: Assets are preloaded before display to ensure smooth animation from start.
  * Videos wait for 'canplaythrough' event, images wait for 'load' event.
+ * Preload errors are non-fatal - if preload fails, the actual element will still attempt to load.
  */
 
 // Helper function to encode spaces and special characters in URL
@@ -138,9 +139,9 @@ export function BackgroundImage({
       };
       
       const handlePreloadError = () => {
-        console.error('Video preload failed:', encodedSrc);
-        // Try to fall back to image rendering if video preload fails
-        setContentType('image');
+        console.warn('Video preload failed, will try direct loading:', encodedSrc);
+        // Don't change content type - let the actual video element try loading
+        // Preload is just an optimization, not a requirement
         setIsPreloaded(true);
         video.removeEventListener('canplaythrough', handleCanPlayThrough);
         video.removeEventListener('error', handlePreloadError);
