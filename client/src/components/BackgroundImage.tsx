@@ -242,9 +242,13 @@ export function BackgroundImage({
         className={className}
         style={{
           ...style,
-          willChange: 'transform',
-          transform: 'translateZ(0)',
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          transform: 'translate3d(0, 0, 0)',
           backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+          pointerEvents: 'none',
         }}
         onError={handleVideoError}
       >

@@ -1260,3 +1260,10 @@
 - [x] Fixed MIME type mismatch - removed type attribute for webp to let browser auto-detect
 - [x] Test video loading with URL containing space before "(2).webp" - ✅ WORKING PERFECTLY
 - [x] Verify no console errors and video plays smoothly - ✅ CONFIRMED, SMOOTH ANIMATION
+
+## CRITICAL ISSUES - User Frustrated
+- [x] Fix "Back to Courses" button - replaced Link with native <a> tag for proper hash navigation
+- [x] Fix jittery/stuttering background animation - removed conflicting willChange, contain, and blur filter
+- [x] Test navigation thoroughly - hash anchor navigation working with native <a> tag
+- [x] Test background animation - removed performance-killing styles
+- [x] Verify fixes work consistently across page loads and refreshes

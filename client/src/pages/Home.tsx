@@ -193,17 +193,14 @@ export default function Home() {
         {/* Background - Animated or Static - Robust handling for any format */}
         {backgroundUrl ? (
           <>
-            <div className="absolute inset-0 z-0" style={{ 
-              willChange: 'transform',
-              contain: 'layout style paint',
-            }}>
+            <div className="absolute inset-0 z-0">
               <BackgroundImage
                 src={backgroundUrl}
                 alt=""
                 className="w-full h-full object-cover"
                 style={{
                   opacity: 0.6,
-                  filter: 'saturate(0.8) brightness(0.9) blur(1px)',
+                  filter: 'saturate(0.8) brightness(0.9)',
                 }}
                 prefersReducedMotion={prefersReducedMotion}
                 onError={() => {

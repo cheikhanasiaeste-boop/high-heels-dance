@@ -57,12 +57,12 @@ export default function CourseDetail() {
       <div className="min-h-screen">
         <header className="border-b bg-card">
           <div className="container py-4">
-            <Link href="/#courses">
+            <a href="/#courses">
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Courses
               </Button>
-            </Link>
+            </a>
           </div>
         </header>
         <div className="container py-16">
@@ -81,12 +81,12 @@ export default function CourseDetail() {
       <div className="min-h-screen">
         <header className="border-b bg-card">
           <div className="container py-4">
-            <Link href="/#courses">
+            <a href="/#courses">
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Courses
               </Button>
-            </Link>
+            </a>
           </div>
         </header>
         <div className="container py-16 text-center">
@@ -106,12 +106,12 @@ export default function CourseDetail() {
     <div className="min-h-screen">
       <header className="border-b bg-card">
         <div className="container py-4">
-          <Link href="/#courses">
+          <a href="/#courses">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Courses
             </Button>
-          </Link>
+          </a>
         </div>
       </header>
 
