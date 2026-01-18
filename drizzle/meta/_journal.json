@@ -155,13 +155,6 @@
       "when": 1768763265002,
       "tag": "0021_bitter_jocasta",
       "breakpoints": true
-    },
-    {
-      "idx": 22,
-      "version": "5",
-      "when": 1768765169912,
-      "tag": "0022_skinny_big_bertha",
-      "breakpoints": true
     }
   ]
 }

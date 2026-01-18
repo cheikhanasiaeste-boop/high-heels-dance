@@ -46,7 +46,7 @@ export async function markCourseComplete(userId: number, courseId: number): Prom
   const [user] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
   const [course] = await db.select().from(courses).where(eq(courses.id, courseId)).limit(1);
 
-  if (user && user.email && course) {
+  if (user && user.email && course && user.emailCourseCompletion) {
     const emailHtml = getCourseCompletionEmail({
       userName: user.name || "Student",
       courseTitle: course.title,

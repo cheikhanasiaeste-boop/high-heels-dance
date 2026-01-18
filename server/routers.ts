@@ -37,6 +37,33 @@ export const appRouter = router({
       await db.markUserWelcomeSeen(ctx.user.id);
       return { success: true };
     }),
+    
+    // Get user's email notification preferences
+    getNotificationPreferences: protectedProcedure.query(async ({ ctx }) => {
+      const user = await db.getUserById(ctx.user.id);
+      if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+      
+      return {
+        emailSessionEnrollment: user.emailSessionEnrollment,
+        emailSessionReminders: user.emailSessionReminders,
+        emailMessages: user.emailMessages,
+        emailCourseCompletion: user.emailCourseCompletion,
+      };
+    }),
+    
+    // Update user's email notification preferences
+    updateNotificationPreferences: protectedProcedure
+      .input(z.object({
+        emailSessionEnrollment: z.boolean().optional(),
+        emailSessionReminders: z.boolean().optional(),
+        emailMessages: z.boolean().optional(),
+        emailCourseCompletion: z.boolean().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { updateUserNotificationPreferences } = await import("./db-notification-preferences");
+        await updateUserNotificationPreferences(ctx.user.id, input);
+        return { success: true };
+      }),
   }),
 
   // Public course procedures
@@ -1495,7 +1522,7 @@ Be friendly, professional, and helpful. If you don't know something specific, of
         endTime: z.date(),
         eventType: z.enum(["online", "in-person"]),
         location: z.string().optional(),
-        sessionLink: z.string().url().optional(),
+        sessionLink: z.string().url().optional().or(z.literal('')).optional(),
         isFree: z.boolean().default(true),
         price: z.string().optional(),
         sessionType: z.enum(["private", "group"]).default("private"),
@@ -1536,7 +1563,7 @@ Be friendly, professional, and helpful. If you don't know something specific, of
         endTime: z.date().optional(),
         eventType: z.enum(["online", "in-person"]).optional(),
         location: z.string().optional(),
-        sessionLink: z.string().url().optional(),
+        sessionLink: z.string().url().optional().or(z.literal('')).optional(),
         isFree: z.boolean().optional(),
         price: z.string().optional(),
         sessionType: z.enum(["private", "group"]).optional(),
