@@ -14,6 +14,7 @@ interface BackgroundImageProps {
  * - Handles any file format (webp, png, jpg, gif, mp4)
  * - Works with presigned URLs (with query parameters)
  * - Automatically detects content type
+ * - Preloads assets before displaying to prevent stutter
  * - Provides fallback on error
  * - Respects reduced motion preferences
  * - Plays animated webp smoothly via video element (NOT img tag)
@@ -21,6 +22,9 @@ interface BackgroundImageProps {
  * 
  * CRITICAL: Animated webp MUST be rendered via <video> element for smooth playback.
  * Using <img> tag causes stuttering and discontinuous animation.
+ * 
+ * PRELOADING: Assets are preloaded before display to ensure smooth animation from start.
+ * Videos wait for 'canplaythrough' event, images wait for 'load' event.
  */
 
 // Helper function to encode spaces and special characters in URL
@@ -46,6 +50,7 @@ export function BackgroundImage({
 }: BackgroundImageProps) {
   const [contentType, setContentType] = useState<'video' | 'image' | 'unknown'>('unknown');
   const [isLoading, setIsLoading] = useState(true);
+  const [isPreloaded, setIsPreloaded] = useState(false);
   const [hasError, setHasError] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
@@ -118,11 +123,76 @@ export function BackgroundImage({
     detectContentType();
   }, [src]);
 
+  // Preload video when content type is determined
+  useEffect(() => {
+    if (contentType === 'video' && !prefersReducedMotion && !isPreloaded) {
+      const encodedSrc = encodeUrlProperly(src);
+      const video = document.createElement('video');
+      video.preload = 'auto';
+      video.muted = true;
+      
+      const handleCanPlayThrough = () => {
+        setIsPreloaded(true);
+        video.removeEventListener('canplaythrough', handleCanPlayThrough);
+        video.removeEventListener('error', handlePreloadError);
+      };
+      
+      const handlePreloadError = () => {
+        console.error('Video preload failed:', encodedSrc);
+        // Try to fall back to image rendering if video preload fails
+        setContentType('image');
+        setIsPreloaded(true);
+        video.removeEventListener('canplaythrough', handleCanPlayThrough);
+        video.removeEventListener('error', handlePreloadError);
+      };
+      
+      video.addEventListener('canplaythrough', handleCanPlayThrough);
+      video.addEventListener('error', handlePreloadError);
+      video.src = encodedSrc;
+      video.load();
+      
+      return () => {
+        video.removeEventListener('canplaythrough', handleCanPlayThrough);
+        video.removeEventListener('error', handlePreloadError);
+      };
+    } else if (contentType === 'image' && !isPreloaded) {
+      const encodedSrc = encodeUrlProperly(src);
+      const img = new Image();
+      
+      const handleLoad = () => {
+        setIsPreloaded(true);
+        img.removeEventListener('load', handleLoad);
+        img.removeEventListener('error', handlePreloadError);
+      };
+      
+      const handlePreloadError = () => {
+        console.error('Image preload failed:', encodedSrc);
+        setHasError(true);
+        onError?.();
+        img.removeEventListener('load', handleLoad);
+        img.removeEventListener('error', handlePreloadError);
+      };
+      
+      img.addEventListener('load', handleLoad);
+      img.addEventListener('error', handlePreloadError);
+      img.src = encodedSrc;
+      
+      return () => {
+        img.removeEventListener('load', handleLoad);
+        img.removeEventListener('error', handlePreloadError);
+      };
+    } else if (contentType === 'video' && prefersReducedMotion) {
+      // If reduced motion is preferred, skip video preload and go straight to image
+      setIsPreloaded(true);
+    }
+  }, [contentType, src, prefersReducedMotion, isPreloaded, onError]);
+
   const handleVideoError = () => {
     console.error('Video failed to load:', src);
     // Try to fall back to image rendering if video fails
     if (contentType === 'video') {
       setContentType('image');
+      setIsPreloaded(false); // Reset to preload as image
     } else {
       setHasError(true);
       onError?.();
@@ -139,8 +209,17 @@ export function BackgroundImage({
     return null;
   }
 
-  if (isLoading) {
-    return <div className={className} style={style} />;
+  // Show loading state while detecting content type or preloading
+  if (isLoading || !isPreloaded) {
+    return (
+      <div 
+        className={className} 
+        style={{
+          ...style,
+          background: 'linear-gradient(135deg, rgba(219, 39, 119, 0.1) 0%, rgba(147, 51, 234, 0.1) 100%)',
+        }} 
+      />
+    );
   }
 
   // Render video for video content and webp (if not preferring reduced motion)
