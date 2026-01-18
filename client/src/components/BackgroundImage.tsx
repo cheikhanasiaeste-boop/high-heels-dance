@@ -189,9 +189,11 @@ export function BackgroundImage({
   }, [contentType, src, prefersReducedMotion, isPreloaded, onError]);
 
   const handleVideoError = () => {
-    console.error('Video failed to load:', src);
+    const encodedSrc = encodeUrlProperly(src);
+    console.error('Video failed to load. Original:', src, 'Encoded:', encodedSrc);
     // Try to fall back to image rendering if video fails
     if (contentType === 'video') {
+      console.log('Attempting fallback to image rendering');
       setContentType('image');
       setIsPreloaded(false); // Reset to preload as image
     } else {
@@ -201,7 +203,8 @@ export function BackgroundImage({
   };
 
   const handleImageError = () => {
-    console.error('Image failed to load:', src);
+    const encodedSrc = encodeUrlProperly(src);
+    console.error('Image failed to load. Original:', src, 'Encoded:', encodedSrc);
     setHasError(true);
     onError?.();
   };
@@ -245,7 +248,8 @@ export function BackgroundImage({
         }}
         onError={handleVideoError}
       >
-        <source src={encodedSrc} type={isWebp ? 'video/webp' : 'video/mp4'} />
+        {/* Don't specify type for webp - let browser auto-detect from Content-Type header */}
+        <source src={encodedSrc} type={isWebp ? undefined : 'video/mp4'} />
       </video>
     );
   }
