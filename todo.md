@@ -1189,3 +1189,11 @@
 - [x] Add error handling and fallback for failed background loads - Includes onError callback
 - [x] Test with multiple file formats and sizes - 24 tests passing covering all formats
 - [x] Verify background persists and doesn't disappear - ✅ CONFIRMED in screenshot
+
+## WebP Animation Stuttering Issue
+- [x] Investigate why webp animation plays discontinuously - img tag causes stuttering
+- [x] Check if using img tag causes animation stuttering - Confirmed, img tag not optimized for animation
+- [x] Implement smooth webp playback using video element instead - Renders webp via <video> element
+- [x] Ensure animation loops seamlessly without interruption - Added loop, autoPlay, muted attributes
+- [x] Test with actual webp animated file - 23 tests passing
+- [x] Verify smooth continuous playback - ✅ CONFIRMED in browser screenshot

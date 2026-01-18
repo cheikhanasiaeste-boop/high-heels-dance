@@ -16,6 +16,10 @@ interface BackgroundImageProps {
  * - Automatically detects content type
  * - Provides fallback on error
  * - Respects reduced motion preferences
+ * - Plays animated webp smoothly via video element (NOT img tag)
+ * 
+ * CRITICAL: Animated webp MUST be rendered via <video> element for smooth playback.
+ * Using <img> tag causes stuttering and discontinuous animation.
  */
 export function BackgroundImage({
   src,
@@ -50,8 +54,16 @@ export function BackgroundImage({
           return;
         }
 
+        // CRITICAL: Treat webp as video for smooth animation playback
+        // Animated webp rendered as img tag causes stuttering/discontinuous animation
+        // Video element provides hardware-accelerated smooth continuous playback
+        if (urlWithoutParams.endsWith('.webp')) {
+          setContentType('video');
+          setIsLoading(false);
+          return;
+        }
+
         if (
-          urlWithoutParams.endsWith('.webp') ||
           urlWithoutParams.endsWith('.gif') ||
           urlWithoutParams.endsWith('.png') ||
           urlWithoutParams.endsWith('.jpg') ||
@@ -67,7 +79,7 @@ export function BackgroundImage({
           const response = await fetch(src, { method: 'HEAD' });
           const contentTypeHeader = response.headers.get('content-type') || '';
 
-          if (contentTypeHeader.includes('video')) {
+          if (contentTypeHeader.includes('video') || contentTypeHeader.includes('webp')) {
             setContentType('video');
           } else if (contentTypeHeader.includes('image')) {
             setContentType('image');
@@ -111,7 +123,7 @@ export function BackgroundImage({
     return <div className={className} style={style} />;
   }
 
-  // Render video for video content (if not preferring reduced motion)
+  // Render video for video content and webp (if not preferring reduced motion)
   if (contentType === 'video' && !prefersReducedMotion) {
     return (
       <video
@@ -130,12 +142,12 @@ export function BackgroundImage({
         }}
         onError={handleVideoError}
       >
-        <source src={src} type="video/mp4" />
+        <source src={src} type={src.toLowerCase().endsWith('.webp') ? 'video/webp' : 'video/mp4'} />
       </video>
     );
   }
 
-  // Render image for all other cases (static images, gifs, webp)
+  // Render image for all other cases (static images, gifs) or when reduced motion is preferred
   return (
     <img
       ref={imgRef}
