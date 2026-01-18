@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Mail, Send, MessageSquare, ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Conversations() {
   const { user } = useAuth();
@@ -198,6 +199,12 @@ export default function Conversations() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-4 md:p-8">
       <div className="max-w-2xl mx-auto">
+        <Link href="/">
+          <Button variant="ghost" size="sm" className="mb-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Home
+          </Button>
+        </Link>
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900">My Conversations</h1>
           <Button
