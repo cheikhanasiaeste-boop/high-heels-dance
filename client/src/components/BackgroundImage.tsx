@@ -17,11 +17,40 @@ interface BackgroundImageProps {
  * - Provides fallback on error
  * - Respects reduced motion preferences
  * - Plays animated webp smoothly via video element (NOT img tag)
- * - Handles URLs with special characters and spaces
+ * - Properly encodes URLs with spaces and special characters
  * 
  * CRITICAL: Animated webp MUST be rendered via <video> element for smooth playback.
  * Using <img> tag causes stuttering and discontinuous animation.
  */
+
+// Helper function to properly encode URL while preserving structure
+function encodeUrlProperly(url: string): string {
+  try {
+    // Split URL at query params to avoid double-encoding
+    const [baseUrl, ...queryParts] = url.split('?');
+    
+    // Encode each path segment separately to preserve slashes
+    const encodedBase = baseUrl
+      .split('/')
+      .map(part => {
+        // Only encode if not already encoded
+        try {
+          const decoded = decodeURIComponent(part);
+          return encodeURIComponent(decoded);
+        } catch {
+          return encodeURIComponent(part);
+        }
+      })
+      .join('/');
+    
+    // Reconstruct URL with query params
+    return queryParts.length > 0 ? encodedBase + '?' + queryParts.join('?') : encodedBase;
+  } catch (error) {
+    console.warn('Error encoding URL, returning original:', error);
+    return url;
+  }
+}
+
 export function BackgroundImage({
   src,
   alt = '',
@@ -131,8 +160,7 @@ export function BackgroundImage({
 
   // Render video for video content and webp (if not preferring reduced motion)
   if (contentType === 'video' && !prefersReducedMotion) {
-    // Ensure URL is properly encoded for special characters and spaces
-    const encodedSrc = encodeURI(src);
+    const encodedSrc = encodeUrlProperly(src);
     const isWebp = src.toLowerCase().includes('.webp');
     
     return (
@@ -158,10 +186,12 @@ export function BackgroundImage({
   }
 
   // Render image for all other cases (static images, gifs) or when reduced motion is preferred
+  const encodedImgSrc = encodeUrlProperly(src);
+  
   return (
     <img
       ref={imgRef}
-      src={src}
+      src={encodedImgSrc}
       alt={alt}
       className={className}
       style={style}
