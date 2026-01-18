@@ -1,0 +1,46 @@
+{
+  "query": "SELECT * FROM siteSettings WHERE `key` LIKE '%hero%' OR `key` LIKE '%background%';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4HtU1c2nK4A5Wb2.root --database M2v4Dnk4LCsJQ3Qwy7fUfL --execute SELECT * FROM siteSettings WHERE `key` LIKE '%hero%' OR `key` LIKE '%background%';",
+  "rows": [
+    {
+      "id": "60001",
+      "key": "heroVideoUrl",
+      "value": "",
+      "updatedAt": "2026-01-16 18:46:35"
+    },
+    {
+      "id": "90011",
+      "key": "backgroundVideoUrl",
+      "value": "url3.mp4",
+      "updatedAt": "2026-01-17 18:44:21"
+    },
+    {
+      "id": "120001",
+      "key": "backgroundAnimationUrl",
+      "value": "/hero-bg-new.webp",
+      "updatedAt": "2026-01-17 11:36:21"
+    },
+    {
+      "id": "120014",
+      "key": "heroBackgroundUrl",
+      "value": "https://d2xsxph8kpxj0f.cloudfront.net/310519663298901455/M2v4Dnk4LCsJQ3Qwy7fUfL/images/1768733644356-ho9xqj-Little-Simz-Venom-Acro-Heels-Choreograph_Media_XXMbXH8kEbo_001_1080p-ezgif.com-video-to-webp-converter (2).webp",
+      "updatedAt": "2026-01-18 10:54:04"
+    },
+    {
+      "id": "120016",
+      "key": "heroProfilePictureUrl",
+      "value": "https://d2xsxph8kpxj0f.cloudfront.net/310519663298901455/M2v4Dnk4LCsJQ3Qwy7fUfL/images/1768729619712-4u35j-EZ Profile Picture.jpg",
+      "updatedAt": "2026-01-18 09:47:00"
+    },
+    {
+      "id": "120026",
+      "key": "hero_tagline",
+      "value": "",
+      "updatedAt": "2026-01-17 18:04:50"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tkey\tvalue\tupdatedAt\n60001\theroVideoUrl\t\t2026-01-16 18:46:35\n90011\tbackgroundVideoUrl\turl3.mp4\t2026-01-17 18:44:21\n120001\tbackgroundAnimationUrl\t/hero-bg-new.webp\t2026-01-17 11:36:21\n120014\theroBackgroundUrl\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663298901455/M2v4Dnk4LCsJQ3Qwy7fUfL/images/1768733644356-ho9xqj-Little-Simz-Venom-Acro-Heels-Choreograph_Media_XXMbXH8kEbo_001_1080p-ezgif.com-video-to-webp-converter (2).webp\t2026-01-18 10:54:04\n120016\theroProfilePictureUrl\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663298901455/M2v4Dnk4LCsJQ3Qwy7fUfL/images/1768729619712-4u35j-EZ Profile Picture.jpg\t2026-01-18 09:47:00\n120026\thero_tagline\t\t2026-01-17 18:04:50\n",
+  "stderr": "",
+  "execution_time_ms": 61
+}
