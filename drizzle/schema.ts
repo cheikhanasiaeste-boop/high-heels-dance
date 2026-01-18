@@ -15,11 +15,6 @@ export const users = mysqlTable("users", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
-  // Email notification preferences (all enabled by default)
-  emailSessionEnrollment: boolean("emailSessionEnrollment").default(true).notNull(),
-  emailSessionReminders: boolean("emailSessionReminders").default(true).notNull(),
-  emailMessages: boolean("emailMessages").default(true).notNull(),
-  emailCourseCompletion: boolean("emailCourseCompletion").default(true).notNull(),
 });
 
 export type User = typeof users.$inferSelect;

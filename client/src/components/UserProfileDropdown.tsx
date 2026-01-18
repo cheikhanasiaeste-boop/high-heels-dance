@@ -6,7 +6,6 @@ import {
   Calendar, 
   BookOpen, 
   Activity, 
-  Settings,
   LogOut,
   ChevronDown 
 } from 'lucide-react';
@@ -212,17 +211,6 @@ export function UserProfileDropdown({ unreadMessagesCount = 0 }: UserProfileDrop
               >
                 <Activity className="w-5 h-5 text-gray-400 group-hover:text-purple-600 group-focus:text-purple-600 transition-colors" />
                 <span>Activity History</span>
-              </a>
-            </Link>
-            
-            {/* Account Settings */}
-            <Link href="/account-settings" onClick={closeDropdown}>
-              <a
-                role="menuitem"
-                className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors duration-150 focus:outline-none focus:bg-purple-50 focus:text-purple-700 min-h-[44px] group"
-              >
-                <Settings className="w-5 h-5 text-gray-400 group-hover:text-purple-600 group-focus:text-purple-600 transition-colors" />
-                <span>Account Settings</span>
               </a>
             </Link>
           </div>

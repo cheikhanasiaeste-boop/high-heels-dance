@@ -148,13 +148,6 @@
       "when": 1768762708944,
       "tag": "0020_dear_namora",
       "breakpoints": true
-    },
-    {
-      "idx": 21,
-      "version": "5",
-      "when": 1768763265002,
-      "tag": "0021_bitter_jocasta",
-      "breakpoints": true
     }
   ]
 }

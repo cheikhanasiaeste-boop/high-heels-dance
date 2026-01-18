@@ -60,8 +60,8 @@ export default function Home() {
   );
   
   // Use new animation format if available, fallback to old video
-  // Priority: heroBackgroundUrl > bgAnimationUrl > bgVideoUrl > default
-  const backgroundUrl = heroBackgroundUrl || bgAnimationUrl || bgVideoUrl || 'https://storage.manus.im/01JHTMTJNXBGWKF0BNBP0YNVV0/hero-background.webp';
+  // Priority: heroBackgroundUrl > bgAnimationUrl > bgVideoUrl
+  const backgroundUrl = heroBackgroundUrl || bgAnimationUrl || bgVideoUrl;
   
   // Detect reduced motion preference
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(() => {
@@ -127,26 +127,25 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      {/* Website Popup - Show for all visitors */}
-      <WebsitePopup
-        settings={popupSettings || null}
-        onDismiss={(popupId) => {
-          if (isAuthenticated) {
+      {/* Website Popup - Only show for authenticated users */}
+      {isAuthenticated && (
+        <WebsitePopup
+          settings={popupSettings || null}
+          onDismiss={(popupId) => {
             recordInteractionMutation.mutate({
               popupId,
               action: 'dismissed',
             });
-          }
-        }}
-        onEmailSubmit={(popupId, email) => {
-          if (isAuthenticated) {
+          }}
+          onEmailSubmit={(popupId, email) => {
             recordInteractionMutation.mutate({
               popupId,
               action: 'email_submitted',
+              email,
             });
-          }
-        }}
-      />
+          }}
+        />
+      )}
       
       {/* Discount Banner */}
       {banner?.enabled && banner.text && (
