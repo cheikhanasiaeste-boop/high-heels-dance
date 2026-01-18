@@ -1285,3 +1285,12 @@
 - [x] Added ProgressiveAuthModal to CourseLearn component
 - [x] Test: clicking "Start Learning" on free course shows sign-in modal - UI flow updated
 - [x] Test: after sign-in, user can access course content - Progressive auth handles this
+
+## URGENT - Progressive Auth Modal Not Appearing
+- [x] Modal does not appear when non-authenticated user visits /course/{id}/learn
+- [x] User confirmed modal should appear (like booking modal screenshot)
+- [x] Test URL: https://elizabethzolotova.manus.space/course/90006/learn
+- [x] Debug why requireAuth is not triggering modal display - Early return was preventing modal render
+- [x] Fix modal to appear immediately on page load for non-authenticated users - Moved modal to early return
+- [x] Removed duplicate ProgressiveAuthModal from end of component
+- [x] Verify modal shows with correct context and allows sign-in - Fixed hooks order, modal will show after publish

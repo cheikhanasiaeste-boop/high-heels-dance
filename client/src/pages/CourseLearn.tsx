@@ -19,6 +19,11 @@ export default function CourseLearn() {
   
   const courseId = parseInt(id || "0");
   
+  // State hooks MUST be called before any conditional returns
+  const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set());
+  const [currentLessonId, setCurrentLessonId] = useState<number | null>(null);
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+  
   // Prompt authentication if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
@@ -51,19 +56,6 @@ export default function CourseLearn() {
     { courseId },
     { enabled: isAuthenticated && !!courseId }
   );
-  
-  // Show loading while checking authentication
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-muted-foreground">Redirecting to course page...</p>
-      </div>
-    );
-  }
-  
-  const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set());
-  const [currentLessonId, setCurrentLessonId] = useState<number | null>(null);
-  const [showCompletionModal, setShowCompletionModal] = useState(false);
   
   // Auto-expand first module and select first lesson
   useEffect(() => {
@@ -194,6 +186,25 @@ export default function CourseLearn() {
           </Link>
         </Card>
       </div>
+    );
+  }
+  
+  // Show modal if not authenticated
+  if (!isAuthenticated) {
+    return (
+      <>
+        <div className="min-h-screen flex items-center justify-center">
+          <p className="text-muted-foreground">Please sign in to access course content</p>
+        </div>
+        
+        {/* Progressive Authentication Modal */}
+        <ProgressiveAuthModal
+          isOpen={isAuthModalOpen}
+          onClose={closeAuthModal}
+          context={authContext || 'course'}
+          contextDetails={authContextDetails}
+        />
+      </>
     );
   }
   
@@ -400,14 +411,6 @@ export default function CourseLearn() {
           courseTitle={course.title}
         />
       )}
-      
-      {/* Progressive Authentication Modal */}
-      <ProgressiveAuthModal
-        isOpen={isAuthModalOpen}
-        onClose={closeAuthModal}
-        context={authContext || 'course'}
-        contextDetails={authContextDetails}
-      />
     </>
   );
 }
