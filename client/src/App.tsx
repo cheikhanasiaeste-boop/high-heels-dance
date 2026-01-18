@@ -23,6 +23,7 @@ import AdminSettings from "./pages/admin/Settings";
 import AdminUsers from "./pages/admin/Users";
 import AdminUserManagement from "./pages/admin/UserManagementNew";
 import AdminUserActivity from "./pages/admin/UserActivity";
+import AdminSessions from "./pages/admin/AdminSessions";
 import CourseContentManager from "./pages/admin/CourseContentManager";
 import BookSession from "./pages/BookSession";
 import Feedback from "./pages/Feedback";
@@ -55,6 +56,7 @@ function Router() {
       <Route path="/admin/courses/:id/content" component={CourseContentManager} />
       <Route path="/admin/bookings" component={AdminBookings} />
       <Route path="/admin/availability" component={AdminAvailability} />
+      <Route path="/admin/sessions" component={AdminSessions} />
       <Route path="/admin/testimonials" component={AdminTestimonials} />
       <Route path="/admin/users" component={AdminUserManagement} />
       <Route path="/admin/user-activity" component={AdminUserActivity} />

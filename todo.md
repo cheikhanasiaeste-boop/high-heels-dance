@@ -1343,10 +1343,13 @@
 - [x] Session list view with status badges
 - [x] Create/Edit session dialog with tabs
 - [x] Session details tab (title, description, date, capacity)
-- [ ] Session type toggle (online/in-person)
-- [ ] Online session: link input (hidden from non-enrolled users)
-- [ ] In-person session: Google Maps address autocomplete
-- [ ] Enrollment management tab
+- [x] Session type toggle (online/in-person)
+- [x] Online session: link input (hidden from non-enrolled users)
+- [x] In-person session: address input field
+- [x] Enrollment management tab
+- [x] Add Google Maps autocomplete to address input - AddressAutocomplete component created and integrated
+- [x] Register AdminSessions route in App.tsx - Route added and file moved to correct location
+- [x] Update AdminLayout navigation to replace old submenus with Sessions
 - [ ] User list with checkboxes for bulk selection
 - [ ] Bulk add users action
 - [ ] Bulk remove users action with confirmation

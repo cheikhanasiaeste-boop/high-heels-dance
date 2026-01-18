@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { AddressAutocomplete } from "@/components/AddressAutocomplete";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -513,14 +514,14 @@ export default function AdminSessions() {
               ) : (
                 <div className="space-y-2">
                   <Label htmlFor="location">Address *</Label>
-                  <Input
+                  <AddressAutocomplete
                     id="location"
                     value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                    placeholder="123 Dance Studio, City, Country"
+                    onChange={(value) => setFormData({ ...formData, location: value })}
+                    placeholder="Search for address..."
                   />
                   <p className="text-sm text-muted-foreground">
-                    Required before publishing.
+                    Required before publishing. Start typing to search.
                   </p>
                 </div>
               )}
@@ -679,10 +680,11 @@ export default function AdminSessions() {
               ) : (
                 <div className="space-y-2">
                   <Label htmlFor="edit-location">Address *</Label>
-                  <Input
+                  <AddressAutocomplete
                     id="edit-location"
                     value={formData.location}
-                    onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                    onChange={(value) => setFormData({ ...formData, location: value })}
+                    placeholder="Search for address..."
                   />
                 </div>
               )}
