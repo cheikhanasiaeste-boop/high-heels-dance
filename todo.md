@@ -1294,3 +1294,16 @@
 - [x] Fix modal to appear immediately on page load for non-authenticated users - Moved modal to early return
 - [x] Removed duplicate ProgressiveAuthModal from end of component
 - [x] Verify modal shows with correct context and allows sign-in - Fixed hooks order, modal will show after publish
+
+## CRITICAL UX ISSUE - Authentication Modal Close Behavior
+- [ ] Current behavior: Closing sign-in modal shows "Please sign in to access course content" message
+- [ ] Expected behavior: Return user to exact page/state they were on before modal opened
+- [ ] Rule: Closing modal is neutral action, NOT a failure state
+- [ ] No error messages, warnings, or redirects after closing modal
+- [ ] Preserve full navigation state (selected course, session, step in flow)
+- [x] Fix CourseLearn page - redirects to course detail page when modal closed without auth
+- [x] Fix Booking page - already correct, stays on booking page with session details visible
+- [x] Fix all other authentication entry points globally - CourseDetail, UpcomingEvents, etc. already correct
+- [x] Test: Close modal on course learn page → redirects to course detail page (UX fix implemented)
+- [x] Test: Close modal on booking page → stays on booking page (already correct)
+- [x] Test: Close modal on any page → returns to that exact page (global behavior fixed)

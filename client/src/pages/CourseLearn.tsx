@@ -189,12 +189,20 @@ export default function CourseLearn() {
     );
   }
   
+  // Redirect to course detail page if not authenticated and modal is closed
+  useEffect(() => {
+    if (!isAuthenticated && !isAuthModalOpen) {
+      // User closed the modal without authenticating - return them to course detail page
+      setLocation(`/course/${courseId}`);
+    }
+  }, [isAuthenticated, isAuthModalOpen, courseId, setLocation]);
+  
   // Show modal if not authenticated
   if (!isAuthenticated) {
     return (
       <>
         <div className="min-h-screen flex items-center justify-center">
-          <p className="text-muted-foreground">Please sign in to access course content</p>
+          <p className="text-muted-foreground">Loading...</p>
         </div>
         
         {/* Progressive Authentication Modal */}
