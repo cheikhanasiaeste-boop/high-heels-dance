@@ -23,28 +23,13 @@ interface BackgroundImageProps {
  * Using <img> tag causes stuttering and discontinuous animation.
  */
 
-// Helper function to properly encode URL while preserving structure
+// Helper function to encode spaces and special characters in URL
+// Simple approach: just replace spaces with %20 and other problematic chars
 function encodeUrlProperly(url: string): string {
   try {
-    // Split URL at query params to avoid double-encoding
-    const [baseUrl, ...queryParts] = url.split('?');
-    
-    // Encode each path segment separately to preserve slashes
-    const encodedBase = baseUrl
-      .split('/')
-      .map(part => {
-        // Only encode if not already encoded
-        try {
-          const decoded = decodeURIComponent(part);
-          return encodeURIComponent(decoded);
-        } catch {
-          return encodeURIComponent(part);
-        }
-      })
-      .join('/');
-    
-    // Reconstruct URL with query params
-    return queryParts.length > 0 ? encodedBase + '?' + queryParts.join('?') : encodedBase;
+    // Simply replace spaces with %20
+    // This is the most reliable approach for URLs that are already mostly valid
+    return url.replace(/ /g, '%20');
   } catch (error) {
     console.warn('Error encoding URL, returning original:', error);
     return url;
