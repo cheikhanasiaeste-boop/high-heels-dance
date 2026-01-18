@@ -43,6 +43,11 @@ export async function sendSessionReminders(): Promise<{ sent: number; errors: nu
             console.warn(`[Session Reminders] User ${enrollment.userId} not found or has no email`);
             continue;
           }
+          
+          if (!user.emailSessionReminders) {
+            console.log(`[Session Reminders] User ${user.email} has disabled session reminders`);
+            continue;
+          }
 
           const emailHtml = getSessionReminderEmail({
             userName: user.name || "Student",

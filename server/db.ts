@@ -1902,7 +1902,7 @@ export async function createMessage(data: {
   const recipient = await getUserById(data.toUserId);
   const sender = await getUserById(data.fromUserId);
   
-  if (recipient && recipient.email && sender) {
+  if (recipient && recipient.email && sender && recipient.emailMessages) {
     // Create message preview (first 100 characters)
     const messagePreview = data.body.length > 100 
       ? data.body.substring(0, 100) + "..." 
@@ -2104,7 +2104,7 @@ export async function addUsersToSession(slotId: number, userIds: number[]): Prom
   
   for (const userId of userIds) {
     const user = await getUserById(userId);
-    if (user && user.email) {
+    if (user && user.email && user.emailSessionEnrollment) {
       const emailHtml = getSessionEnrollmentEmail({
         userName: user.name || "Student",
         sessionTitle: slot.title,

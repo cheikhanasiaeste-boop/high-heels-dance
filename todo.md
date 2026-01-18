@@ -1398,3 +1398,15 @@
 - [x] Implement course completion congratulations notification - Added markComplete procedure and email integration
 - [x] Test all notification triggers - Email API key validated with test
 - [x] Verify email delivery and formatting - Test email sent successfully
+
+## Email Notification Preferences
+- [x] Add notification preferences fields to users table schema
+- [x] Push database schema changes
+- [x] Update email sending functions to check user preferences
+- [x] Create tRPC procedures for getting/updating preferences
+- [x] Build notification preferences UI component
+- [x] Add preferences section to account settings page - Created AccountSettings page with toggle switches
+- [x] Add navigation link to account settings - Added to UserProfileDropdown menu
+- [x] Write vitest tests for preference checking logic - All 5 tests passing
+- [x] Test preference toggles in UI - UI verified in browser
+- [x] Verify emails respect user preferences - All email functions check preferences before sending

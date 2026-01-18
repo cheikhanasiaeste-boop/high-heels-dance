@@ -37,6 +37,33 @@ export const appRouter = router({
       await db.markUserWelcomeSeen(ctx.user.id);
       return { success: true };
     }),
+    
+    // Get user's email notification preferences
+    getNotificationPreferences: protectedProcedure.query(async ({ ctx }) => {
+      const user = await db.getUserById(ctx.user.id);
+      if (!user) throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+      
+      return {
+        emailSessionEnrollment: user.emailSessionEnrollment,
+        emailSessionReminders: user.emailSessionReminders,
+        emailMessages: user.emailMessages,
+        emailCourseCompletion: user.emailCourseCompletion,
+      };
+    }),
+    
+    // Update user's email notification preferences
+    updateNotificationPreferences: protectedProcedure
+      .input(z.object({
+        emailSessionEnrollment: z.boolean().optional(),
+        emailSessionReminders: z.boolean().optional(),
+        emailMessages: z.boolean().optional(),
+        emailCourseCompletion: z.boolean().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { updateUserNotificationPreferences } = await import("./db-notification-preferences");
+        await updateUserNotificationPreferences(ctx.user.id, input);
+        return { success: true };
+      }),
   }),
 
   // Public course procedures
