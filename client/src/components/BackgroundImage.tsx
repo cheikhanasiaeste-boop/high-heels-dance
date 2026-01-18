@@ -17,6 +17,7 @@ interface BackgroundImageProps {
  * - Provides fallback on error
  * - Respects reduced motion preferences
  * - Plays animated webp smoothly via video element (NOT img tag)
+ * - Handles URLs with special characters and spaces
  * 
  * CRITICAL: Animated webp MUST be rendered via <video> element for smooth playback.
  * Using <img> tag causes stuttering and discontinuous animation.
@@ -105,8 +106,13 @@ export function BackgroundImage({
 
   const handleVideoError = () => {
     console.error('Video failed to load:', src);
-    setHasError(true);
-    onError?.();
+    // Try to fall back to image rendering if video fails
+    if (contentType === 'video') {
+      setContentType('image');
+    } else {
+      setHasError(true);
+      onError?.();
+    }
   };
 
   const handleImageError = () => {
@@ -125,6 +131,10 @@ export function BackgroundImage({
 
   // Render video for video content and webp (if not preferring reduced motion)
   if (contentType === 'video' && !prefersReducedMotion) {
+    // Ensure URL is properly encoded for special characters and spaces
+    const encodedSrc = encodeURI(src);
+    const isWebp = src.toLowerCase().includes('.webp');
+    
     return (
       <video
         ref={videoRef}
@@ -142,7 +152,7 @@ export function BackgroundImage({
         }}
         onError={handleVideoError}
       >
-        <source src={src} type={src.toLowerCase().endsWith('.webp') ? 'video/webp' : 'video/mp4'} />
+        <source src={encodedSrc} type={isWebp ? 'video/webp' : 'video/mp4'} />
       </video>
     );
   }

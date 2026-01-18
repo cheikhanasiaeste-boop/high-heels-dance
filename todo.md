@@ -1205,3 +1205,9 @@
 - [x] Debug why webp is not loading - Database table migration issue
 - [x] Fix loading issue - Ran pnpm db:push to create missing siteSettings table
 - [x] Verify newly uploaded webp displays correctly - ✅ CONFIRMED - Background displaying smoothly
+
+## Video Loading Error - Special Characters in URL
+- [x] Fix BackgroundImage component to handle URLs with spaces and special characters - Added encodeURI()
+- [x] Add URL encoding for webp filenames - Using encodeURI() for all video URLs
+- [x] Add fallback logic if video fails - Falls back to image rendering
+- [x] Test with filenames containing spaces and special chars - ✅ Background displaying correctly
