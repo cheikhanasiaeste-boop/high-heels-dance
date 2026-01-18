@@ -162,6 +162,20 @@
       "when": 1768765169912,
       "tag": "0022_skinny_big_bertha",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "5",
+      "when": 1768766465289,
+      "tag": "0023_gorgeous_wither",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "5",
+      "when": 1768766650114,
+      "tag": "0024_closed_senator_kelly",
+      "breakpoints": true
     }
   ]
 }

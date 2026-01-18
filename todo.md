@@ -1398,3 +1398,8 @@
 - [x] Implement course completion congratulations notification - Added markComplete procedure and email integration
 - [x] Test all notification triggers - Email API key validated with test
 - [x] Verify email delivery and formatting - Test email sent successfully
+
+## Nested Anchor Tag Error
+- [x] Find nested <a> tags in Home.tsx - Found 5 instances
+- [x] Remove Link wrapper or button wrapper causing nesting - Used Button asChild prop
+- [x] Test fix and verify no console errors - Server restarted successfully

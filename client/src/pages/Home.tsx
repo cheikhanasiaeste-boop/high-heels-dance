@@ -164,18 +164,18 @@ export default function Home() {
           
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-4">
-            <Link href="/book-session">
-              <Button variant="default">Book a Session</Button>
-            </Link>
+            <Button variant="default" asChild>
+              <Link href="/book-session">Book a Session</Link>
+            </Button>
             <a href="https://elizabethzolotova.manus.space/my-courses">
               <Button variant="outline" className="shadow-lg border-2 border-primary hover:bg-primary hover:text-primary-foreground">My Courses</Button>
             </a>
             {isAuthenticated ? (
               <>
                 {user?.role === 'admin' && (
-                  <Link href="/admin">
-                    <Button variant="outline">Admin</Button>
-                  </Link>
+                  <Button variant="outline" asChild>
+                    <Link href="/admin">Admin</Link>
+                  </Button>
                 )}
                 <UserProfileDropdown unreadMessagesCount={unreadCount || 0} />
               </>
@@ -262,12 +262,12 @@ export default function Home() {
             </a>
           </div>
           <div className="flex justify-center gap-6">
-            <Link href="/book-session">
-              <Button size="lg" className="shadow-2xl px-10 py-7 text-lg font-bold bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 transition-all duration-300 hover:scale-105">Book a Dance Session</Button>
-            </Link>
-            <Link href="/courses">
-              <Button size="lg" variant="outline" className="shadow-2xl px-10 py-7 text-lg font-bold border-3 border-pink-600 text-pink-600 hover:bg-pink-600 hover:text-white transition-all duration-300 hover:scale-105">Explore Courses</Button>
-            </Link>
+            <Button size="lg" className="shadow-2xl px-10 py-7 text-lg font-bold bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 transition-all duration-300 hover:scale-105" asChild>
+              <Link href="/book-session">Book a Dance Session</Link>
+            </Button>
+            <Button size="lg" variant="outline" className="shadow-2xl px-10 py-7 text-lg font-bold border-3 border-pink-600 text-pink-600 hover:bg-pink-600 hover:text-white transition-all duration-300 hover:scale-105" asChild>
+              <Link href="/courses">Explore Courses</Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -428,22 +428,22 @@ export default function Home() {
                     </div>
                   </CardContent>
                   <CardFooter>
-                    <Link href={`/course/${course.id}`} className="w-full">
-                      <Button className="w-full text-lg py-6 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                    <Button className="w-full text-lg py-6 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105" asChild>
+                      <Link href={`/course/${course.id}`}>
                         {course.isFree ? '✧ Start Learning' : '◇ View Details'}
-                      </Button>
-                    </Link>
+                      </Link>
+                    </Button>
                   </CardFooter>
                 </Card>
               ))}
               </div>
               {filteredCourses.length > 6 && (
                 <div className="flex justify-center mt-8">
-                  <Link href="/courses">
-                    <Button size="sm" variant="outline" className="shadow-sm border-gray-300 text-gray-700 hover:bg-gray-50 font-medium">
+                  <Button size="sm" variant="outline" className="shadow-sm border-gray-300 text-gray-700 hover:bg-gray-50 font-medium" asChild>
+                    <Link href="/courses">
                       View All {filteredCourses.length} Courses
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                 </div>
               )}
             </div>
