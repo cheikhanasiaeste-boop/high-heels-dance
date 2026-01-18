@@ -1180,3 +1180,12 @@
 - [x] Test user can initiate conversation with admin - ✅ 5 tests passing
 - [x] Test user can reply to admin messages - ✅ Verified in tests
 - [x] Test admin alias "Elizabeth" displays correctly - ✅ Verified in tests
+
+## CRITICAL: Hero Background Fails After Few Seconds
+- [x] Investigate why background URL fails/disappears after loading - Found extension-based logic was fragile
+- [x] Check if issue is with URL expiration or loading mechanism - Presigned URLs with query params broke .endsWith() checks
+- [x] Implement robust background loading that works with webp/png/jpg - Created BackgroundImage component
+- [x] Support both static and animated backgrounds without format-specific logic - Auto-detects content type
+- [x] Add error handling and fallback for failed background loads - Includes onError callback
+- [x] Test with multiple file formats and sizes - 24 tests passing covering all formats
+- [x] Verify background persists and doesn't disappear - ✅ CONFIRMED in screenshot

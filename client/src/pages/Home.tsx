@@ -9,6 +9,7 @@ import { Instagram, Youtube, Facebook, MessageCircle, Star, Play } from "lucide-
 import { Link } from "wouter";
 import { useState, useEffect, useRef } from "react";
 import { AnimatedWebP } from "@/components/AnimatedWebP";
+import { BackgroundImage } from "@/components/BackgroundImage";
 import ChatWidget from "@/components/ChatWidget";
 import { WebsitePopup } from "@/components/WebsitePopup";
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
@@ -189,53 +190,26 @@ export default function Home() {
 
       {/* Hero/Profile Section */}
       <section className="relative py-20 overflow-hidden">
-        {/* Background - Animated or Static */}
+        {/* Background - Animated or Static - Robust handling for any format */}
         {backgroundUrl ? (
           <>
             <div className="absolute inset-0 z-0" style={{ 
               willChange: 'transform',
               contain: 'layout style paint',
             }}>
-              {!prefersReducedMotion && (backgroundUrl.endsWith('.webp') || backgroundUrl.endsWith('.gif')) ? (
-                <AnimatedWebP
-                  src={backgroundUrl}
-                  alt=""
-                  className="w-full h-full object-cover"
-                  style={{
-                    opacity: 0.6,
-                    filter: 'saturate(0.8) brightness(0.9) blur(1px)',
-                  }}
-                  fallbackSrc={heroBackgroundUrl?.replace(/\.(webp|gif)$/, '.jpg') || undefined}
-                />
-              ) : !prefersReducedMotion && backgroundUrl.endsWith('.mp4') ? (
-                <video
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                  preload="auto"
-                  className="w-full h-full object-cover"
-                  style={{
-                    opacity: 0.6,
-                    filter: 'saturate(0.8) brightness(0.9) blur(1px)',
-                    willChange: 'transform',
-                    transform: 'translateZ(0)',
-                    backfaceVisibility: 'hidden',
-                  }}
-                >
-                  <source src={backgroundUrl} type="video/mp4" />
-                </video>
-              ) : (
-                <img
-                  src={backgroundUrl}
-                  alt=""
-                  className="w-full h-full object-cover"
-                  style={{
-                    opacity: 0.6,
-                    filter: 'saturate(0.8) brightness(0.9) blur(1px)',
-                  }}
-                />
-              )}
+              <BackgroundImage
+                src={backgroundUrl}
+                alt=""
+                className="w-full h-full object-cover"
+                style={{
+                  opacity: 0.6,
+                  filter: 'saturate(0.8) brightness(0.9) blur(1px)',
+                }}
+                prefersReducedMotion={prefersReducedMotion}
+                onError={() => {
+                  console.warn('Background image failed to load:', backgroundUrl);
+                }}
+              />
               <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-pink-50/30 to-white/40"></div>
             </div>
           </>
