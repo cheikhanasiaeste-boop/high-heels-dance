@@ -1895,6 +1895,33 @@ export async function createMessage(data: {
   if (!db) throw new Error("Database not available");
   
   const [message] = await db.insert(messages).values(data).$returningId();
+  
+  // Send email notification to recipient
+  const { sendEmail, getMessageNotificationEmail } = await import("./_core/email");
+  
+  const recipient = await getUserById(data.toUserId);
+  const sender = await getUserById(data.fromUserId);
+  
+  if (recipient && recipient.email && sender) {
+    // Create message preview (first 100 characters)
+    const messagePreview = data.body.length > 100 
+      ? data.body.substring(0, 100) + "..." 
+      : data.body;
+    
+    const emailHtml = getMessageNotificationEmail({
+      userName: recipient.name || "User",
+      senderName: sender.name || "Someone",
+      messagePreview,
+      messagesUrl: `${process.env.VITE_APP_URL || "https://elizabethzolotova.manus.space"}/my-messages`,
+    });
+    
+    await sendEmail({
+      to: recipient.email,
+      subject: `New message from ${sender.name || "High Heels Dance"}`,
+      html: emailHtml,
+    });
+  }
+  
   return message;
 }
 
@@ -2070,6 +2097,29 @@ export async function addUsersToSession(slotId: number, userIds: number[]): Prom
     });
   } else {
     await updateAvailabilitySlot(slotId, { isBooked: true });
+  }
+  
+  // Send enrollment confirmation emails
+  const { sendEmail, getSessionEnrollmentEmail } = await import("./_core/email");
+  
+  for (const userId of userIds) {
+    const user = await getUserById(userId);
+    if (user && user.email) {
+      const emailHtml = getSessionEnrollmentEmail({
+        userName: user.name || "Student",
+        sessionTitle: slot.title,
+        sessionDate: slot.startTime,
+        sessionType: slot.eventType,
+        location: slot.location || undefined,
+        sessionLink: slot.sessionLink || undefined,
+      });
+      
+      await sendEmail({
+        to: user.email,
+        subject: `You're Enrolled: ${slot.title}`,
+        html: emailHtml,
+      });
+    }
   }
 }
 

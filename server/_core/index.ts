@@ -10,6 +10,7 @@ import { serveStatic, setupVite } from "./vite";
 import { handleStripeWebhook } from "../stripe-webhook";
 import { setupSSE } from "../sse";
 import { sdk } from "./sdk";
+import { setupCronJobs } from "../jobs/setupCron";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -85,6 +86,9 @@ async function startServer() {
 
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
+    
+    // Setup scheduled jobs
+    setupCronJobs();
   });
 }
 

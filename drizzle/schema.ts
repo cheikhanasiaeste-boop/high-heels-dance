@@ -57,6 +57,8 @@ export const purchases = mysqlTable("purchases", {
   stripePaymentId: varchar("stripePaymentId", { length: 255 }), // Stripe payment intent ID
   status: mysqlEnum("status", ["pending", "completed", "failed"]).default("pending").notNull(),
   purchasedAt: timestamp("purchasedAt").defaultNow().notNull(),
+  isCompleted: boolean("isCompleted").default(false).notNull(), // Course completion tracking
+  completedAt: timestamp("completedAt"), // When the course was completed
 });
 
 export type Purchase = typeof purchases.$inferSelect;

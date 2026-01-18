@@ -118,6 +118,26 @@ export const appRouter = router({
           input.watchedDuration
         );
       }),
+    
+    // Mark course as completed
+    markComplete: protectedProcedure
+      .input(z.object({
+        courseId: z.number(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { markCourseComplete } = await import("./db-course-completion");
+        return await markCourseComplete(ctx.user.id, input.courseId);
+      }),
+    
+    // Check if course is completed
+    isCompleted: protectedProcedure
+      .input(z.object({
+        courseId: z.number(),
+      }))
+      .query(async ({ ctx, input }) => {
+        const { isCourseCompleted } = await import("./db-course-completion");
+        return await isCourseCompleted(ctx.user.id, input.courseId);
+      }),
   }),
 
   // User purchase procedures
