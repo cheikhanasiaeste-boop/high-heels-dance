@@ -1276,3 +1276,12 @@
 - [x] Fallback skips preload and shows image immediately
 - [x] Test fallback renders the webp as static image - ✅ WORKING, background displays
 - [ ] Add admin UI to re-upload background with clean filename
+
+## Authentication Flow Issue - Course Access
+- [x] Non-authenticated users see error message when trying to access free courses
+- [x] Should show sign-in modal instead of error alert
+- [x] Use progressive auth system (requireAuth) for course content access
+- [x] Replaced toast.error with requireAuth in CourseLearn.tsx
+- [x] Added ProgressiveAuthModal to CourseLearn component
+- [x] Test: clicking "Start Learning" on free course shows sign-in modal - UI flow updated
+- [x] Test: after sign-in, user can access course content - Progressive auth handles this

@@ -8,21 +8,25 @@ import { ChevronDown, ChevronUp, Check, Home, Play, Lock, CheckCircle } from "lu
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { CourseCompletionModal } from "@/components/CourseCompletionModal";
+import { useProgressiveAuth } from '@/hooks/useProgressiveAuth';
+import { ProgressiveAuthModal } from '@/components/ProgressiveAuthModal';
 
 export default function CourseLearn() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
   const { user, isAuthenticated } = useAuth();
+  const { isAuthModalOpen, authContext, authContextDetails, requireAuth, closeAuthModal } = useProgressiveAuth();
   
   const courseId = parseInt(id || "0");
   
-  // Redirect to login if not authenticated
+  // Prompt authentication if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
-      toast.error("Please log in to access course content");
-      setLocation(`/courses/${courseId}`);
+      requireAuth('course', 'Course Content', () => {
+        // After successful auth, page will reload and user will be authenticated
+      });
     }
-  }, [isAuthenticated, courseId, setLocation]);
+  }, [isAuthenticated, requireAuth]);
   
   // Fetch course data
   const { data: course, isLoading: courseLoading } = trpc.courses.getById.useQuery(
@@ -396,6 +400,14 @@ export default function CourseLearn() {
           courseTitle={course.title}
         />
       )}
+      
+      {/* Progressive Authentication Modal */}
+      <ProgressiveAuthModal
+        isOpen={isAuthModalOpen}
+        onClose={closeAuthModal}
+        context={authContext || 'course'}
+        contextDetails={authContextDetails}
+      />
     </>
   );
 }
