@@ -166,7 +166,7 @@ export function UserProfileDropdown({ unreadMessagesCount = 0 }: UserProfileDrop
           {/* Menu Items */}
           <div className="py-1">
             {/* My Messages */}
-            <Link href="/messages" onClick={closeDropdown}>
+            <Link href="/my-messages" onClick={closeDropdown}>
               <a
                 role="menuitem"
                 className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors duration-150 focus:outline-none focus:bg-purple-50 focus:text-purple-700 min-h-[44px] group"

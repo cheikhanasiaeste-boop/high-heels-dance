@@ -1162,3 +1162,9 @@
 - [x] Style badges with proper colors and positioning
 - [x] Test badges appear when unread messages exist - ✅ 4 tests passing
 - [x] Test badges disappear when all messages are read
+
+## My Messages Route Fix
+- [x] Found routing issue - /messages was placeholder, /my-messages is real page
+- [x] Fixed UserProfileDropdown to link to /my-messages instead of /messages
+- [x] Fixed MobileNav to link to /my-messages instead of /messages
+- [x] Test that clicking My Messages now shows all 6 messages for Anas - ✅ ALL 6 MESSAGES VISIBLE

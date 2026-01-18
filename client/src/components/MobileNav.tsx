@@ -130,7 +130,7 @@ export function MobileNav() {
                   </Button>
                 </Link>
 
-                <Link href="/messages" onClick={closeMenu}>
+                <Link href="/my-messages" onClick={closeMenu}>
                   <Button variant="ghost" className="w-full justify-start relative" size="lg">
                     My Messages
                     {unreadCount && unreadCount > 0 && (
