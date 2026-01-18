@@ -1307,3 +1307,12 @@
 - [x] Test: Close modal on course learn page → redirects to course detail page (UX fix implemented)
 - [x] Test: Close modal on booking page → stays on booking page (already correct)
 - [x] Test: Close modal on any page → returns to that exact page (global behavior fixed)
+
+## Back to Courses Button Navigation Issue
+- [x] Current behavior: "Back to Courses" button goes to /#courses (homepage hash anchor)
+- [x] Expected behavior: Should go to /courses (dedicated courses page)
+- [x] Find all instances of "Back to Courses" buttons across the site - Found 3 in CourseDetail.tsx
+- [x] Update CourseDetail page back button - All 3 instances updated to /courses
+- [x] Update CourseLearn page back button (if exists) - No such button in CourseLearn
+- [x] Update any other pages with "Back to Courses" button - Only CourseDetail has this button
+- [x] Test: Click "Back to Courses" from any course page → goes to /courses (navigation fix complete)
