@@ -32,7 +32,6 @@ import Activity from "./pages/Activity";
 import MyBookings from "./pages/MyBookings";
 import MyMessages from "./pages/MyMessages";
 import Conversations from "./pages/Conversations";
-import AccountSettings from "./pages/AccountSettings";
 
 
 function Router() {
@@ -47,7 +46,6 @@ function Router() {
       <Route path="/my-courses" component={MyCourses} />
       <Route path="/my-bookings" component={MyBookings} />
       <Route path="/my-messages" component={Conversations} />
-      <Route path="/account-settings" component={AccountSettings} />
       <Route path="/messages" component={Messages} />
       <Route path="/activity" component={Activity} />
       <Route path="/book-session" component={BookSession} />
