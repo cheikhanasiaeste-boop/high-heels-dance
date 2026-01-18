@@ -1267,3 +1267,12 @@
 - [x] Test navigation thoroughly - hash anchor navigation working with native <a> tag
 - [x] Test background animation - removed performance-killing styles
 - [x] Verify fixes work consistently across page loads and refreshes
+
+## Persistent Video Load Error - Filename with Space
+- [x] Video element fails to load despite correct URL encoding
+- [x] File exists and is accessible (verified with curl)
+- [x] Browser video element rejects the file even with proper encoding
+- [x] Implement robust fallback: if video fails, render as static image
+- [x] Fallback skips preload and shows image immediately
+- [x] Test fallback renders the webp as static image - ✅ WORKING, background displays
+- [ ] Add admin UI to re-upload background with clean filename

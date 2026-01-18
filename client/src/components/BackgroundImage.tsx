@@ -190,12 +190,12 @@ export function BackgroundImage({
 
   const handleVideoError = () => {
     const encodedSrc = encodeUrlProperly(src);
-    console.error('Video failed to load. Original:', src, 'Encoded:', encodedSrc);
+    console.warn('Video failed to load, falling back to static image. Original:', src, 'Encoded:', encodedSrc);
     // Try to fall back to image rendering if video fails
     if (contentType === 'video') {
-      console.log('Attempting fallback to image rendering');
+      console.log('Attempting fallback to static image rendering (skipping preload)');
       setContentType('image');
-      setIsPreloaded(false); // Reset to preload as image
+      setIsPreloaded(true); // Skip preload, show image immediately
     } else {
       setHasError(true);
       onError?.();
