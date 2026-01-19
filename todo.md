@@ -1550,3 +1550,9 @@
 ## Navigation Label Update
 - [x] Rename "My Booked Sessions" to "My Sessions" in desktop navigation (Home.tsx)
 - [x] Rename "My Booked Sessions" to "My Sessions" in mobile navigation (MobileNav.tsx)
+
+## Navigation Emoji Icons
+- [x] Add 🧑‍💻 emoji to "My Sessions" button in desktop navigation
+- [x] Add 🎓 emoji to "My Courses" button in desktop navigation
+- [x] Add 🧑‍💻 emoji to "My Sessions" button in mobile navigation
+- [x] Add 🎓 emoji to "My Courses" button in mobile navigation
