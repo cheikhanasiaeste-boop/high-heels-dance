@@ -1462,3 +1462,5 @@
 - [x] Respect reduced-motion preferences
 - [x] Add mobile picture-in-picture support
 - [x] Test performance and accessibility
+
+- [x] Fix floating video disappearing when scrolling to bottom (CTA container becomes absolute positioned)

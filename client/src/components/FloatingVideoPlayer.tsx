@@ -128,9 +128,25 @@ export function FloatingVideoPlayer({
         setFloatingStyle({});
       } else if (isFloating) {
         // Update position if already floating (handles resize, scroll changes)
+        // BUT: Keep video visible if thumbnail goes off bottom of viewport
+        const viewportHeight = window.innerHeight;
+        const thumbnailBottom = thumbnailRect.bottom;
+        const thumbnailTop = thumbnailRect.top;
+        
+        // If thumbnail is going off the bottom of viewport, clamp video position
+        let finalTop = thumbnailRect.top;
+        if (thumbnailBottom > viewportHeight) {
+          // Thumbnail is partially or fully below viewport
+          // Keep video at bottom of viewport with some padding
+          finalTop = viewportHeight - thumbnailRect.height - 16; // 16px padding from bottom
+        } else if (thumbnailTop < 0) {
+          // Thumbnail is going off the top (shouldn't happen but handle it)
+          finalTop = 16; // 16px padding from top
+        }
+        
         setFloatingStyle(prev => ({
           ...prev,
-          top: `${thumbnailRect.top}px`,
+          top: `${finalTop}px`,
           left: `${thumbnailRect.left}px`,
           width: `${thumbnailRect.width}px`,
           height: `${thumbnailRect.height}px`,
