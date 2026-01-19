@@ -9,6 +9,7 @@ import { Link, useParams } from "wouter";
 import { toast } from "sonner";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { ProgressiveAuthModal } from "@/components/ProgressiveAuthModal";
+import { FloatingVideoPlayer } from "@/components/FloatingVideoPlayer";
 import { useState, useEffect, useRef } from "react";
 
 export default function CourseDetail() {
@@ -20,6 +21,7 @@ export default function CourseDetail() {
   const [showMobileCTA, setShowMobileCTA] = useState(false);
   const [isMobileCTADismissed, setIsMobileCTADismissed] = useState(false);
   const videoRef = useRef<HTMLDivElement>(null);
+  const thumbnailRef = useRef<HTMLDivElement>(null);
   const ctaContainerRef = useRef<HTMLDivElement>(null);
   const footerObserverRef = useRef<HTMLDivElement>(null);
   
@@ -201,26 +203,20 @@ export default function CourseDetail() {
           
           {/* LEFT COLUMN: Preview Video + Description */}
           <div className="space-y-6">
-            {/* Preview Video */}
-            <div 
-              ref={videoRef}
-              className="aspect-video bg-gradient-to-br from-purple-900 to-pink-900 rounded-lg overflow-hidden shadow-xl relative"
-            >
+            {/* Preview Video with Floating Behavior */}
+            <div ref={videoRef}>
               {course.previewVideoUrl ? (
-                <video
-                  src={course.previewVideoUrl}
-                  controls
-                  playsInline
-                  preload="metadata"
-                  className="w-full h-full object-cover"
-                  poster={course.imageUrl || undefined}
-                >
-                  Your browser does not support the video tag.
-                </video>
+                <FloatingVideoPlayer
+                  videoUrl={course.previewVideoUrl}
+                  posterUrl={course.imageUrl || undefined}
+                  thumbnailContainerRef={thumbnailRef}
+                />
               ) : (
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                  <Play className="w-16 h-16 mb-4 opacity-50" />
-                  <p className="text-sm opacity-75">Preview video coming soon</p>
+                <div className="aspect-video bg-gradient-to-br from-purple-900 to-pink-900 rounded-lg overflow-hidden shadow-xl relative">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                    <Play className="w-16 h-16 mb-4 opacity-50" />
+                    <p className="text-sm opacity-75">Preview video coming soon</p>
+                  </div>
                 </div>
               )}
             </div>
@@ -264,8 +260,11 @@ export default function CourseDetail() {
           <div className="relative">
             <div className="lg:sticky lg:top-8 space-y-6" ref={ctaContainerRef}>
               
-              {/* Course Thumbnail */}
-              <div className="aspect-video bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg overflow-hidden relative shadow-lg">
+              {/* Course Thumbnail - Target for floating video */}
+              <div 
+                ref={thumbnailRef}
+                className="aspect-video bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg overflow-hidden relative shadow-lg"
+              >
                 {course.imageUrl ? (
                   <img 
                     src={course.imageUrl} 

@@ -1451,3 +1451,14 @@
 - [x] Write vitest tests for FloatingVideoPlayer - Tests created and passing
 
 - [x] Fix React Hooks order violation error in CourseLearn component (conditional hooks usage)
+
+- [x] Implement floating preview video player on course detail page
+- [x] Create FloatingVideoPlayer component with scroll detection
+- [x] Add seamless video playback continuation during scroll
+- [x] Position floating video in thumbnail column without layout disruption
+- [x] Implement play/pause and close controls for floating player
+- [x] Add smooth transitions between normal and floating states
+- [x] Ensure sticky CTA container remains unaffected
+- [x] Respect reduced-motion preferences
+- [x] Add mobile picture-in-picture support
+- [x] Test performance and accessibility
