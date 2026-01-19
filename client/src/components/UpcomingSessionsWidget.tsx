@@ -31,13 +31,14 @@ export function UpcomingSessionsWidget() {
       const minTop = headerHeight + 16; // Header height + 16px spacing
       const defaultTop = 96; // Default top position
       
-      // If hero bottom is above the default top position, constrain widget to hero bottom
-      // But never go above the header
+      // Calculate desired position: follow hero bottom when scrolling past it
+      let desiredTop = defaultTop;
       if (heroBottom < defaultTop) {
-        setWidgetTop(Math.max(minTop, window.innerHeight - (window.innerHeight - heroBottom)));
-      } else {
-        setWidgetTop(defaultTop); // Default position
+        desiredTop = heroBottom;
       }
+      
+      // CRITICAL: Always enforce minimum top position to prevent header overlap
+      setWidgetTop(Math.max(minTop, desiredTop));
     };
     
     window.addEventListener('scroll', handleScroll);
