@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { useParams, useLocation } from 'wouter';
-import ZoomMtgEmbedded from '@zoom/meetingsdk/embedded';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,12 +18,27 @@ export default function SessionView() {
   
   const zoomContainerRef = useRef<HTMLDivElement>(null);
   const clientRef = useRef<any>(null);
+  const zoomSDKRef = useRef<any>(null);
   
   // Fetch booking details with slot information
   const { data: bookings, isLoading } = trpc.bookings.myBookings.useQuery();
   const booking = bookings?.find(b => b.id === parseInt(bookingId!));
   
   const joinMutation = trpc.zoom.getSignature.useMutation();
+  
+  // Dynamically load Zoom SDK only when needed
+  const loadZoomSDK = async () => {
+    if (zoomSDKRef.current) return zoomSDKRef.current;
+    
+    try {
+      const ZoomModule = await import('@zoom/meetingsdk/embedded');
+      zoomSDKRef.current = ZoomModule.default;
+      return ZoomModule.default;
+    } catch (error) {
+      console.error('Failed to load Zoom SDK:', error);
+      throw new Error('Failed to load Zoom SDK');
+    }
+  };
   
   // Check session state and time window
   useEffect(() => {
@@ -71,6 +85,9 @@ export default function SessionView() {
     
     try {
       setSessionState('loading');
+      
+      // Load Zoom SDK dynamically
+      const ZoomMtgEmbedded = await loadZoomSDK();
       
       // Get signature from backend
       const signatureData = await joinMutation.mutateAsync({
