@@ -23,12 +23,13 @@ export function UpcomingSessionsWidget() {
     const handleScroll = () => {
       const heroSection = document.querySelector('section.relative.py-20');
       const header = document.querySelector('header');
-      if (!heroSection) return;
+      if (!heroSection || !header) return;
       
       const heroRect = heroSection.getBoundingClientRect();
       const heroBottom = heroRect.bottom;
-      const headerHeight = header ? header.offsetHeight : 64; // Default 64px if header not found
-      const minTop = headerHeight + 16; // Header height + 16px spacing
+      const headerRect = header.getBoundingClientRect();
+      const whiteBarBottom = headerRect.bottom; // Bottom edge of white navigation bar
+      const minTop = whiteBarBottom + 8; // White bar bottom + 8px spacing
       const defaultTop = 96; // Default top position
       
       // Calculate desired position: follow hero bottom when scrolling past it
@@ -37,7 +38,7 @@ export function UpcomingSessionsWidget() {
         desiredTop = heroBottom;
       }
       
-      // CRITICAL: Always enforce minimum top position to prevent header overlap
+      // CRITICAL: Widget must NEVER go above white bar bottom boundary
       setWidgetTop(Math.max(minTop, desiredTop));
     };
     
