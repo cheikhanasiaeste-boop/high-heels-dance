@@ -1571,3 +1571,7 @@
 - [x] Implement enrollment verification for session access
 - [x] Test session list and detail page experience
 - [x] Verify mobile responsiveness
+
+## Fix Nested Anchor Tag Error
+- [x] Locate nested anchor tags on homepage
+- [x] Fix by removing inner anchor or restructuring component
