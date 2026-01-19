@@ -22,16 +22,21 @@ export function UpcomingSessionsWidget() {
   useEffect(() => {
     const handleScroll = () => {
       const heroSection = document.querySelector('section.relative.py-20');
+      const header = document.querySelector('header');
       if (!heroSection) return;
       
       const heroRect = heroSection.getBoundingClientRect();
       const heroBottom = heroRect.bottom;
+      const headerHeight = header ? header.offsetHeight : 64; // Default 64px if header not found
+      const minTop = headerHeight + 16; // Header height + 16px spacing
+      const defaultTop = 96; // Default top position
       
-      // If hero bottom is above the default top position (96px), constrain widget to hero bottom
-      if (heroBottom < 96) {
-        setWidgetTop(Math.max(24, window.innerHeight - (window.innerHeight - heroBottom)));
+      // If hero bottom is above the default top position, constrain widget to hero bottom
+      // But never go above the header
+      if (heroBottom < defaultTop) {
+        setWidgetTop(Math.max(minTop, window.innerHeight - (window.innerHeight - heroBottom)));
       } else {
-        setWidgetTop(96); // Default position
+        setWidgetTop(defaultTop); // Default position
       }
     };
     

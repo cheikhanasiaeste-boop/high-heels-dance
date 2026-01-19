@@ -1696,3 +1696,9 @@
 - [x] When scrolling past hero, widget should stick at hero bottom position
 - [x] Widget remains visible at all scroll depths
 - [x] Test widget stays visible when scrolling to bottom of page
+
+## Fix Upcoming Events Widget Header Overlap (Jan 19, 2026)
+- [x] Add header height to widget top position calculation
+- [x] Ensure widget never overlaps white navigation bar
+- [x] Test widget positioning at various scroll positions
+- [x] Verify widget stays below header at all times
