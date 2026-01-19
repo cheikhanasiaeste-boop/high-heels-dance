@@ -1653,3 +1653,8 @@
 - [x] Remove flex-wrap to prevent badges from wrapping
 - [x] Ensure location, type, and price badges stay on one line
 - [x] Test on various session cards
+
+## Fix Nested Anchor Tags on Homepage (Jan 19, 2026)
+- [x] Find and fix nested <a> tags on homepage
+- [x] Verify no other invalid anchor nesting errors exist
+- [x] Test homepage renders without console errors

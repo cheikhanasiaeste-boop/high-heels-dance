@@ -104,11 +104,11 @@ export function MobileNav() {
           )}
 
           {/* Navigation Links */}
-          <Link href={isAuthenticated ? "/my-bookings" : "/book-session"} onClick={closeMenu}>
-            <Button variant="default" className="w-full justify-start" size="lg">
+          <Button variant="default" className="w-full justify-start" size="lg" asChild>
+            <Link href={isAuthenticated ? "/my-bookings" : "/book-session"} onClick={closeMenu}>
               {isAuthenticated ? "🧑‍💻 My Sessions" : "Book a Session with Me"}
-            </Button>
-          </Link>
+            </Link>
+          </Button>
 
           <Button
             variant="outline"
@@ -125,43 +125,44 @@ export function MobileNav() {
             <>
               {/* User Menu Items */}
               <div className="pt-3 border-t space-y-2">
-                <Link href="/my-messages" onClick={closeMenu}>
-                  <Button variant="ghost" className="w-full justify-start relative" size="lg">
+                <Button variant="ghost" className="w-full justify-start relative" size="lg" asChild>
+                  <Link href="/my-messages" onClick={closeMenu}>
                     My Messages
                     {unreadCount && unreadCount > 0 && (
                       <span className="ml-auto inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-xs font-semibold text-white bg-red-500 rounded-full">
                         {unreadCount > 99 ? '99+' : unreadCount}
                       </span>
                     )}
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
 
-                <Link href="/activity" onClick={closeMenu}>
-                  <Button variant="ghost" className="w-full justify-start" size="lg">
+                <Button variant="ghost" className="w-full justify-start" size="lg" asChild>
+                  <Link href="/activity" onClick={closeMenu}>
                     Activity History
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
 
                 {user?.role === 'admin' && (
-                  <Link href="/admin" onClick={closeMenu}>
-                    <Button variant="outline" className="w-full justify-start" size="lg">
+                  <Button variant="outline" className="w-full justify-start" size="lg" asChild>
+                    <Link href="/admin" onClick={closeMenu}>
                       Admin Dashboard
-                    </Button>
-                  </Link>
+                    </Link>
+                  </Button>
                 )}
               </div>
 
               {/* Logout */}
               <div className="pt-3 border-t">
-                <Link href="/" onClick={closeMenu}>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-                    size="lg"
-                  >
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                  size="lg"
+                  asChild
+                >
+                  <Link href="/" onClick={closeMenu}>
                     Logout
-                  </Button>
-                </Link>
+                  </Link>
+                </Button>
               </div>
             </>
           ) : (
