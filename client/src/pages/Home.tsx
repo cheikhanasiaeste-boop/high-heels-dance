@@ -272,6 +272,9 @@ export default function Home() {
             </Button>
           </div>
         </div>
+        
+        {/* Floating Upcoming Sessions Widget - Inside Hero */}
+        <UpcomingSessionsWidget />
       </section>
 
       {/* Courses Section - PROMINENT */}
@@ -470,8 +473,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Floating Upcoming Sessions Widget */}
-      <UpcomingSessionsWidget />
+
 
       {/* Testimonials Section - Mixed Text & Video */}
       {allTestimonials.length > 0 && (

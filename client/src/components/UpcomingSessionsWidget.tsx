@@ -57,7 +57,7 @@ export function UpcomingSessionsWidget() {
   return (
     <div 
       ref={widgetRef}
-      className="fixed top-24 right-6 z-50 animate-slide-in-right"
+      className="absolute top-6 right-6 z-50 animate-slide-in-right"
       onMouseEnter={() => {
         setIsHovered(true);
       }}

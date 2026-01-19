@@ -1670,3 +1670,9 @@
 - [x] Ensure widget stays within hero section boundaries
 - [x] Test widget expansion at different viewport heights
 - [x] Verify scrollable content works properly when widget is constrained
+
+## Fix Upcoming Events Widget Button Positioning (Jan 19, 2026)
+- [x] Change button from fixed positioning to absolute within hero section
+- [x] Ensure button scrolls with hero section instead of staying fixed
+- [x] Test button stays within hero boundaries when scrolling
+- [x] Verify button doesn't appear over white content area
