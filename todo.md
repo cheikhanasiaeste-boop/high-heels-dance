@@ -1403,3 +1403,11 @@
 - [x] Find nested <a> tags in Home.tsx - Found 5 instances
 - [x] Remove Link wrapper or button wrapper causing nesting - Used Button asChild prop
 - [x] Test fix and verify no console errors - Server restarted successfully
+
+## Production Environment Issue
+- [x] Compare dev server vs published site - Dev has background, prod doesn't
+- [x] Identify what's different in production - Missing hero background and welcome popup
+- [x] Check if database settings are synced - Updated heroBackgroundUrl in production DB
+- [ ] Verify hero background loads in production - Database updated, needs republish
+- [x] Check for console errors in production - No errors
+- [x] Fix identified production issues - Removed auth check from welcome popup

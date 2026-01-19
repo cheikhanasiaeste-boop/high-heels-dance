@@ -1,0 +1,16 @@
+{
+  "query": "SELECT * FROM siteSettings WHERE `key` = 'heroBackgroundUrl';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4HtU1c2nK4A5Wb2.root --database M2v4Dnk4LCsJQ3Qwy7fUfL --execute SELECT * FROM siteSettings WHERE `key` = 'heroBackgroundUrl';",
+  "rows": [
+    {
+      "id": "120014",
+      "key": "heroBackgroundUrl",
+      "value": "https://d2xsxph8kpxj0f.cloudfront.net/310519663298901455/M2v4Dnk4LCsJQ3Qwy7fUfL/images/1768767343253-n6r3s-Little-Simz-Venom-Acro-Heels-Choreograph_Media_XXMbXH8kEbo_001_1080p-ezgif.com-video-to-webp-converter (2).webp",
+      "updatedAt": "2026-01-18 20:15:43"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tkey\tvalue\tupdatedAt\n120014\theroBackgroundUrl\thttps://d2xsxph8kpxj0f.cloudfront.net/310519663298901455/M2v4Dnk4LCsJQ3Qwy7fUfL/images/1768767343253-n6r3s-Little-Simz-Venom-Acro-Heels-Choreograph_Media_XXMbXH8kEbo_001_1080p-ezgif.com-video-to-webp-converter (2).webp\t2026-01-18 20:15:43\n",
+  "stderr": "",
+  "execution_time_ms": 99
+}

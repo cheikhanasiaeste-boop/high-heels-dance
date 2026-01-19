@@ -127,9 +127,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen">
-      {/* Website Popup - Only show for authenticated users */}
-      {isAuthenticated && (
-        <WebsitePopup
+      {/* Website Popup - Show for all users */}
+      <WebsitePopup
           settings={popupSettings || null}
           onDismiss={(popupId) => {
             recordInteractionMutation.mutate({
@@ -145,7 +144,6 @@ export default function Home() {
             });
           }}
         />
-      )}
       
       {/* Discount Banner */}
       {banner?.enabled && banner.text && (
