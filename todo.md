@@ -1546,3 +1546,7 @@
 - [x] Ensure breadcrumb links follow logical navigation flow preference
 - [x] Test breadcrumb navigation across different pages
 - [x] Verify mobile responsiveness of breadcrumbs
+
+## Navigation Label Update
+- [x] Rename "My Booked Sessions" to "My Sessions" in desktop navigation (Home.tsx)
+- [x] Rename "My Booked Sessions" to "My Sessions" in mobile navigation (MobileNav.tsx)
