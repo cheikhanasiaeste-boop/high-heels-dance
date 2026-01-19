@@ -1,0 +1,67 @@
+{
+  "query": "SHOW TABLES;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4HtU1c2nK4A5Wb2.root --database M2v4Dnk4LCsJQ3Qwy7fUfL --execute SHOW TABLES;",
+  "rows": [
+    {
+      "Tables_in_M2v4Dnk4LCsJQ3Qwy7fUfL": "__drizzle_migrations"
+    },
+    {
+      "Tables_in_M2v4Dnk4LCsJQ3Qwy7fUfL": "availabilitySlots"
+    },
+    {
+      "Tables_in_M2v4Dnk4LCsJQ3Qwy7fUfL": "bookings"
+    },
+    {
+      "Tables_in_M2v4Dnk4LCsJQ3Qwy7fUfL": "chatMessages"
+    },
+    {
+      "Tables_in_M2v4Dnk4LCsJQ3Qwy7fUfL": "course_lessons"
+    },
+    {
+      "Tables_in_M2v4Dnk4LCsJQ3Qwy7fUfL": "course_modules"
+    },
+    {
+      "Tables_in_M2v4Dnk4LCsJQ3Qwy7fUfL": "courses"
+    },
+    {
+      "Tables_in_M2v4Dnk4LCsJQ3Qwy7fUfL": "messages"
+    },
+    {
+      "Tables_in_M2v4Dnk4LCsJQ3Qwy7fUfL": "page_analytics"
+    },
+    {
+      "Tables_in_M2v4Dnk4LCsJQ3Qwy7fUfL": "popup_interactions"
+    },
+    {
+      "Tables_in_M2v4Dnk4LCsJQ3Qwy7fUfL": "popup_settings"
+    },
+    {
+      "Tables_in_M2v4Dnk4LCsJQ3Qwy7fUfL": "purchases"
+    },
+    {
+      "Tables_in_M2v4Dnk4LCsJQ3Qwy7fUfL": "section_headings"
+    },
+    {
+      "Tables_in_M2v4Dnk4LCsJQ3Qwy7fUfL": "siteSettings"
+    },
+    {
+      "Tables_in_M2v4Dnk4LCsJQ3Qwy7fUfL": "testimonials"
+    },
+    {
+      "Tables_in_M2v4Dnk4LCsJQ3Qwy7fUfL": "user_course_enrollments"
+    },
+    {
+      "Tables_in_M2v4Dnk4LCsJQ3Qwy7fUfL": "user_lesson_progress"
+    },
+    {
+      "Tables_in_M2v4Dnk4LCsJQ3Qwy7fUfL": "users"
+    },
+    {
+      "Tables_in_M2v4Dnk4LCsJQ3Qwy7fUfL": "visual_settings"
+    }
+  ],
+  "messages": [],
+  "stdout": "Tables_in_M2v4Dnk4LCsJQ3Qwy7fUfL\n__drizzle_migrations\navailabilitySlots\nbookings\nchatMessages\ncourse_lessons\ncourse_modules\ncourses\nmessages\npage_analytics\npopup_interactions\npopup_settings\npurchases\nsection_headings\nsiteSettings\ntestimonials\nuser_course_enrollments\nuser_lesson_progress\nusers\nvisual_settings\n",
+  "stderr": "",
+  "execution_time_ms": 54
+}

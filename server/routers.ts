@@ -703,6 +703,12 @@ export const appRouter = router({
           await db.markUserViewedByAdmin(input.userId);
           return { success: true };
         }),
+
+      markAllUsersViewed: adminProcedure
+        .mutation(async () => {
+          await db.markAllUsersViewedByAdmin();
+          return { success: true };
+        }),
     }),
 
     // Course Assignment Management

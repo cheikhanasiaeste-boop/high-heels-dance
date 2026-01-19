@@ -1,0 +1,13 @@
+{
+  "query": "SELECT COUNT(*) as unviewed_count FROM users WHERE lastViewedByAdmin IS NULL;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4HtU1c2nK4A5Wb2.root --database M2v4Dnk4LCsJQ3Qwy7fUfL --execute SELECT COUNT(*) as unviewed_count FROM users WHERE lastViewedByAdmin IS NULL;",
+  "rows": [
+    {
+      "unviewed_count": "19"
+    }
+  ],
+  "messages": [],
+  "stdout": "unviewed_count\n19\n",
+  "stderr": "",
+  "execution_time_ms": 55
+}

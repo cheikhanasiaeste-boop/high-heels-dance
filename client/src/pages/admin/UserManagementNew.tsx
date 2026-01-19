@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { AdminLayout } from "@/components/AdminLayout";
 import { trpc } from "@/lib/trpc";
@@ -174,6 +174,24 @@ function UserRow({
 export default function UserManagementNew() {
   const { user: currentUser, isAuthenticated } = useAuth();
   const utils = trpc.useUtils();
+
+  // Mark all new users as viewed when admin opens this page
+  const markAllViewedMutation = trpc.admin.users.markAllUsersViewed.useMutation({
+    onSuccess: () => {
+      console.log('[UserManagementNew] All users marked as viewed successfully');
+      // Invalidate queries to update the badge
+      utils.admin.users.newUserCount.invalidate();
+    },
+    onError: (error) => {
+      console.error('[UserManagementNew] Error marking users as viewed:', error);
+    },
+  });
+
+  useEffect(() => {
+    console.log('[UserManagementNew] Component mounted, calling markAllUsersViewed mutation');
+    markAllViewedMutation.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // State
   const [page, setPage] = useState(1);

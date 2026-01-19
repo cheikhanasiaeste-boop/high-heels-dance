@@ -1826,6 +1826,16 @@ export async function markUserViewedByAdmin(userId: number) {
     .where(eq(users.id, userId));
 }
 
+export async function markAllUsersViewedByAdmin() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db
+    .update(users)
+    .set({ lastViewedByAdmin: new Date() })
+    .where(isNull(users.lastViewedByAdmin));
+}
+
 export async function getUserEnrollmentCount(userId: number): Promise<number> {
   const db = await getDb();
   if (!db) return 0;

@@ -1482,3 +1482,5 @@
 - [x] Fix Sessions submenu to display content in right panel without sidebar disappearing (consistent with other admin sections)
 
 - [x] Fix admin sidebar to remain fixed while only right panel scrolls
+
+- [x] Fix user notification badge not resetting to zero when admin opens Users page

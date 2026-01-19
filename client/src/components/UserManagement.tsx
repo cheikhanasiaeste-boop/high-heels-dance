@@ -13,23 +13,25 @@ export function UserManagement() {
   
   const { data: users, isLoading } = trpc.admin.users.list.useQuery();
   
-  const markUserViewedMutation = trpc.admin.users.markUserViewed.useMutation({
+  const markAllViewedMutation = trpc.admin.users.markAllUsersViewed.useMutation({
     onSuccess: () => {
-      // Invalidate the new user count to update the notification badge
+      console.log('[UserManagement] All users marked as viewed successfully');
+      // Invalidate queries to update the badge
       utils.admin.users.newUserCount.invalidate();
+      utils.admin.users.list.invalidate();
+    },
+    onError: (error) => {
+      console.error('[UserManagement] Error marking users as viewed:', error);
     },
   });
   
   // Mark all new users as viewed when the admin opens this page
   useEffect(() => {
-    if (users) {
-      users.forEach(user => {
-        if (!user.lastViewedByAdmin) {
-          markUserViewedMutation.mutate({ userId: user.id });
-        }
-      });
-    }
-  }, [users]);
+    console.log('[UserManagement] Component mounted, calling markAllUsersViewed mutation');
+    // Call the mutation once when component mounts
+    markAllViewedMutation.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array = run once on mount
 
   const updateRoleMutation = trpc.admin.users.updateRole.useMutation({
     onSuccess: () => {
