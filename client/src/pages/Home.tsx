@@ -165,9 +165,9 @@ export default function Home() {
             <Button variant="default" asChild>
               <Link href="/book-session">Book a Session</Link>
             </Button>
-            <a href="https://elizabethzolotova.manus.space/my-courses">
-              <Button variant="outline" className="shadow-lg border-2 border-primary hover:bg-primary hover:text-primary-foreground">My Courses</Button>
-            </a>
+            <Button variant="outline" className="shadow-lg border-2 border-primary hover:bg-primary hover:text-primary-foreground" asChild>
+              <Link href="/my-courses">My Courses</Link>
+            </Button>
             {isAuthenticated ? (
               <>
                 {user?.role === 'admin' && (

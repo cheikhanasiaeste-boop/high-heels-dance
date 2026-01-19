@@ -1491,3 +1491,12 @@
 ## Bug Fixes - My Messages Page
 - [x] Fix nested anchor tag error on /my-messages page
 - [x] Fix React Hooks order violation in Conversations component
+
+## Bug Fixes - My Courses Page
+- [ ] Fix Service Unavailable error on /my-courses page when admin accesses it
+
+## Navigation Fix
+- [x] Fixed "My Courses" navigation button to use local route instead of external domain
+- [x] Updated desktop navigation in Header component
+- [x] Updated mobile navigation in MobileNav component
+- [x] Tested navigation flow - now loads correctly without Service Unavailable error

@@ -110,15 +110,16 @@ export function MobileNav() {
             </Button>
           </Link>
 
-          <a href="https://elizabethzolotova.manus.space/my-courses" onClick={closeMenu}>
-            <Button
-              variant="outline"
-              className="w-full justify-start shadow-lg border-2 border-primary hover:bg-primary hover:text-primary-foreground"
-              size="lg"
-            >
+          <Button
+            variant="outline"
+            className="w-full justify-start shadow-lg border-2 border-primary hover:bg-primary hover:text-primary-foreground"
+            size="lg"
+            asChild
+          >
+            <Link href="/my-courses" onClick={closeMenu}>
               My Courses
-            </Button>
-          </a>
+            </Link>
+          </Button>
 
           {isAuthenticated ? (
             <>
