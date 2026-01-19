@@ -120,9 +120,9 @@ export function WebsitePopup({ settings, onDismiss, onEmailSubmit }: WebsitePopu
                 </h2>
                 
                 {/* Message */}
-                <p className="popup-description">
+                <div className="popup-description">
                   {settings.message}
-                </p>
+                </div>
                 
                 {/* Email input and buttons */}
                 <div className="space-y-3 pt-4">
@@ -182,9 +182,9 @@ export function WebsitePopup({ settings, onDismiss, onEmailSubmit }: WebsitePopu
                 <h2 className="text-2xl font-bold text-gray-900">
                   {settings.title}
                 </h2>
-                <p className="text-gray-600">
+                <div className="text-gray-600">
                   {settings.message}
-                </p>
+                </div>
               </div>
               <button
                 onClick={handleDismiss}

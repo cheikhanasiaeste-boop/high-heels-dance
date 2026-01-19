@@ -1632,3 +1632,8 @@
 - [x] Add visual indicators for different activity types and payment statuses
 - [x] Test all filter combinations
 - [x] Verify grouping logic with various activity data
+
+## Fix Homepage HTML Nesting Error (Jan 19, 2026)
+- [x] Find and fix invalid <p> tag containing <div> on homepage
+- [x] Verify no other invalid nesting errors exist on homepage
+- [x] Test homepage renders without console errors
