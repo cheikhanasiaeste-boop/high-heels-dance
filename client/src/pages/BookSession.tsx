@@ -382,31 +382,6 @@ export default function BookSession() {
           </CardHeader>
           {showFilters && (
             <CardContent className="space-y-6">
-              {/* Quick Presets */}
-              <div className="space-y-2">
-                <Label className="text-sm font-semibold">Quick Filters</Label>
-                <div className="flex flex-wrap gap-2">
-                  {FILTER_PRESETS.map((preset) => {
-                    const isActive = 
-                      preset.eventType === eventFilter &&
-                      preset.sessionType === sessionTypeFilter &&
-                      preset.priceFilter === priceFilter;
-                    
-                    return (
-                      <Button
-                        key={preset.label}
-                        variant={isActive ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => applyPreset(preset)}
-                        className="transition-all"
-                      >
-                        {preset.label}
-                      </Button>
-                    );
-                  })}
-                </div>
-              </div>
-
               {/* Individual Filters */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Location Type */}

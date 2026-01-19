@@ -1575,3 +1575,14 @@
 ## Fix Nested Anchor Tag Error
 - [x] Locate nested anchor tags on homepage
 - [x] Fix by removing inner anchor or restructuring component
+
+## Fix tRPC API Error on My Bookings Page
+- [x] Check server logs for errors
+- [x] Diagnose why API returns HTML instead of JSON
+- [x] Fix server-side issue
+- [x] Test My Bookings page loads correctly
+
+## Remove Quick Filters from Book a Session Page
+- [x] Locate and remove Quick Filters section in BookSession page
+- [x] Keep main filter categories (Location, Session Type, Price)
+- [x] Test that filtering still works correctly
