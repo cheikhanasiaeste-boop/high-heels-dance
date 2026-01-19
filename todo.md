@@ -1623,3 +1623,12 @@
 - [x] Find and fix invalid <p> tag containing <div> in BookSession page
 - [x] Verify no other invalid nesting errors exist
 - [x] Test page renders without console errors
+
+## User Activity Timeline Enhancement (Jan 19, 2026)
+- [x] Add time period filter buttons (Today, This Week, This Month, All Time)
+- [ ] Implement date range picker for custom period selection (future enhancement)
+- [x] Implement hierarchical grouping: Type (Booking/Course) → Payment Status (Paid/Free) → Date
+- [x] Update UI to display grouped activities with collapsible sections
+- [x] Add visual indicators for different activity types and payment statuses
+- [x] Test all filter combinations
+- [x] Verify grouping logic with various activity data
