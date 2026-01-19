@@ -22,7 +22,7 @@ const menuItems = [
   { path: "/admin", icon: LayoutDashboard, label: "Dashboard" },
   { path: "/admin/courses", icon: BookOpen, label: "Courses" },
   { path: "/admin/sessions", icon: Calendar, label: "Sessions" },
-  { path: "/admin/users", icon: Users, label: "User Management" },
+  { path: "/admin/users", icon: Users, label: "Users" },
   { path: "/admin/user-activity", icon: Activity, label: "User Activity" },
   { path: "/admin/testimonials", icon: MessageSquare, label: "Testimonials" },
   { path: "/admin/settings", icon: Settings, label: "Site Settings" },

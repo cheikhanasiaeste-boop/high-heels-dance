@@ -1475,3 +1475,6 @@
 - [x] Remove all transition animation to eliminate visual discomfort (instant repositioning)
 
 - [x] Fix missing Start Learning section on mobile version of course detail page
+
+- [x] Rename "User Management" submenu to "Users" in admin sidebar
+- [x] Reset notification badge to zero when admin views user page and checks new user details

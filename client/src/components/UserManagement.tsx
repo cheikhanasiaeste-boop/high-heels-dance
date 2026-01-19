@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,24 @@ export function UserManagement() {
   const [searchTerm, setSearchTerm] = useState("");
   
   const { data: users, isLoading } = trpc.admin.users.list.useQuery();
+  
+  const markUserViewedMutation = trpc.admin.users.markUserViewed.useMutation({
+    onSuccess: () => {
+      // Invalidate the new user count to update the notification badge
+      utils.admin.users.newUserCount.invalidate();
+    },
+  });
+  
+  // Mark all new users as viewed when the admin opens this page
+  useEffect(() => {
+    if (users) {
+      users.forEach(user => {
+        if (!user.lastViewedByAdmin) {
+          markUserViewedMutation.mutate({ userId: user.id });
+        }
+      });
+    }
+  }, [users]);
 
   const updateRoleMutation = trpc.admin.users.updateRole.useMutation({
     onSuccess: () => {
