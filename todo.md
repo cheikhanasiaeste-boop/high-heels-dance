@@ -1676,3 +1676,16 @@
 - [x] Ensure button scrolls with hero section instead of staying fixed
 - [x] Test button stays within hero boundaries when scrolling
 - [x] Verify button doesn't appear over white content area
+
+## Fix Upcoming Events Widget - Sticky with Scroll Limit (Jan 19, 2026)
+- [ ] Change widget back to fixed positioning to keep it always visible
+- [ ] Add JavaScript to detect when widget reaches bottom of hero section
+- [ ] Stop widget from scrolling further when it hits hero section boundary
+- [ ] Prevent widget from appearing over white content area
+- [ ] Test widget stays at bottom edge of hero section when scrolling down
+
+## Fix Upcoming Events Widget Sticky Positioning with Scroll Limit (Jan 19, 2026)
+- [x] Implement sticky positioning that stops at hero section bottom
+- [x] Ensure widget stays visible while in hero section
+- [x] Verify widget doesn't extend into white content area
+- [x] Test scroll behavior at hero section boundary

@@ -12,7 +12,7 @@ export function UpcomingSessionsWidget() {
   const [isHovered, setIsHovered] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [, setLocation] = useLocation();
-  const { data: events, isLoading } = trpc.admin.availability.upcoming.useQuery({ limit: 5 });
+  const { data: events, isLoading} = trpc.admin.availability.upcoming.useQuery({ limit: 5 });
   const { isAuthModalOpen, authContext, authContextDetails, requireAuth, closeAuthModal } = useProgressiveAuth();
   const widgetRef = useRef<HTMLDivElement>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -57,7 +57,7 @@ export function UpcomingSessionsWidget() {
   return (
     <div 
       ref={widgetRef}
-      className="absolute top-6 right-6 z-50 animate-slide-in-right"
+      className="sticky top-24 right-6 z-50 animate-slide-in-right ml-auto w-fit"
       onMouseEnter={() => {
         setIsHovered(true);
       }}

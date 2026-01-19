@@ -273,7 +273,7 @@ export default function Home() {
           </div>
         </div>
         
-        {/* Floating Upcoming Sessions Widget - Inside Hero */}
+        {/* Floating Upcoming Sessions Widget - Sticky within hero */}
         <UpcomingSessionsWidget />
       </section>
 
