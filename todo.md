@@ -1664,3 +1664,9 @@
 - [x] Ensure "View All Available Sessions" text is fully displayed
 - [x] Test widget stays visible at all scroll positions
 - [x] Verify footer link text is not cut off
+
+## Fix Upcoming Events Widget Positioning - Keep in Hero Section (Jan 19, 2026)
+- [x] Adjust widget max-height to prevent extending into white content area
+- [x] Ensure widget stays within hero section boundaries
+- [x] Test widget expansion at different viewport heights
+- [x] Verify scrollable content works properly when widget is constrained

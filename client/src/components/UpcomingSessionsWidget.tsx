@@ -95,7 +95,7 @@ export function UpcomingSessionsWidget() {
       <div 
         className={`
           absolute top-full right-0 mt-2
-          w-80 max-h-[480px] 
+          w-80 max-h-[65vh] 
           bg-white rounded-xl shadow-2xl border border-gray-200 
           overflow-hidden
           transition-all duration-300 ease-out
@@ -117,7 +117,7 @@ export function UpcomingSessionsWidget() {
         </div>
         
         {/* Sessions List */}
-        <div className="overflow-y-auto max-h-[400px]">
+        <div className="overflow-y-auto" style={{ maxHeight: 'calc(65vh - 120px)' }}>
           {events.map((event: any, index: number) => {
             const spotsLeft = event.capacity - event.currentBookings;
             const startTime = new Date(event.startTime);
