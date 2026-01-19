@@ -24,8 +24,8 @@ interface FloatingVideoPlayerProps {
  * - Close button → stops video, scrolls back to original position
  * 
  * Performance:
- * - Smooth 500ms transitions with Material Design easing
- * - Separate property timing for refined motion
+ * - Extremely subtle 250ms transitions with gentle easing
+ * - Barely noticeable, natural repositioning
  * - Passive scroll listeners for 60fps scrolling
  * - Respects reduced-motion preferences
  * - Mobile picture-in-picture fallback
@@ -202,9 +202,9 @@ export function FloatingVideoPlayer({
     };
   }, [isFloating]);
 
-  // Enhanced transition timing for smoother, more premium feel
-  const transitionDuration = prefersReducedMotion ? '0ms' : '500ms';
-  const transitionEasing = 'cubic-bezier(0.4, 0.0, 0.2, 1)'; // Material Design standard easing
+  // Extremely subtle transition - barely noticeable, natural feel
+  const transitionDuration = prefersReducedMotion ? '0ms' : '250ms';
+  const transitionEasing = 'cubic-bezier(0.25, 0.1, 0.25, 1)'; // Gentle ease-in-out
 
   return (
     <div 
@@ -233,8 +233,7 @@ export function FloatingVideoPlayer({
               left ${transitionDuration} ${transitionEasing},
               width ${transitionDuration} ${transitionEasing},
               height ${transitionDuration} ${transitionEasing},
-              box-shadow ${transitionDuration} ${transitionEasing},
-              opacity 200ms ease-in-out
+              box-shadow ${transitionDuration} ${transitionEasing}
             `,
           ...(isFloating ? { 
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',

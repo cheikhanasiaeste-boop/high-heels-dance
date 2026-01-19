@@ -1467,3 +1467,5 @@
 
 - [x] Keep video in thumbnail position when paused while floating (instead of returning to original)
 - [x] Improve floating video transition animations for smoother, more seamless experience
+
+- [x] Make floating video transition extremely subtle (reduce duration, gentler easing)
