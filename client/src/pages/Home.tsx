@@ -163,10 +163,14 @@ export default function Home() {
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-4">
             <Button variant="default" asChild>
-              <Link href="/book-session">Book a Session</Link>
+              <Link href={isAuthenticated ? "/my-bookings" : "/book-session"}>
+                {isAuthenticated ? "My Booked Sessions" : "Book a Session with Me"}
+              </Link>
             </Button>
             <Button variant="outline" className="shadow-lg border-2 border-primary hover:bg-primary hover:text-primary-foreground" asChild>
-              <Link href="/my-courses">My Courses</Link>
+              <Link href={isAuthenticated ? "/my-courses" : "/courses"}>
+                {isAuthenticated ? "My Courses" : "Enroll Course"}
+              </Link>
             </Button>
             {isAuthenticated ? (
               <>

@@ -1526,3 +1526,14 @@
 - [x] Implement lazy loading to prevent SDK from loading on homepage
 - [x] Test that homepage loads without errors
 - [x] Verify SessionView still works correctly with lazy-loaded SDK
+
+## Dynamic Navigation Labels Based on Auth State
+- [x] Update desktop header navigation labels to adapt based on authentication
+- [x] Update mobile header navigation labels to adapt based on authentication
+- [x] Signed-in: "Book a session" → "My booked sessions"
+- [x] Signed-in: "My courses" remains unchanged
+- [x] Guest: "Book a session" → "Book a session with me"
+- [x] Guest: "My courses" → "Enroll course"
+- [x] Test navigation with authenticated user
+- [x] Test navigation with guest user (logged out)
+- [x] Verify no page reloads when auth state changes

@@ -104,9 +104,9 @@ export function MobileNav() {
           )}
 
           {/* Navigation Links */}
-          <Link href="/book-session" onClick={closeMenu}>
+          <Link href={isAuthenticated ? "/my-bookings" : "/book-session"} onClick={closeMenu}>
             <Button variant="default" className="w-full justify-start" size="lg">
-              Book a Session
+              {isAuthenticated ? "My Booked Sessions" : "Book a Session with Me"}
             </Button>
           </Link>
 
@@ -116,8 +116,8 @@ export function MobileNav() {
             size="lg"
             asChild
           >
-            <Link href="/my-courses" onClick={closeMenu}>
-              My Courses
+            <Link href={isAuthenticated ? "/my-courses" : "/courses"} onClick={closeMenu}>
+              {isAuthenticated ? "My Courses" : "Enroll Course"}
             </Link>
           </Button>
 
@@ -125,12 +125,6 @@ export function MobileNav() {
             <>
               {/* User Menu Items */}
               <div className="pt-3 border-t space-y-2">
-                <Link href="/my-bookings" onClick={closeMenu}>
-                  <Button variant="ghost" className="w-full justify-start" size="lg">
-                    My Booked Sessions
-                  </Button>
-                </Link>
-
                 <Link href="/my-messages" onClick={closeMenu}>
                   <Button variant="ghost" className="w-full justify-start relative" size="lg">
                     My Messages
