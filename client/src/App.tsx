@@ -28,6 +28,7 @@ import CourseContentManager from "./pages/admin/CourseContentManager";
 import BookSession from "./pages/BookSession";
 import Feedback from './pages/Feedback';
 import SessionView from './pages/SessionView';
+import SessionDetail from './pages/SessionDetail';
 import Messages from "./pages/Messages";
 import Activity from "./pages/Activity";
 import MyBookings from "./pages/MyBookings";
@@ -46,7 +47,8 @@ function Router() {
       <Route path="/courses/:id/learn" component={CourseLearn} />
       <Route path="/my-courses" component={MyCourses} />
       <Route path="/my-bookings" component={MyBookings} />
-      <Route path="/session/:bookingId" component={SessionView} />
+      <Route path="/session/:bookingId" component={SessionDetail} />
+      <Route path="/session-view/:bookingId" component={SessionView} />
       <Route path="/my-messages" component={Conversations} />
       <Route path="/messages" component={Messages} />
       <Route path="/activity" component={Activity} />

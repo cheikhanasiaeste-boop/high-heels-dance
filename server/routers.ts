@@ -1313,6 +1313,32 @@ export const appRouter = router({
       return await db.getUserBookingsWithSlots(ctx.user.id);
     }),
     
+    // Get session detail by booking ID (with enrollment verification)
+    getSessionDetail: protectedProcedure
+      .input(z.object({ bookingId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const booking = await db.getBookingById(input.bookingId);
+        if (!booking) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Session not found' });
+        }
+        
+        // Verify user is enrolled in this session
+        if (booking.userId !== ctx.user.id) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'You are not enrolled in this session' });
+        }
+        
+        // Get slot details
+        const slot = await db.getAvailabilitySlotById(booking.slotId);
+        if (!slot) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Session details not found' });
+        }
+        
+        return {
+          booking,
+          slot,
+        };
+      }),
+    
     // Cancel a booking
     cancel: protectedProcedure
       .input(z.object({ id: z.number() }))
