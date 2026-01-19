@@ -57,7 +57,7 @@ export function UpcomingSessionsWidget() {
   return (
     <div 
       ref={widgetRef}
-      className="fixed top-24 right-6 z-40 animate-slide-in-right"
+      className="fixed top-24 right-6 z-50 animate-slide-in-right"
       onMouseEnter={() => {
         setIsHovered(true);
       }}
@@ -191,10 +191,10 @@ export function UpcomingSessionsWidget() {
         </div>
         
         {/* Footer */}
-        <div className="p-4 bg-gray-50 border-t border-gray-200">
+        <div className="p-3 bg-gray-50 border-t border-gray-200">
           <a
             href="/book-session"
-            className="block text-center text-sm font-semibold text-purple-600 hover:text-purple-700 transition-colors"
+            className="block text-center text-xs font-semibold text-purple-600 hover:text-purple-700 transition-colors whitespace-nowrap overflow-hidden text-ellipsis px-2"
           >
             View All Available Sessions ✦
           </a>

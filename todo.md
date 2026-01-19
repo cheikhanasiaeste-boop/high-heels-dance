@@ -1658,3 +1658,9 @@
 - [x] Find and fix nested <a> tags on homepage
 - [x] Verify no other invalid anchor nesting errors exist
 - [x] Test homepage renders without console errors
+
+## Fix Upcoming Events Widget Visibility (Jan 19, 2026)
+- [x] Fix widget positioning to remain visible when scrolling up
+- [x] Ensure "View All Available Sessions" text is fully displayed
+- [x] Test widget stays visible at all scroll positions
+- [x] Verify footer link text is not cut off
