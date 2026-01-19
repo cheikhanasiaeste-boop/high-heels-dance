@@ -1471,3 +1471,5 @@
 - [x] Make floating video transition extremely subtle (reduce duration, gentler easing)
 
 - [x] Make floating video transition imperceptible with minimal perceived movement
+
+- [x] Remove all transition animation to eliminate visual discomfort (instant repositioning)
