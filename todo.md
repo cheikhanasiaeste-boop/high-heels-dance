@@ -1469,3 +1469,5 @@
 - [x] Improve floating video transition animations for smoother, more seamless experience
 
 - [x] Make floating video transition extremely subtle (reduce duration, gentler easing)
+
+- [x] Make floating video transition imperceptible with minimal perceived movement
