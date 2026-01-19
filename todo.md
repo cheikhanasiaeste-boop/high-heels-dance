@@ -1647,3 +1647,9 @@
 - [x] Remove flex-wrap from filter container to prevent wrapping
 - [x] Ensure all three filter groups stay on one line
 - [x] Test on various screen sizes to verify layout
+
+## Fix Session Card Badge Layout - Keep Badges on One Line (Jan 19, 2026)
+- [x] Find badge container in session cards
+- [x] Remove flex-wrap to prevent badges from wrapping
+- [x] Ensure location, type, and price badges stay on one line
+- [x] Test on various session cards
