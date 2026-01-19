@@ -1618,3 +1618,8 @@
 - [x] Remove legend section at bottom of calendar
 - [x] Update calendar styling for cleaner, more streamlined look
 - [x] Test session count display on various dates
+
+## Fix HTML Nesting Error (Jan 19, 2026)
+- [x] Find and fix invalid <p> tag containing <div> in BookSession page
+- [x] Verify no other invalid nesting errors exist
+- [x] Test page renders without console errors

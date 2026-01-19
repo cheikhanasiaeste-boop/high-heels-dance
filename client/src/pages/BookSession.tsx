@@ -542,9 +542,9 @@ export default function BookSession() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Confirm Booking</DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="space-y-2 mt-4">
               {selectedSlot && (
-                <div className="space-y-2 mt-4">
+                <>
                   <div className="font-medium text-gray-900">{selectedSlot.title}</div>
                   <div className="text-sm text-gray-600">
                     {format(new Date(selectedSlot.startTime), "EEEE, MMMM d 'at' h:mm a")}
@@ -558,7 +558,7 @@ export default function BookSession() {
                       <Badge variant="secondary" className="text-green-700 bg-green-50">Free</Badge>
                     )}
                   </div>
-                </div>
+                </>
               )}
             </DialogDescription>
           </DialogHeader>
