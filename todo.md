@@ -1464,3 +1464,6 @@
 - [x] Test performance and accessibility
 
 - [x] Fix floating video disappearing when scrolling to bottom (CTA container becomes absolute positioned)
+
+- [x] Keep video in thumbnail position when paused while floating (instead of returning to original)
+- [x] Improve floating video transition animations for smoother, more seamless experience

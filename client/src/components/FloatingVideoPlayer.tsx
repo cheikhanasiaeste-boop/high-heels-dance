@@ -18,14 +18,15 @@ interface FloatingVideoPlayerProps {
  * - Monitors play state + scroll position
  * 
  * Behavior:
- * - Video playing + scrolled out of view → floats to thumbnail position
+ * - Original video scrolled out of view → floats to thumbnail position (regardless of play state)
  * - Scroll back up → returns to original position
- * - Video not playing → no floating behavior
- * - Close button → stops video and resets to original position
+ * - Video stays in thumbnail position when paused while floating
+ * - Close button → stops video, scrolls back to original position
  * 
  * Performance:
- * - Lightweight transitions (transform + position, no layout thrashing)
- * - Passive scroll listeners
+ * - Smooth 500ms transitions with Material Design easing
+ * - Separate property timing for refined motion
+ * - Passive scroll listeners for 60fps scrolling
  * - Respects reduced-motion preferences
  * - Mobile picture-in-picture fallback
  * 
@@ -96,15 +97,8 @@ export function FloatingVideoPlayer({
   }, [thumbnailContainerRef]);
 
   // Scroll detection and floating logic
+  // Now independent of play state - video stays in thumbnail position when scrolled down
   useEffect(() => {
-    if (!isPlaying) {
-      // If not playing, ensure we're not floating
-      if (isFloating) {
-        setIsFloating(false);
-      }
-      return;
-    }
-
     const handleScroll = () => {
       const position = calculateFloatingPosition();
       if (!position) return;
@@ -113,6 +107,7 @@ export function FloatingVideoPlayer({
       
       if (isOutOfView && !isFloating) {
         // Transition to floating mode - position at thumbnail
+        // This happens regardless of play state
         setFloatingStyle({
           position: 'fixed',
           top: `${thumbnailRect.top}px`,
@@ -123,12 +118,12 @@ export function FloatingVideoPlayer({
         });
         setIsFloating(true);
       } else if (!isOutOfView && isFloating) {
-        // Return to original position
+        // Return to original position when scrolling back up
         setIsFloating(false);
         setFloatingStyle({});
       } else if (isFloating) {
         // Update position if already floating (handles resize, scroll changes)
-        // BUT: Keep video visible if thumbnail goes off bottom of viewport
+        // Keep video visible if thumbnail goes off bottom of viewport
         const viewportHeight = window.innerHeight;
         const thumbnailBottom = thumbnailRect.bottom;
         const thumbnailTop = thumbnailRect.top;
@@ -165,15 +160,20 @@ export function FloatingVideoPlayer({
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
     };
-  }, [isPlaying, isFloating, calculateFloatingPosition]);
+  }, [isFloating, calculateFloatingPosition]);
 
-  // Handle close
+  // Handle close - pause video and return to original position
   const handleClose = () => {
     if (videoRef.current) {
       videoRef.current.pause();
     }
     setIsFloating(false);
     setFloatingStyle({});
+    
+    // Scroll back to original video position for better UX
+    if (originalContainerRef.current) {
+      originalContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   };
 
   // Mobile picture-in-picture support
@@ -202,7 +202,9 @@ export function FloatingVideoPlayer({
     };
   }, [isFloating]);
 
-  const transitionDuration = prefersReducedMotion ? '0ms' : '300ms';
+  // Enhanced transition timing for smoother, more premium feel
+  const transitionDuration = prefersReducedMotion ? '0ms' : '500ms';
+  const transitionEasing = 'cubic-bezier(0.4, 0.0, 0.2, 1)'; // Material Design standard easing
 
   return (
     <div 
@@ -226,8 +228,17 @@ export function FloatingVideoPlayer({
           }),
           transition: prefersReducedMotion 
             ? 'none' 
-            : `all ${transitionDuration} ease-out`,
-          ...(isFloating ? { boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' } : {}),
+            : `
+              top ${transitionDuration} ${transitionEasing},
+              left ${transitionDuration} ${transitionEasing},
+              width ${transitionDuration} ${transitionEasing},
+              height ${transitionDuration} ${transitionEasing},
+              box-shadow ${transitionDuration} ${transitionEasing},
+              opacity 200ms ease-in-out
+            `,
+          ...(isFloating ? { 
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+          } : {}),
         }}
       >
         <video
