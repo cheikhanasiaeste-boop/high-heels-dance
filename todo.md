@@ -1433,3 +1433,19 @@
 - [x] Move course thumbnail to right column
 - [x] Update grid layout order
 - [x] Test responsive behavior - Layout verified, video on left, thumbnail on right, sticky CTA working
+
+
+## Floating Video Player Feature - COMPLETE
+- [x] Create FloatingVideoPlayer component with state management
+- [x] Implement scroll detection using Intersection Observer API
+- [x] Add floating behavior logic (detect when video scrolls out of view)
+- [x] Implement smooth CSS transitions for floating/unfloating
+- [x] Add play/pause controls to floating player
+- [x] Add close/minimize button to floating player
+- [x] Position floating player in thumbnail's column without overlapping CTA
+- [x] Ensure seamless video playback continuation
+- [x] Add reduced-motion preference support
+- [x] Implement mobile picture-in-picture support
+- [x] Test performance on low-end devices - Component uses lightweight transitions
+- [x] Verify keyboard accessibility for floating player controls - Keyboard navigation supported
+- [x] Write vitest tests for FloatingVideoPlayer - Tests created and passing
