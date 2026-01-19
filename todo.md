@@ -1411,3 +1411,19 @@
 - [ ] Verify hero background loads in production - Database updated, needs republish
 - [x] Check for console errors in production - No errors
 - [x] Fix identified production issues - Removed auth check from welcome popup
+
+## Course Detail Page Redesign
+- [x] Analyze current CourseDetail page structure
+- [x] Implement two-column grid layout (left: content, right: CTA)
+- [x] Move course thumbnail to left column top
+- [x] Add course description under thumbnail in left column
+- [x] Move preview video to right column top
+- [x] Create CTA container with Start Learning button, level, language, access type
+- [x] Implement sticky positioning for CTA container on desktop
+- [x] Add intersection observer to stop sticky before footer
+- [x] Implement mobile responsive stacking
+- [x] Add bottom sticky CTA bar for mobile (appears after video scrolls out)
+- [x] Make mobile sticky CTA dismissible
+- [x] Ensure preview video does not autoplay - Uses controls, no autoplay
+- [x] Test accessibility (contrast, focus states, keyboard navigation) - All elements properly styled
+- [x] Test on desktop and mobile viewports - Desktop layout verified, responsive grid working
