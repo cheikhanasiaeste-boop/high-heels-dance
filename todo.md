@@ -1427,3 +1427,9 @@
 - [x] Ensure preview video does not autoplay - Uses controls, no autoplay
 - [x] Test accessibility (contrast, focus states, keyboard navigation) - All elements properly styled
 - [x] Test on desktop and mobile viewports - Desktop layout verified, responsive grid working
+
+## Course Detail Layout Adjustment
+- [x] Switch preview video to left column
+- [x] Move course thumbnail to right column
+- [x] Update grid layout order
+- [x] Test responsive behavior - Layout verified, video on left, thumbnail on right, sticky CTA working

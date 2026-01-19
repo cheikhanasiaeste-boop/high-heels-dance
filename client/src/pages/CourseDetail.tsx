@@ -199,32 +199,28 @@ export default function CourseDetail() {
         {/* Two-column grid: Left (content) + Right (CTA) */}
         <div className="grid lg:grid-cols-[1fr_400px] gap-8 lg:gap-12">
           
-          {/* LEFT COLUMN: Thumbnail + Description */}
+          {/* LEFT COLUMN: Preview Video + Description */}
           <div className="space-y-6">
-            {/* Course Thumbnail - Compact */}
-            <div className="aspect-video bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg overflow-hidden relative shadow-lg">
-              {course.imageUrl ? (
-                <img 
-                  src={course.imageUrl} 
-                  alt={course.title} 
-                  loading="eager"
-                  className="absolute"
-                  style={{
-                    top: '50%',
-                    left: '50%',
-                    width: 'auto',
-                    height: 'auto',
-                    maxWidth: 'none',
-                    maxHeight: 'none',
-                    minWidth: '100%',
-                    minHeight: '100%',
-                    transform: `translate(-50%, -50%) scale(${parseFloat(course.imageCropZoom || "1.00")}) translate(${parseFloat(course.imageCropOffsetX || "0")}px, ${parseFloat(course.imageCropOffsetY || "0")}px)`,
-                    transformOrigin: 'center center',
-                  }}
-                />
+            {/* Preview Video */}
+            <div 
+              ref={videoRef}
+              className="aspect-video bg-gradient-to-br from-purple-900 to-pink-900 rounded-lg overflow-hidden shadow-xl relative"
+            >
+              {course.previewVideoUrl ? (
+                <video
+                  src={course.previewVideoUrl}
+                  controls
+                  playsInline
+                  preload="metadata"
+                  className="w-full h-full object-cover"
+                  poster={course.imageUrl || undefined}
+                >
+                  Your browser does not support the video tag.
+                </video>
               ) : (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="text-8xl">💃</span>
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
+                  <Play className="w-16 h-16 mb-4 opacity-50" />
+                  <p className="text-sm opacity-75">Preview video coming soon</p>
                 </div>
               )}
             </div>
@@ -264,30 +260,34 @@ export default function CourseDetail() {
             )}
           </div>
 
-          {/* RIGHT COLUMN: Preview Video + Sticky CTA Container */}
+          {/* RIGHT COLUMN: Thumbnail + Sticky CTA Container */}
           <div className="relative">
             <div className="lg:sticky lg:top-8 space-y-6" ref={ctaContainerRef}>
               
-              {/* Preview Video */}
-              <div 
-                ref={videoRef}
-                className="aspect-video bg-gradient-to-br from-purple-900 to-pink-900 rounded-lg overflow-hidden shadow-xl relative"
-              >
-                {course.previewVideoUrl ? (
-                  <video
-                    src={course.previewVideoUrl}
-                    controls
-                    playsInline
-                    preload="metadata"
-                    className="w-full h-full object-cover"
-                    poster={course.imageUrl || undefined}
-                  >
-                    Your browser does not support the video tag.
-                  </video>
+              {/* Course Thumbnail */}
+              <div className="aspect-video bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg overflow-hidden relative shadow-lg">
+                {course.imageUrl ? (
+                  <img 
+                    src={course.imageUrl} 
+                    alt={course.title} 
+                    loading="eager"
+                    className="absolute"
+                    style={{
+                      top: '50%',
+                      left: '50%',
+                      width: 'auto',
+                      height: 'auto',
+                      maxWidth: 'none',
+                      maxHeight: 'none',
+                      minWidth: '100%',
+                      minHeight: '100%',
+                      transform: `translate(-50%, -50%) scale(${parseFloat(course.imageCropZoom || "1.00")}) translate(${parseFloat(course.imageCropOffsetX || "0")}px, ${parseFloat(course.imageCropOffsetY || "0")}px)`,
+                      transformOrigin: 'center center',
+                    }}
+                  />
                 ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                    <Play className="w-16 h-16 mb-4 opacity-50" />
-                    <p className="text-sm opacity-75">Preview video coming soon</p>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-8xl">💃</span>
                   </div>
                 )}
               </div>
