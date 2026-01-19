@@ -272,10 +272,10 @@ export default function Home() {
             </Button>
           </div>
         </div>
-        
-        {/* Floating Upcoming Sessions Widget - Sticky within hero */}
-        <UpcomingSessionsWidget />
       </section>
+
+      {/* Floating Upcoming Sessions Widget - Always visible */}
+      <UpcomingSessionsWidget />
 
       {/* Courses Section - PROMINENT */}
       <section className="py-20 bg-gradient-to-b from-white via-pink-50/30 to-white relative overflow-hidden">

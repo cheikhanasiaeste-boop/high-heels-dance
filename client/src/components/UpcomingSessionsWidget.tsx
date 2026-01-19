@@ -11,11 +11,35 @@ export function UpcomingSessionsWidget() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [widgetTop, setWidgetTop] = useState(96); // Default top position (24 * 4px)
   const [, setLocation] = useLocation();
   const { data: events, isLoading} = trpc.admin.availability.upcoming.useQuery({ limit: 5 });
   const { isAuthModalOpen, authContext, authContextDetails, requireAuth, closeAuthModal } = useProgressiveAuth();
   const widgetRef = useRef<HTMLDivElement>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Constrain widget top position to hero section bottom
+  useEffect(() => {
+    const handleScroll = () => {
+      const heroSection = document.querySelector('section.relative.py-20');
+      if (!heroSection) return;
+      
+      const heroRect = heroSection.getBoundingClientRect();
+      const heroBottom = heroRect.bottom;
+      
+      // If hero bottom is above the default top position (96px), constrain widget to hero bottom
+      if (heroBottom < 96) {
+        setWidgetTop(Math.max(24, window.innerHeight - (window.innerHeight - heroBottom)));
+      } else {
+        setWidgetTop(96); // Default position
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Check initial state
+    
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
   
   // Expand/collapse based on hover or focus state
   useEffect(() => {
@@ -57,7 +81,8 @@ export function UpcomingSessionsWidget() {
   return (
     <div 
       ref={widgetRef}
-      className="sticky top-24 right-6 z-50 animate-slide-in-right ml-auto w-fit"
+      className="fixed right-6 z-50 animate-slide-in-right transition-all duration-200"
+      style={{ top: `${widgetTop}px` }}
       onMouseEnter={() => {
         setIsHovered(true);
       }}

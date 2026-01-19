@@ -1689,3 +1689,10 @@
 - [x] Ensure widget stays visible while in hero section
 - [x] Verify widget doesn't extend into white content area
 - [x] Test scroll behavior at hero section boundary
+
+## Fix Upcoming Events Widget - Always Visible with Hero Constraint (Jan 19, 2026)
+- [x] Widget must stay fixed at top-right corner (always visible)
+- [x] Widget top position must be constrained to never go above hero section bottom
+- [x] When scrolling past hero, widget should stick at hero bottom position
+- [x] Widget remains visible at all scroll depths
+- [x] Test widget stays visible when scrolling to bottom of page
