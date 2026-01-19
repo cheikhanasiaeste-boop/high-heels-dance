@@ -93,11 +93,11 @@ export default function BookSession() {
     }
   }, []);
 
-  // Get dates with available sessions
+  // Get dates with available sessions and their counts
   const datesWithSessions = useMemo(() => {
-    if (!availableSlots) return new Set<string>();
+    if (!availableSlots) return new Map<string, number>();
     
-    const dates = new Set<string>();
+    const dateCounts = new Map<string, number>();
     availableSlots.forEach(slot => {
       const matchesPrice = priceFilter === "all" || 
         (priceFilter === "free" && (!slot.price || Number(slot.price) === 0)) ||
@@ -105,11 +105,11 @@ export default function BookSession() {
       
       if (matchesPrice) {
         const dateKey = format(startOfDay(new Date(slot.startTime)), 'yyyy-MM-dd');
-        dates.add(dateKey);
+        dateCounts.set(dateKey, (dateCounts.get(dateKey) || 0) + 1);
       }
     });
     
-    return dates;
+    return dateCounts;
   }, [availableSlots, priceFilter]);
 
   // Filter and group slots by price and selected date
@@ -403,7 +403,8 @@ export default function BookSession() {
                     }
 
                     const dateKey = format(startOfDay(day), 'yyyy-MM-dd');
-                    const hasSession = datesWithSessions.has(dateKey);
+                    const sessionCount = datesWithSessions.get(dateKey) || 0;
+                    const hasSession = sessionCount > 0;
                     const isSelected = selectedDate && isSameDay(day, selectedDate);
                     const isToday = isSameDay(day, new Date());
                     const isCurrentMonth = isSameMonth(day, calendarMonth);
@@ -414,7 +415,7 @@ export default function BookSession() {
                         onClick={() => handleDateClick(day)}
                         disabled={!hasSession}
                         className={`
-                          aspect-square rounded-lg text-xs font-medium transition-all relative
+                          aspect-square rounded-lg text-xs font-medium transition-all relative flex flex-col items-center justify-center gap-0.5
                           ${!isCurrentMonth ? 'text-gray-300' : ''}
                           ${hasSession ? 'cursor-pointer hover:bg-primary/10' : 'cursor-not-allowed opacity-40'}
                           ${isSelected ? 'bg-primary text-white hover:bg-primary' : ''}
@@ -422,30 +423,17 @@ export default function BookSession() {
                           ${!isSelected && hasSession && isCurrentMonth ? 'text-gray-900' : ''}
                         `}
                       >
-                        {format(day, 'd')}
-                        {hasSession && !isSelected && (
-                          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
+                        <span>{format(day, 'd')}</span>
+                        {hasSession && (
+                          <span className={`text-[9px] font-semibold ${
+                            isSelected ? 'text-white/90' : 'text-primary'
+                          }`}>
+                            {sessionCount}
+                          </span>
                         )}
                       </button>
                     );
                   })}
-                </div>
-
-                {/* Legend */}
-                <div className="mt-4 pt-4 border-t space-y-2 text-xs text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded border-2 border-primary flex items-center justify-center">
-                      <div className="text-[10px]">1</div>
-                    </div>
-                    <span>Today</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center relative">
-                      <div className="text-[10px]">1</div>
-                      <div className="absolute bottom-0.5 w-1 h-1 rounded-full bg-primary" />
-                    </div>
-                    <span>Has sessions</span>
-                  </div>
                 </div>
               </CardContent>
             </Card>

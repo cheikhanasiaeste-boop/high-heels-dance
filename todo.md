@@ -1612,3 +1612,9 @@
 - [x] Make calendar sticky positioned for easy access while scrolling
 - [x] Integrate calendar with existing filter system
 - [x] Test date selection and deselection functionality
+
+## Calendar Sidebar Refinement (Jan 19, 2026)
+- [x] Move session count badges from dots to calendar date squares
+- [x] Remove legend section at bottom of calendar
+- [x] Update calendar styling for cleaner, more streamlined look
+- [x] Test session count display on various dates
