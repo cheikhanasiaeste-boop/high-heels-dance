@@ -343,6 +343,14 @@ export async function getAvailabilitySlotById(id: number): Promise<AvailabilityS
   return result[0];
 }
 
+export async function getAvailabilitySlotByZoomId(zoomMeetingId: string): Promise<AvailabilitySlot | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  
+  const result = await db.select().from(availabilitySlots).where(eq(availabilitySlots.zoomMeetingId, zoomMeetingId)).limit(1);
+  return result[0];
+}
+
 export async function updateAvailabilitySlot(id: number, updates: Partial<InsertAvailabilitySlot>): Promise<void> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
@@ -378,6 +386,43 @@ export async function getUserBookings(userId: number): Promise<Booking[]> {
   const result = await db
     .select()
     .from(bookings)
+    .where(eq(bookings.userId, userId))
+    .orderBy(desc(bookings.bookedAt));
+  
+  return result;
+}
+
+export async function getUserBookingsWithSlots(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  
+  const result = await db
+    .select({
+      id: bookings.id,
+      userId: bookings.userId,
+      slotId: bookings.slotId,
+      sessionType: bookings.sessionType,
+      zoomLink: bookings.zoomLink,
+      status: bookings.status,
+      notes: bookings.notes,
+      paymentRequired: bookings.paymentRequired,
+      paymentStatus: bookings.paymentStatus,
+      bookedAt: bookings.bookedAt,
+      slot: {
+        id: availabilitySlots.id,
+        startTime: availabilitySlots.startTime,
+        endTime: availabilitySlots.endTime,
+        eventType: availabilitySlots.eventType,
+        location: availabilitySlots.location,
+        title: availabilitySlots.title,
+        description: availabilitySlots.description,
+        zoomMeetingId: availabilitySlots.zoomMeetingId,
+        zoomMeetingPassword: availabilitySlots.zoomMeetingPassword,
+        zoomJoinUrl: availabilitySlots.zoomJoinUrl,
+      },
+    })
+    .from(bookings)
+    .leftJoin(availabilitySlots, eq(bookings.slotId, availabilitySlots.id))
     .where(eq(bookings.userId, userId))
     .orderBy(desc(bookings.bookedAt));
   

@@ -176,6 +176,13 @@
       "when": 1768766650114,
       "tag": "0024_closed_senator_kelly",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1768826037182,
+      "tag": "0025_messy_crusher_hogan",
+      "breakpoints": true
     }
   ]
 }

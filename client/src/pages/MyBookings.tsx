@@ -57,7 +57,7 @@ export default function MyBookings() {
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
                           <h3 className="font-semibold text-gray-900">
-                            {booking.availability.sessionType === 'private' ? 'Private' : 'Group'} Session
+                            {booking.slot?.title || `${booking.sessionType} Session`}
                           </h3>
                           <Badge variant={booking.status === 'confirmed' ? 'default' : 'secondary'}>
                             {booking.status}
@@ -67,14 +67,14 @@ export default function MyBookings() {
                           <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4" />
                             <span>
-                              {new Date(booking.availability.startTime).toLocaleDateString()} at{' '}
-                              {new Date(booking.availability.startTime).toLocaleTimeString([], {
+                              {new Date(booking.slot!.startTime).toLocaleDateString()} at{' '}
+                              {new Date(booking.slot!.startTime).toLocaleTimeString([], {
                                 hour: '2-digit',
                                 minute: '2-digit',
                               })}
                             </span>
                           </div>
-                          {booking.availability.eventType === 'online' ? (
+                          {booking.slot?.eventType === 'online' ? (
                             <div className="flex items-center gap-2">
                               <Video className="w-4 h-4" />
                               <span>Online Session</span>
@@ -82,20 +82,18 @@ export default function MyBookings() {
                           ) : (
                             <div className="flex items-center gap-2">
                               <MapPin className="w-4 h-4" />
-                              <span>{booking.availability.location || 'In-person'}</span>
+                              <span>{booking.slot?.location || 'In-person'}</span>
                             </div>
                           )}
                         </div>
                       </div>
-                      {booking.availability.eventType === 'online' && booking.zoomLink && (
-                        <a
-                          href={booking.zoomLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="ml-4"
-                        >
-                          <Button size="sm">Join Session</Button>
-                        </a>
+                      {booking.slot?.eventType === 'online' && booking.slot?.zoomMeetingId && (
+                        <Link href={`/session/${booking.id}`} className="ml-4">
+                          <Button size="sm" className="bg-green-600 hover:bg-green-700">
+                            <Video className="w-4 h-4 mr-2" />
+                            Join Session
+                          </Button>
+                        </Link>
                       )}
                     </div>
                   </div>

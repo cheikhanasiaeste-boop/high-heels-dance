@@ -1506,3 +1506,17 @@
 - [x] Update card layouts to use flex with buttons anchored to bottom
 - [x] Ensure consistent button positioning regardless of description length
 - [x] Test alignment with varying description lengths
+
+## Zoom Online Session Integration
+- [x] Research Zoom Web SDK vs Meeting SDK integration approaches
+- [x] Design architecture for embedded session experience
+- [x] Add Zoom meeting fields to availability_slots table (meetingId, meetingPassword, joinUrl)
+- [x] Create backend API for Zoom SDK authentication (generate SDK JWT)
+- [x] Implement access control logic (enrollment verification, time window checks)
+- [x] Build SessionView component with embedded Zoom interface
+- [x] Add session state indicators (Upcoming, Live, Ended)
+- [x] Implement Join Session button with access control
+- [x] Add fallback behavior for unsupported browsers/devices
+- [x] Test embedded Zoom experience across browsers
+- [x] Implement security measures to prevent link leakage
+- [x] Add error handling and user feedback

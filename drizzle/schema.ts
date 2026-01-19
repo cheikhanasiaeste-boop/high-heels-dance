@@ -101,6 +101,14 @@ export const availabilitySlots = mysqlTable("availabilitySlots", {
   eventType: mysqlEnum("eventType", ["online", "in-person"]).default("online").notNull(),
   location: text("location"), // Physical address for in-person events
   sessionLink: text("sessionLink"), // Zoom/Meet link for online sessions (hidden until enrolled)
+  
+  // Zoom Integration Fields
+  zoomMeetingId: varchar("zoomMeetingId", { length: 50 }), // Zoom meeting ID (e.g., "123456789")
+  zoomMeetingPassword: varchar("zoomMeetingPassword", { length: 50 }), // Meeting password
+  zoomJoinUrl: text("zoomJoinUrl"), // Fallback join URL
+  zoomStartUrl: text("zoomStartUrl"), // Host start URL (for admin)
+  zoomCreatedAt: timestamp("zoomCreatedAt"), // When Zoom meeting was created
+  
   isFree: boolean("isFree").default(true).notNull(),
   price: varchar("price", { length: 20 }), // Price in EUR (e.g., "50.00")
   title: varchar("title", { length: 200 }).default("One-on-One Dance Session").notNull(),

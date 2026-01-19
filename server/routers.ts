@@ -10,6 +10,7 @@ import { storagePut } from "./storage";
 import Stripe from "stripe";
 import { getCourseStripePrice } from "./products";
 import { adminNotifications } from "./events";
+import { generateZoomSignature, createZoomMeeting, deleteZoomMeeting, updateZoomMeeting } from "./zoom";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-12-15.clover',
@@ -1012,6 +1013,146 @@ export const appRouter = router({
       }),
   }),
 
+  // Zoom integration
+  zoom: router({
+    // Get SDK signature for joining a meeting (protected - requires enrollment)
+    getSignature: protectedProcedure
+      .input(z.object({
+        meetingNumber: z.string(),
+        role: z.enum(['0', '1']), // 0 = participant, 1 = host
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const { meetingNumber, role } = input;
+        
+        // Verify user has access to this meeting via booking
+        const bookings = await db.getUserBookingsWithSlots(ctx.user.id);
+        const hasAccess = bookings.some(booking => 
+          booking.slot?.zoomMeetingId === meetingNumber &&
+          booking.status === 'confirmed'
+        );
+        
+        if (!hasAccess && ctx.user.role !== 'admin') {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'You do not have access to this session',
+          });
+        }
+        
+        // Find the session to check time window
+        const slot = await db.getAvailabilitySlotByZoomId(meetingNumber);
+        if (!slot) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Session not found',
+          });
+        }
+        
+        // Check time window (allow joining 15 minutes before start)
+        const now = Date.now();
+        const sessionStart = new Date(slot.startTime).getTime();
+        const sessionEnd = new Date(slot.endTime).getTime();
+        const fifteenMinutesBefore = sessionStart - 15 * 60 * 1000;
+        
+        if (now < fifteenMinutesBefore && ctx.user.role !== 'admin') {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Session is not yet available. You can join 15 minutes before start time.',
+          });
+        }
+        
+        if (now > sessionEnd && ctx.user.role !== 'admin') {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'This session has ended',
+          });
+        }
+        
+        // Generate SDK JWT signature
+        const signature = generateZoomSignature(meetingNumber, role);
+        
+        return {
+          signature,
+          sdkKey: process.env.ZOOM_CLIENT_ID!,
+          meetingNumber,
+          password: slot.zoomMeetingPassword || '',
+          userName: ctx.user.name || ctx.user.email || 'Guest',
+          userEmail: ctx.user.email || '',
+        };
+      }),
+    
+    // Create Zoom meeting for a session (admin only)
+    createMeeting: adminProcedure
+      .input(z.object({
+        slotId: z.number(),
+        topic: z.string(),
+        startTime: z.string(), // ISO 8601 format
+        duration: z.number(), // in minutes
+      }))
+      .mutation(async ({ input }) => {
+        const { slotId, topic, startTime, duration } = input;
+        
+        // Check if slot exists
+        const slot = await db.getAvailabilitySlotById(slotId);
+        if (!slot) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Session not found' });
+        }
+        
+        // Create Zoom meeting
+        const meeting = await createZoomMeeting({
+          topic,
+          start_time: startTime,
+          duration,
+          settings: {
+            join_before_host: false,
+            waiting_room: true,
+            mute_upon_entry: true,
+          },
+        });
+        
+        // Update availability slot with Zoom meeting data
+        await db.updateAvailabilitySlot(slotId, {
+          zoomMeetingId: meeting.id.toString(),
+          zoomMeetingPassword: meeting.password,
+          zoomJoinUrl: meeting.join_url,
+          zoomStartUrl: meeting.start_url,
+          zoomCreatedAt: new Date(),
+        });
+        
+        return {
+          success: true,
+          meetingId: meeting.id,
+          joinUrl: meeting.join_url,
+          startUrl: meeting.start_url,
+        };
+      }),
+    
+    // Delete Zoom meeting (admin only)
+    deleteMeeting: adminProcedure
+      .input(z.object({
+        slotId: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        const slot = await db.getAvailabilitySlotById(input.slotId);
+        if (!slot || !slot.zoomMeetingId) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Zoom meeting not found' });
+        }
+        
+        // Delete from Zoom
+        await deleteZoomMeeting(slot.zoomMeetingId);
+        
+        // Clear Zoom data from slot
+        await db.updateAvailabilitySlot(input.slotId, {
+          zoomMeetingId: null,
+          zoomMeetingPassword: null,
+          zoomJoinUrl: null,
+          zoomStartUrl: null,
+          zoomCreatedAt: null,
+        });
+        
+        return { success: true };
+      }),
+  }),
+
   // Booking system
   bookings: router({
     // Get available slots for booking with optional filter
@@ -1169,7 +1310,7 @@ export const appRouter = router({
     
     // Get user's bookings
     myBookings: protectedProcedure.query(async ({ ctx }) => {
-      return await db.getUserBookings(ctx.user.id);
+      return await db.getUserBookingsWithSlots(ctx.user.id);
     }),
     
     // Cancel a booking
