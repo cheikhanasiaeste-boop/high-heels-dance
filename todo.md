@@ -1449,3 +1449,5 @@
 - [x] Test performance on low-end devices - Component uses lightweight transitions
 - [x] Verify keyboard accessibility for floating player controls - Keyboard navigation supported
 - [x] Write vitest tests for FloatingVideoPlayer - Tests created and passing
+
+- [x] Fix React Hooks order violation error in CourseLearn component (conditional hooks usage)

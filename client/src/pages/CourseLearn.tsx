@@ -150,6 +150,15 @@ export default function CourseLearn() {
     markCompleteMutation.mutate({ lessonId: currentLessonId, courseId });
   };
   
+  // Redirect to course detail page if not authenticated and modal is closed
+  // MUST be before any conditional returns to maintain hooks order
+  useEffect(() => {
+    if (!isAuthenticated && !isAuthModalOpen) {
+      // User closed the modal without authenticating - return them to course detail page
+      setLocation(`/course/${courseId}`);
+    }
+  }, [isAuthenticated, isAuthModalOpen, courseId, setLocation]);
+  
   // Redirect if no access
   if (!courseLoading && !hasAccess && isAuthenticated) {
     return (
@@ -188,14 +197,6 @@ export default function CourseLearn() {
       </div>
     );
   }
-  
-  // Redirect to course detail page if not authenticated and modal is closed
-  useEffect(() => {
-    if (!isAuthenticated && !isAuthModalOpen) {
-      // User closed the modal without authenticating - return them to course detail page
-      setLocation(`/course/${courseId}`);
-    }
-  }, [isAuthenticated, isAuthModalOpen, courseId, setLocation]);
   
   // Show modal if not authenticated
   if (!isAuthenticated) {
