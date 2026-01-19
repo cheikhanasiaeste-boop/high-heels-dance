@@ -1,0 +1,16 @@
+{
+  "query": "SELECT * FROM siteSettings WHERE `key` = 'heroBackgroundUrl' LIMIT 1",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4HtU1c2nK4A5Wb2.root --database M2v4Dnk4LCsJQ3Qwy7fUfL --execute SELECT * FROM siteSettings WHERE `key` = 'heroBackgroundUrl' LIMIT 1",
+  "rows": [
+    {
+      "id": "120014",
+      "key": "heroBackgroundUrl",
+      "value": "url1.webp",
+      "updatedAt": "2026-01-19 09:48:05"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tkey\tvalue\tupdatedAt\n120014\theroBackgroundUrl\turl1.webp\t2026-01-19 09:48:05\n",
+  "stderr": "",
+  "execution_time_ms": 53
+}
