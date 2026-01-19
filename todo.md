@@ -1642,3 +1642,8 @@
 - [x] Adjust sticky top position to prevent covering page title
 - [x] Ensure filter section stays below "Book Your Dance Session" header
 - [x] Test scrolling behavior to verify title remains visible
+
+## Fix Filter Section Layout - Keep Filters on One Line (Jan 19, 2026)
+- [x] Remove flex-wrap from filter container to prevent wrapping
+- [x] Ensure all three filter groups stay on one line
+- [x] Test on various screen sizes to verify layout

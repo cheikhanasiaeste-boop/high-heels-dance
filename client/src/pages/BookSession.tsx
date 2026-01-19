@@ -246,7 +246,7 @@ export default function BookSession() {
         {/* Filter Bar */}
         <div className="mb-8">
           <div className="bg-white/90 backdrop-blur-md rounded-full shadow-sm hover:shadow-md transition-shadow px-6 py-4 border border-gray-200">
-            <div className="flex items-center justify-between gap-6 flex-wrap">
+            <div className="flex items-center justify-between gap-6">
               {/* Session Count */}
               <div className="text-sm font-medium text-gray-700">
                 🎯 {filteredSlots.length} sessions
@@ -263,7 +263,7 @@ export default function BookSession() {
               </div>
 
               {/* Filters */}
-              <div className="flex items-center gap-3 flex-wrap flex-1 justify-center">
+              <div className="flex items-center gap-3 flex-1 justify-center">
                 {/* Location */}
                 <div className="flex items-center gap-1.5">
                   <Button
