@@ -346,48 +346,46 @@ export default function BookSession() {
         )}
 
         {/* Filter Section */}
-        <Card>
-          <CardHeader>
+        <div className="bg-white/50 backdrop-blur-sm border border-gray-200/50 rounded-lg">
+          <div className="px-4 py-3">
             <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Filter className="h-5 w-5" />
-                  Filter Sessions
-                  {hasActiveFilters && (
-                    <Badge variant="secondary" className="ml-2">
-                      {activeFilterCount} active
-                    </Badge>
-                  )}
-                </CardTitle>
-                <CardDescription>
-                  {filteredSlots.length} session{filteredSlots.length !== 1 ? 's' : ''} available
-                </CardDescription>
+              <div className="flex items-center gap-3">
+                <Filter className="h-4 w-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-700">
+                  {filteredSlots.length} session{filteredSlots.length !== 1 ? 's' : ''}
+                </span>
+                {hasActiveFilters && (
+                  <Badge variant="secondary" className="text-xs">
+                    {activeFilterCount} filter{activeFilterCount !== 1 ? 's' : ''}
+                  </Badge>
+                )}
               </div>
               <div className="flex gap-2">
                 {hasActiveFilters && (
-                  <Button variant="ghost" size="sm" onClick={clearAllFilters}>
-                    <X className="h-4 w-4 mr-1" />
-                    Clear all
+                  <Button variant="ghost" size="sm" onClick={clearAllFilters} className="h-7 text-xs">
+                    <X className="h-3 w-3 mr-1" />
+                    Clear
                   </Button>
                 )}
                 <Button 
-                  variant="outline" 
+                  variant="ghost" 
                   size="sm" 
                   onClick={() => setShowFilters(!showFilters)}
+                  className="h-7 text-xs"
                 >
                   {showFilters ? 'Hide' : 'Show'} Filters
                 </Button>
               </div>
             </div>
-          </CardHeader>
+          </div>
           {showFilters && (
-            <CardContent className="space-y-6">
+            <div className="px-4 pb-3 pt-1">
               {/* Individual Filters */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {/* Location Type */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Location</Label>
-                  <div className="flex flex-wrap gap-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-gray-600">Location</Label>
+                  <div className="flex flex-wrap gap-1.5">
                     <Button
                       variant={eventFilter === "all" ? "default" : "outline"}
                       size="sm"
@@ -417,9 +415,9 @@ export default function BookSession() {
                 </div>
 
                 {/* Session Type */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Session Type</Label>
-                  <div className="flex flex-wrap gap-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-gray-600">Session Type</Label>
+                  <div className="flex flex-wrap gap-1.5">
                     <Button
                       variant={sessionTypeFilter === "all" ? "default" : "outline"}
                       size="sm"
@@ -445,9 +443,9 @@ export default function BookSession() {
                 </div>
 
                 {/* Price */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-semibold">Price</Label>
-                  <div className="flex flex-wrap gap-2">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-medium text-gray-600">Price</Label>
+                  <div className="flex flex-wrap gap-1.5">
                     <Button
                       variant={priceFilter === "all" ? "default" : "outline"}
                       size="sm"
@@ -473,9 +471,9 @@ export default function BookSession() {
                   </div>
                 </div>
               </div>
-            </CardContent>
+            </div>
           )}
-        </Card>
+        </div>
 
         {/* View Toggle */}
         <div className="flex justify-center gap-2">
