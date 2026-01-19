@@ -10,21 +10,23 @@ import { Link } from "wouter";
 
 export default function Conversations() {
   const { user } = useAuth();
-  if (!user) return null;
   const [selectedConversation, setSelectedConversation] = useState<number | null>(null);
   const [showNewConversation, setShowNewConversation] = useState(false);
   const [newMessageSubject, setNewMessageSubject] = useState("");
   const [newMessageBody, setNewMessageBody] = useState("");
   const [replyBody, setReplyBody] = useState("");
-
-  const conversationsQuery = trpc.messages.conversations.useQuery();
+  
+  // All hooks MUST be called before any conditional returns
+  const conversationsQuery = trpc.messages.conversations.useQuery(undefined, { enabled: !!user });
   const threadQuery = trpc.messages.thread.useQuery(
     { otherUserId: selectedConversation! },
-    { enabled: !!selectedConversation }
+    { enabled: !!user && !!selectedConversation }
   );
   const sendMutation = trpc.messages.send.useMutation();
   const markAsReadMutation = trpc.messages.markAsRead.useMutation();
   const utils = trpc.useUtils();
+  
+  if (!user) return null;
   
   // Get admin user ID (first admin user)
   const adminUserId = 124298; // TODO: Get this dynamically from backend
@@ -65,8 +67,6 @@ export default function Conversations() {
       console.error("Failed to send reply:", error);
     }
   };
-
-  if (!user) return null;
 
   // Show conversation thread
   if (selectedConversation && threadQuery.data) {
@@ -199,12 +199,12 @@ export default function Conversations() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-4 md:p-8">
       <div className="max-w-2xl mx-auto">
-        <Link href="/">
-          <Button variant="ghost" size="sm" className="mb-4">
+        <Button variant="ghost" size="sm" className="mb-4" asChild>
+          <Link href="/">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Home
-          </Button>
-        </Link>
+          </Link>
+        </Button>
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-900">My Conversations</h1>
           <Button

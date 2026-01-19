@@ -1484,3 +1484,10 @@
 - [x] Fix admin sidebar to remain fixed while only right panel scrolls
 
 - [x] Fix user notification badge not resetting to zero when admin opens Users page
+
+- [ ] Fix nested anchor tag error on /my-messages page
+- [ ] Fix React Hooks order violation in Conversations component
+
+## Bug Fixes - My Messages Page
+- [x] Fix nested anchor tag error on /my-messages page
+- [x] Fix React Hooks order violation in Conversations component
