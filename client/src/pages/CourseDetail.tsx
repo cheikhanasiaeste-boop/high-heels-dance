@@ -254,6 +254,51 @@ export default function CourseDetail() {
                 </AlertDescription>
               </Alert>
             )}
+
+            {/* Mobile CTA Card - Always visible on mobile */}
+            <Card className="lg:hidden shadow-xl border-2">
+              <CardContent className="p-6 space-y-6">
+                {/* Price Display */}
+                <div>
+                  <div className="flex items-baseline gap-2 mb-2">
+                    <span className="text-4xl font-bold text-primary">
+                      {course.isFree ? 'Free' : `€${course.price}`}
+                    </span>
+                    {course.originalPrice && Number(course.originalPrice) > Number(course.price) && (
+                      <span className="text-xl text-muted-foreground line-through">
+                        €{course.originalPrice}
+                      </span>
+                    )}
+                  </div>
+                  {course.originalPrice && Number(course.originalPrice) > Number(course.price) && (
+                    <p className="text-sm text-green-600 font-medium">
+                      Save €{(Number(course.originalPrice) - Number(course.price)).toFixed(2)}
+                    </p>
+                  )}
+                </div>
+
+                {/* Primary CTA Button */}
+                <CTAButton />
+
+                {/* Course Metadata */}
+                <div className="pt-4 border-t space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Level</span>
+                    <Badge variant="outline" className="font-medium">All Levels</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Language</span>
+                    <Badge variant="outline" className="font-medium">English</Badge>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Access</span>
+                    <Badge variant="outline" className="font-medium">
+                      {course.isFree ? 'Free' : 'Lifetime'}
+                    </Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
           {/* RIGHT COLUMN: Thumbnail + Sticky CTA Container */}

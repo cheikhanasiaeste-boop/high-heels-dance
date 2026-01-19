@@ -1473,3 +1473,5 @@
 - [x] Make floating video transition imperceptible with minimal perceived movement
 
 - [x] Remove all transition animation to eliminate visual discomfort (instant repositioning)
+
+- [x] Fix missing Start Learning section on mobile version of course detail page
