@@ -6,13 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Clock, Video, MapPin, Euro, Sparkles } from "lucide-react";
+import { ArrowLeft, Clock, Video, MapPin, Euro, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { ProgressiveAuthModal } from "@/components/ProgressiveAuthModal";
-import { format, parseISO, isSameDay, startOfDay } from "date-fns";
+import { format, parseISO, isSameDay, startOfDay, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths, isSameMonth } from "date-fns";
 
 export default function BookSession() {
   const { user, isAuthenticated } = useAuth();
@@ -25,6 +25,8 @@ export default function BookSession() {
   const [eventFilter, setEventFilter] = useState<"all" | "online" | "in-person">("all");
   const [sessionTypeFilter, setSessionTypeFilter] = useState<"all" | "private" | "group">("all");
   const [priceFilter, setPriceFilter] = useState<"all" | "free" | "premium">("all");
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [calendarMonth, setCalendarMonth] = useState(new Date());
 
   const { data: availableSlots, isLoading: slotsLoading } = trpc.bookings.availableSlots.useQuery({
     eventType: eventFilter,
@@ -91,7 +93,26 @@ export default function BookSession() {
     }
   }, []);
 
-  // Filter and group slots by price
+  // Get dates with available sessions
+  const datesWithSessions = useMemo(() => {
+    if (!availableSlots) return new Set<string>();
+    
+    const dates = new Set<string>();
+    availableSlots.forEach(slot => {
+      const matchesPrice = priceFilter === "all" || 
+        (priceFilter === "free" && (!slot.price || Number(slot.price) === 0)) ||
+        (priceFilter === "premium" && slot.price && Number(slot.price) > 0);
+      
+      if (matchesPrice) {
+        const dateKey = format(startOfDay(new Date(slot.startTime)), 'yyyy-MM-dd');
+        dates.add(dateKey);
+      }
+    });
+    
+    return dates;
+  }, [availableSlots, priceFilter]);
+
+  // Filter and group slots by price and selected date
   const filteredSlots = useMemo(() => {
     if (!availableSlots) return [];
     
@@ -100,9 +121,11 @@ export default function BookSession() {
         (priceFilter === "free" && (!slot.price || Number(slot.price) === 0)) ||
         (priceFilter === "premium" && slot.price && Number(slot.price) > 0);
       
-      return matchesPrice;
+      const matchesDate = !selectedDate || isSameDay(new Date(slot.startTime), selectedDate);
+      
+      return matchesPrice && matchesDate;
     });
-  }, [availableSlots, priceFilter]);
+  }, [availableSlots, priceFilter, selectedDate]);
 
   // Group slots by date
   const groupedSlots = useMemo(() => {
@@ -125,6 +148,19 @@ export default function BookSession() {
     
     return Array.from(groups.entries()).sort((a, b) => a[0].localeCompare(b[0]));
   }, [filteredSlots]);
+
+  // Generate calendar days
+  const calendarDays = useMemo(() => {
+    const start = startOfMonth(calendarMonth);
+    const end = endOfMonth(calendarMonth);
+    const days = eachDayOfInterval({ start, end });
+    
+    // Pad start to align with week
+    const startDay = start.getDay();
+    const padding = Array(startDay).fill(null);
+    
+    return [...padding, ...days];
+  }, [calendarMonth]);
 
   const handleBookClick = (slot: any) => {
     setSelectedSlot(slot);
@@ -176,6 +212,13 @@ export default function BookSession() {
     return format(date, "EEEE, MMMM d");
   };
 
+  const handleDateClick = (date: Date) => {
+    const dateKey = format(startOfDay(date), 'yyyy-MM-dd');
+    if (datesWithSessions.has(dateKey)) {
+      setSelectedDate(isSameDay(selectedDate || new Date(), date) ? null : date);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Header */}
@@ -199,14 +242,24 @@ export default function BookSession() {
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-8 max-w-6xl">
+      <div className="container mx-auto px-6 py-8">
         {/* Floating Filter Bar */}
-        <div className="sticky top-[120px] z-10 mb-12">
+        <div className="sticky top-[120px] z-10 mb-8">
           <div className="bg-white/90 backdrop-blur-md rounded-full shadow-sm hover:shadow-md transition-shadow px-6 py-4 border border-gray-200">
             <div className="flex items-center justify-between gap-6 flex-wrap">
               {/* Session Count */}
               <div className="text-sm font-medium text-gray-700">
                 🎯 {filteredSlots.length} sessions
+                {selectedDate && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedDate(null)}
+                    className="ml-2 h-6 px-2 text-xs"
+                  >
+                    Clear date
+                  </Button>
+                )}
               </div>
 
               {/* Filters */}
@@ -304,95 +357,196 @@ export default function BookSession() {
           </div>
         </div>
 
-        {/* Timeline View */}
-        {slotsLoading ? (
-          <div className="text-center py-12 text-gray-500">Loading sessions...</div>
-        ) : groupedSlots.length === 0 ? (
-          <div className="text-center py-16 space-y-4">
-            <div className="text-6xl">📅</div>
-            <h3 className="text-xl font-medium text-gray-900">No sessions available</h3>
-            <p className="text-gray-600">Try adjusting your filters above</p>
-          </div>
-        ) : (
-          <div className="space-y-12">
-            {groupedSlots.map(([dateKey, slots]) => (
-              <div key={dateKey} className="space-y-6">
-                {/* Date Header */}
-                <div className="flex items-center gap-4">
-                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
-                  <h2 className="text-xl font-semibold text-gray-900">
-                    {formatDate(String(slots[0].startTime))}
-                  </h2>
-                  <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
+        {/* Main Content: Calendar + Sessions */}
+        <div className="flex gap-8 items-start">
+          {/* Compact Calendar Sidebar */}
+          <div className="w-80 flex-shrink-0 sticky top-[200px]">
+            <Card className="shadow-sm">
+              <CardContent className="p-4">
+                {/* Month Navigation */}
+                <div className="flex items-center justify-between mb-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCalendarMonth(subMonths(calendarMonth, 1))}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <div className="font-semibold text-sm">
+                    {format(calendarMonth, "MMMM yyyy")}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCalendarMonth(addMonths(calendarMonth, 1))}
+                    className="h-8 w-8 p-0"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
                 </div>
 
-                {/* Sessions for this date */}
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {slots.map((slot) => {
-                    const isBooked = myBookings?.some(b => b.slotId === slot.id && b.status === "confirmed");
-                    
+                {/* Weekday Headers */}
+                <div className="grid grid-cols-7 gap-1 mb-2">
+                  {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+                    <div key={i} className="text-center text-xs font-medium text-gray-500 py-1">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Calendar Days */}
+                <div className="grid grid-cols-7 gap-1">
+                  {calendarDays.map((day, i) => {
+                    if (!day) {
+                      return <div key={`empty-${i}`} className="aspect-square" />;
+                    }
+
+                    const dateKey = format(startOfDay(day), 'yyyy-MM-dd');
+                    const hasSession = datesWithSessions.has(dateKey);
+                    const isSelected = selectedDate && isSameDay(day, selectedDate);
+                    const isToday = isSameDay(day, new Date());
+                    const isCurrentMonth = isSameMonth(day, calendarMonth);
+
                     return (
-                      <Card 
-                        key={slot.id} 
-                        className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-gray-200"
+                      <button
+                        key={dateKey}
+                        onClick={() => handleDateClick(day)}
+                        disabled={!hasSession}
+                        className={`
+                          aspect-square rounded-lg text-xs font-medium transition-all relative
+                          ${!isCurrentMonth ? 'text-gray-300' : ''}
+                          ${hasSession ? 'cursor-pointer hover:bg-primary/10' : 'cursor-not-allowed opacity-40'}
+                          ${isSelected ? 'bg-primary text-white hover:bg-primary' : ''}
+                          ${isToday && !isSelected ? 'ring-2 ring-primary ring-inset' : ''}
+                          ${!isSelected && hasSession && isCurrentMonth ? 'text-gray-900' : ''}
+                        `}
                       >
-                        <CardContent className="p-6 space-y-4">
-                          {/* Time */}
-                          <div className="flex items-center gap-2 text-lg font-semibold text-gray-900">
-                            <Clock className="h-5 w-5 text-primary" />
-                            {format(new Date(slot.startTime), "h:mm a")}
-                          </div>
-
-                          {/* Title */}
-                          <h3 className="font-medium text-gray-900 line-clamp-2">
-                            {slot.title}
-                          </h3>
-
-                          {/* Metadata */}
-                          <div className="flex flex-wrap gap-2">
-                            <Badge variant="secondary" className="text-xs">
-                              {getEventTypeLabel(slot.eventType)}
-                            </Badge>
-                            <Badge variant="secondary" className="text-xs">
-                              {getSessionTypeLabel(slot.sessionType)}
-                            </Badge>
-                            {slot.price && Number(slot.price) > 0 ? (
-                              <Badge variant="secondary" className="text-xs">
-                                €{slot.price}
-                              </Badge>
-                            ) : (
-                              <Badge variant="secondary" className="text-xs text-green-700 bg-green-50">
-                                Free
-                              </Badge>
-                            )}
-                          </div>
-
-                          {/* CTA */}
-                          {isBooked ? (
-                            <Button 
-                              variant="outline" 
-                              className="w-full"
-                              disabled
-                            >
-                              Already Booked
-                            </Button>
-                          ) : (
-                            <Button 
-                              onClick={() => handleBookClick(slot)}
-                              className="w-full group-hover:shadow-md transition-shadow"
-                            >
-                              Book Now →
-                            </Button>
-                          )}
-                        </CardContent>
-                      </Card>
+                        {format(day, 'd')}
+                        {hasSession && !isSelected && (
+                          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
+                        )}
+                      </button>
                     );
                   })}
                 </div>
-              </div>
-            ))}
+
+                {/* Legend */}
+                <div className="mt-4 pt-4 border-t space-y-2 text-xs text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded border-2 border-primary flex items-center justify-center">
+                      <div className="text-[10px]">1</div>
+                    </div>
+                    <span>Today</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded bg-gray-100 flex items-center justify-center relative">
+                      <div className="text-[10px]">1</div>
+                      <div className="absolute bottom-0.5 w-1 h-1 rounded-full bg-primary" />
+                    </div>
+                    <span>Has sessions</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        )}
+
+          {/* Timeline View */}
+          <div className="flex-1 min-w-0">
+            {slotsLoading ? (
+              <div className="text-center py-12 text-gray-500">Loading sessions...</div>
+            ) : groupedSlots.length === 0 ? (
+              <div className="text-center py-16 space-y-4">
+                <div className="text-6xl">📅</div>
+                <h3 className="text-xl font-medium text-gray-900">No sessions available</h3>
+                <p className="text-gray-600">
+                  {selectedDate 
+                    ? "No sessions on this date. Try selecting another date or clearing the filter."
+                    : "Try adjusting your filters above"}
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-12">
+                {groupedSlots.map(([dateKey, slots]) => (
+                  <div key={dateKey} className="space-y-6">
+                    {/* Date Header */}
+                    <div className="flex items-center gap-4">
+                      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
+                      <h2 className="text-xl font-semibold text-gray-900">
+                        {formatDate(String(slots[0].startTime))}
+                      </h2>
+                      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
+                    </div>
+
+                    {/* Sessions for this date */}
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                      {slots.map((slot) => {
+                        const isBooked = myBookings?.some(b => b.slotId === slot.id && b.status === "confirmed");
+                        
+                        return (
+                          <Card 
+                            key={slot.id} 
+                            className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-gray-200"
+                          >
+                            <CardContent className="p-6 space-y-4">
+                              {/* Time */}
+                              <div className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                                <Clock className="h-5 w-5 text-primary" />
+                                {format(new Date(slot.startTime), "h:mm a")}
+                              </div>
+
+                              {/* Title */}
+                              <h3 className="font-medium text-gray-900 line-clamp-2">
+                                {slot.title}
+                              </h3>
+
+                              {/* Metadata */}
+                              <div className="flex flex-wrap gap-2">
+                                <Badge variant="secondary" className="text-xs">
+                                  {getEventTypeLabel(slot.eventType)}
+                                </Badge>
+                                <Badge variant="secondary" className="text-xs">
+                                  {getSessionTypeLabel(slot.sessionType)}
+                                </Badge>
+                                {slot.price && Number(slot.price) > 0 ? (
+                                  <Badge variant="secondary" className="text-xs">
+                                    €{slot.price}
+                                  </Badge>
+                                ) : (
+                                  <Badge variant="secondary" className="text-xs text-green-700 bg-green-50">
+                                    Free
+                                  </Badge>
+                                )}
+                              </div>
+
+                              {/* CTA */}
+                              {isBooked ? (
+                                <Button 
+                                  variant="outline" 
+                                  className="w-full"
+                                  disabled
+                                >
+                                  Already Booked
+                                </Button>
+                              ) : (
+                                <Button 
+                                  onClick={() => handleBookClick(slot)}
+                                  className="w-full group-hover:shadow-md transition-shadow"
+                                >
+                                  Book Now →
+                                </Button>
+                              )}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Booking Dialog */}

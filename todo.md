@@ -1602,3 +1602,13 @@
 - [x] Replace calendar view with timeline view
 - [x] Add subtle animations and micro-interactions
 - [x] Test responsive design across devices
+
+## Calendar Sidebar Enhancement (Jan 19, 2026)
+- [x] Add compact calendar sidebar to Book a Session page
+- [x] Implement date filtering when clicking calendar dates
+- [x] Show visual indicators for dates with available sessions
+- [x] Add "Clear date" button when date is selected
+- [x] Create calendar legend explaining visual indicators
+- [x] Make calendar sticky positioned for easy access while scrolling
+- [x] Integrate calendar with existing filter system
+- [x] Test date selection and deselection functionality
