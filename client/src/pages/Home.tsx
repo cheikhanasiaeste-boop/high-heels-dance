@@ -357,7 +357,7 @@ export default function Home() {
               {filteredCourses.slice(0, 6).map((course) => (
                 <Card 
                   key={course.id} 
-                  className="group overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 bg-white/90 backdrop-blur-sm"
+                  className="group overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 bg-white/90 backdrop-blur-sm flex flex-col"
                 >
                   <div className="relative">
                     {course.imageUrl ? (
@@ -394,7 +394,7 @@ export default function Home() {
                       </div>
                     )}
                   </div>
-                  <CardHeader className="pb-4">
+                  <CardHeader className="pb-4 flex-grow">
                     <div className="flex justify-between items-start mb-3">
                       <CardTitle className="text-2xl font-bold group-hover:text-pink-600 transition-colors">
                         {course.title}
@@ -425,7 +425,7 @@ export default function Home() {
                       )}
                     </div>
                   </CardContent>
-                  <CardFooter>
+                  <CardFooter className="mt-auto">
                     <Button className="w-full text-lg py-6 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105" asChild>
                       <Link href={`/course/${course.id}`}>
                         {course.isFree ? '✧ Start Learning' : '◇ View Details'}

@@ -78,7 +78,7 @@ export default function MyCourses() {
         ) : myCourses.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {myCourses.map((course) => (
-              <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow">
+              <Card key={course.id} className="overflow-hidden hover:shadow-lg transition-shadow flex flex-col">
                 <div className="h-48 bg-gradient-to-br from-pink-100 to-purple-100 flex items-center justify-center overflow-hidden">
                   {course.imageUrl ? (
                     <img src={course.imageUrl} alt={course.title} className="w-full h-full object-cover" />
@@ -86,11 +86,11 @@ export default function MyCourses() {
                     <span className="text-6xl">💃</span>
                   )}
                 </div>
-                <CardHeader>
+                <CardHeader className="flex-grow">
                   <CardTitle className="text-xl">{course.title}</CardTitle>
                   <CardDescription className="line-clamp-2">{course.description}</CardDescription>
                 </CardHeader>
-                <CardFooter>
+                <CardFooter className="mt-auto">
                   <Link href={`/course/${course.id}`} className="w-full">
                     <Button className="w-full">
                       <BookOpen className="h-4 w-4 mr-2" />

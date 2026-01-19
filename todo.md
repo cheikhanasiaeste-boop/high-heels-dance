@@ -1500,3 +1500,9 @@
 - [x] Updated desktop navigation in Header component
 - [x] Updated mobile navigation in MobileNav component
 - [x] Tested navigation flow - now loads correctly without Service Unavailable error
+
+## Course Card Button Alignment
+- [x] Identify all course card components across the site (Home, MyCourses, etc.)
+- [x] Update card layouts to use flex with buttons anchored to bottom
+- [x] Ensure consistent button positioning regardless of description length
+- [x] Test alignment with varying description lengths
