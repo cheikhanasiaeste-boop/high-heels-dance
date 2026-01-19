@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AdminLayout } from "@/components/AdminLayout";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -245,16 +246,17 @@ export default function AdminSessions() {
 
   if (isLoading) {
     return (
-      <div className="container py-8">
+      <AdminLayout>
         <div className="flex items-center justify-center min-h-[400px]">
           <p className="text-muted-foreground">Loading sessions...</p>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="container py-8">
+    <AdminLayout>
+      <div className="space-y-8">
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold">Sessions</h1>
@@ -833,6 +835,7 @@ export default function AdminSessions() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

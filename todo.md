@@ -1478,3 +1478,5 @@
 
 - [x] Rename "User Management" submenu to "Users" in admin sidebar
 - [x] Reset notification badge to zero when admin views user page and checks new user details
+
+- [x] Fix Sessions submenu to display content in right panel without sidebar disappearing (consistent with other admin sections)
