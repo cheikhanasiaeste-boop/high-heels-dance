@@ -1480,3 +1480,5 @@
 - [x] Reset notification badge to zero when admin views user page and checks new user details
 
 - [x] Fix Sessions submenu to display content in right panel without sidebar disappearing (consistent with other admin sections)
+
+- [x] Fix admin sidebar to remain fixed while only right panel scrolls

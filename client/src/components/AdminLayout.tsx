@@ -42,7 +42,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       <AdminNotifications />
       <div className="min-h-screen bg-background flex">
       {/* Side Menu */}
-      <aside className="w-64 bg-card border-r border-border flex flex-col">
+      <aside className="w-64 bg-card border-r border-border flex flex-col fixed left-0 top-0 h-screen">
         {/* Header */}
         <div className="p-6 border-b border-border">
           <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -100,7 +100,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto ml-64">
         <div className="container max-w-7xl py-8">
           {children}
         </div>
