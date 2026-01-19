@@ -8,6 +8,7 @@ import { ChevronDown, ChevronUp, Check, Home, Play, Lock, CheckCircle } from "lu
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { CourseCompletionModal } from "@/components/CourseCompletionModal";
+import { CourseBreadcrumb } from "@/components/CourseBreadcrumb";
 import { useProgressiveAuth } from '@/hooks/useProgressiveAuth';
 import { ProgressiveAuthModal } from '@/components/ProgressiveAuthModal';
 
@@ -224,6 +225,13 @@ export default function CourseLearn() {
         {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto">
           <div className="max-w-4xl mx-auto p-8">
+            {/* Breadcrumb Navigation */}
+            <CourseBreadcrumb 
+              courseName={course.title} 
+              courseId={courseId}
+              lessonTitle={currentLesson?.title}
+              className="mb-6"
+            />
             {/* Course Thumbnail */}
             {course.imageUrl && (
               <img

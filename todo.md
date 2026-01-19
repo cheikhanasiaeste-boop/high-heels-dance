@@ -1537,3 +1537,12 @@
 - [x] Test navigation with authenticated user
 - [x] Test navigation with guest user (logged out)
 - [x] Verify no page reloads when auth state changes
+
+## Breadcrumb Navigation
+- [x] Install shadcn/ui breadcrumb component
+- [x] Create reusable Breadcrumb component
+- [x] Add breadcrumbs to CourseDetail page (Home > Courses > Course Name)
+- [x] Add breadcrumbs to Learn/Lesson page (Home > Courses > Course Name > Lesson Title)
+- [x] Ensure breadcrumb links follow logical navigation flow preference
+- [x] Test breadcrumb navigation across different pages
+- [x] Verify mobile responsiveness of breadcrumbs

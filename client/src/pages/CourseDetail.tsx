@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { ProgressiveAuthModal } from "@/components/ProgressiveAuthModal";
 import { FloatingVideoPlayer } from "@/components/FloatingVideoPlayer";
+import { CourseBreadcrumb } from "@/components/CourseBreadcrumb";
 import { useState, useEffect, useRef } from "react";
 
 export default function CourseDetail() {
@@ -187,13 +188,14 @@ export default function CourseDetail() {
   return (
     <div className="min-h-screen">
       <header className="border-b bg-card">
-        <div className="container py-4">
+        <div className="container py-4 space-y-3">
           <a href="/courses">
             <Button variant="ghost" size="sm">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Courses
             </Button>
           </a>
+          <CourseBreadcrumb courseName={course.title} courseId={courseId} />
         </div>
       </header>
 
