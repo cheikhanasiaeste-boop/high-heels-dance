@@ -243,8 +243,8 @@ export default function BookSession() {
       </div>
 
       <div className="container mx-auto px-6 py-8">
-        {/* Floating Filter Bar */}
-        <div className="sticky top-[120px] z-10 mb-8">
+        {/* Filter Bar */}
+        <div className="mb-8">
           <div className="bg-white/90 backdrop-blur-md rounded-full shadow-sm hover:shadow-md transition-shadow px-6 py-4 border border-gray-200">
             <div className="flex items-center justify-between gap-6 flex-wrap">
               {/* Session Count */}
