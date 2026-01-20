@@ -1577,7 +1577,9 @@ Be friendly, professional, and helpful. If you don't know something specific, of
         endTime: z.date(),
         eventType: z.enum(["online", "in-person"]),
         location: z.string().optional(),
-        sessionLink: z.string().url().optional(),
+        sessionLink: z.string().optional().refine((val) => !val || val === '' || z.string().url().safeParse(val).success, {
+          message: 'Invalid URL format'
+        }),
         isFree: z.boolean().default(true),
         price: z.string().optional(),
         sessionType: z.enum(["private", "group"]).default("private"),
@@ -1585,12 +1587,11 @@ Be friendly, professional, and helpful. If you don't know something specific, of
         status: z.enum(["draft", "published"]).default("draft"),
       }))
       .mutation(async ({ input }) => {
-        // Validation: online sessions must have a link if published
-        if (input.status === 'published' && input.eventType === 'online' && !input.sessionLink) {
-          throw new TRPCError({ 
-            code: 'BAD_REQUEST', 
-            message: 'Online sessions must have a session link before publishing' 
-          });
+        // Auto-generate Google Meet link if empty for online sessions
+        let sessionLink = input.sessionLink;
+        if (input.eventType === 'online' && (!sessionLink || sessionLink === '')) {
+          const { generateMeetLink } = await import('./meet');
+          sessionLink = generateMeetLink();
         }
         
         // Validation: in-person sessions must have a location if published
@@ -1603,6 +1604,7 @@ Be friendly, professional, and helpful. If you don't know something specific, of
 
         return await db.createAvailabilitySlot({
           ...input,
+          sessionLink,
           currentBookings: 0,
           isBooked: false,
         });
@@ -1618,7 +1620,9 @@ Be friendly, professional, and helpful. If you don't know something specific, of
         endTime: z.date().optional(),
         eventType: z.enum(["online", "in-person"]).optional(),
         location: z.string().optional(),
-        sessionLink: z.string().url().optional(),
+        sessionLink: z.string().optional().refine((val) => !val || val === '' || z.string().url().safeParse(val).success, {
+          message: 'Invalid URL format'
+        }),
         isFree: z.boolean().optional(),
         price: z.string().optional(),
         sessionType: z.enum(["private", "group"]).optional(),

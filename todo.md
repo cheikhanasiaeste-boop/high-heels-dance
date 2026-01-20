@@ -1779,3 +1779,9 @@
 - [x] Remove Zoom placeholder text from session link input
 - [x] Update help text to clarify Google Meet links are auto-generated
 - [x] Add documentation on how admins access Google Meet links
+
+## Fix Session Creation Validation for Empty Google Meet Links (Jan 20, 2026 - CRITICAL)
+- [x] Update backend validation to allow empty sessionLink values
+- [x] Ensure auto-generation triggers when sessionLink is empty or not provided
+- [x] Test session creation with empty link
+- [x] Test session creation with provided Meet link
