@@ -1769,3 +1769,13 @@
 - [x] Filter out enrolled courses from homepage display
 - [x] Ensure buttons align at bottom of cards using flex layout
 - [x] Test button alignment with varying description lengths
+
+## Fix Course Card Button Alignment (Jan 20, 2026 - CRITICAL)
+- [x] Fix card grid to use equal heights for all cards
+- [x] Ensure buttons align perfectly regardless of description length
+- [x] Test with varying content lengths
+
+## Update Admin Session Creation for Google Meet (Jan 20, 2026)
+- [x] Remove Zoom placeholder text from session link input
+- [x] Update help text to clarify Google Meet links are auto-generated
+- [x] Add documentation on how admins access Google Meet links

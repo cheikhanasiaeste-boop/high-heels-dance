@@ -381,11 +381,11 @@ export default function Home() {
             </div>
           ) : filteredCourses.length > 0 ? (
             <div className="relative max-w-7xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
               {filteredCourses.slice(0, 6).map((course) => (
                 <Link key={course.id} href={`/course/${course.id}`}>
                   <Card 
-                    className="group overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 bg-white/90 backdrop-blur-sm flex flex-col cursor-pointer"
+                    className="group overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-0 bg-white/90 backdrop-blur-sm flex flex-col h-full cursor-pointer"
                   >
                   <div className="relative">
                     {course.imageUrl ? (
