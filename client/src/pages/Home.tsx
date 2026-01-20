@@ -24,6 +24,7 @@ export default function Home() {
   const { user, isAuthenticated } = useAuth();
   const { isAuthModalOpen, authContext, authContextDetails, requireAuth, closeAuthModal } = useProgressiveAuth();
   const { data: courses, isLoading } = trpc.courses.list.useQuery();
+  const { data: myPurchases } = trpc.purchases.myPurchases.useQuery(undefined, { enabled: isAuthenticated });
   const { data: unreadCount } = trpc.messages.unreadCount.useQuery(undefined, { enabled: isAuthenticated });
   const { data: banner } = trpc.banner.get.useQuery();
   const { data: textTestimonials } = trpc.testimonials.list.useQuery();
@@ -72,7 +73,12 @@ export default function Home() {
   const [courseFilter, setCourseFilter] = useState<'all' | 'free' | 'premium'>('all');
 
   // Filter and sort courses - Top Picks first, then chronological
+  // Also filter out enrolled courses for authenticated users on homepage
+  const enrolledCourseIds = new Set(myPurchases?.map((p: any) => p.courseId) || []);
   const filteredCourses = (courses?.filter(course => {
+    // Filter out enrolled courses for authenticated users
+    if (isAuthenticated && enrolledCourseIds.has(course.id)) return false;
+    // Apply category filter
     if (courseFilter === 'free') return course.isFree;
     if (courseFilter === 'premium') return !course.isFree;
     return true;
@@ -449,7 +455,7 @@ export default function Home() {
                   </CardContent>
                   <CardFooter className="mt-auto">
                     <div className="w-full text-lg py-6 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105 rounded-md flex items-center justify-center text-white font-medium">
-                      {course.isFree ? '✧ Start Learning' : '◇ View Details'}
+                      ✧ Enroll Now
                     </div>
                   </CardFooter>
                 </Card>

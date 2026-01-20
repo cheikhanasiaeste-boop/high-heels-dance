@@ -1762,3 +1762,10 @@
 ## Fix SessionDetail Platform Field to Show Google Meet (Jan 20, 2026)
 - [x] Update SessionDetail.tsx to display "Google Meet" instead of "Zoom" in Platform field
 - [x] Test SessionDetail page to verify correct platform display
+
+## Standardize Course Card Button Text (Jan 20, 2026)
+- [x] Change all course card buttons to single "Enroll Now" text
+- [x] Remove dual-button layout from Courses page
+- [x] Filter out enrolled courses from homepage display
+- [x] Ensure buttons align at bottom of cards using flex layout
+- [x] Test button alignment with varying description lengths

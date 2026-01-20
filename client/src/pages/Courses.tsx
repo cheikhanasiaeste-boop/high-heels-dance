@@ -104,7 +104,7 @@ export default function Courses() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredCourses.map((course) => (
-              <Card key={course.id} className="flex flex-col hover:shadow-lg transition-shadow">
+              <Card key={course.id} className="flex flex-col h-full hover:shadow-lg transition-shadow">
                 <div className="relative">
                   {course.imageUrl ? (
                     <>
@@ -141,14 +141,14 @@ export default function Courses() {
                   )}
                 </div>
                 
-                <CardHeader className="flex-grow">
+                <CardHeader className="flex-grow flex-shrink-0">
                   <CardTitle className="line-clamp-2">{course.title}</CardTitle>
                   <CardDescription className="line-clamp-3">
                     {course.description}
                   </CardDescription>
                 </CardHeader>
 
-                <CardContent>
+                <CardContent className="flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <div>
                       {course.isFree ? (
@@ -169,15 +169,10 @@ export default function Courses() {
                   </div>
                 </CardContent>
 
-                <CardFooter className="flex gap-2 mt-auto">
-                  <Link href={`/course/${course.id}`} className="flex-1">
-                    <Button variant="outline" className="w-full">
-                      ◇ View Details
-                    </Button>
-                  </Link>
-                  <Link href={`/course/${course.id}`} className="flex-1">
+                <CardFooter className="mt-auto flex-shrink-0">
+                  <Link href={`/course/${course.id}`} className="w-full">
                     <Button className="w-full">
-                      {course.isFree ? '✧ Start Learning' : '✧ Enroll Now'}
+                      ✧ Enroll Now
                     </Button>
                   </Link>
                 </CardFooter>
