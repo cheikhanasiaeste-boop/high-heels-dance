@@ -1722,3 +1722,9 @@
 - [x] Add smooth hover and active state transitions
 - [x] Implement underline or border indicator for active tab
 - [x] Test responsive behavior and visual consistency
+
+## Update Non-Authenticated Navigation Button Labels (Jan 20, 2026)
+- [x] Change "Book a Session with Me" to "Book a Session" in Home.tsx
+- [x] Change "Enroll Course" to "Browse Courses" in Home.tsx
+- [x] Update mobile navigation labels in MobileNav.tsx to match
+- [x] Test both authenticated and non-authenticated states

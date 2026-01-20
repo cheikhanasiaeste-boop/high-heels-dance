@@ -106,7 +106,7 @@ export function MobileNav() {
           {/* Navigation Links */}
           <Button variant="default" className="w-full justify-start" size="lg" asChild>
             <Link href={isAuthenticated ? "/my-bookings" : "/book-session"} onClick={closeMenu}>
-              {isAuthenticated ? "My Sessions" : "Book a Session with Me"}
+              {isAuthenticated ? "My Sessions" : "Book a Session"}
             </Link>
           </Button>
 
@@ -117,7 +117,7 @@ export function MobileNav() {
             asChild
           >
             <Link href={isAuthenticated ? "/my-courses" : "/courses"} onClick={closeMenu}>
-              {isAuthenticated ? "My Courses" : "Enroll Course"}
+              {isAuthenticated ? "My Courses" : "Browse Courses"}
             </Link>
           </Button>
 
