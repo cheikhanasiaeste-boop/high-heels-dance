@@ -1735,3 +1735,26 @@
 - [x] Add visual distinction between authenticated tabs and non-authenticated CTAs
 - [x] Ensure elegant, sophisticated appearance without being overwhelming
 - [x] Test visual hierarchy and attention-grabbing effectiveness
+
+## Replace Zoom Integration with Google Meet (Jan 20, 2026)
+- [ ] Analyze current Zoom integration implementation
+- [ ] Update database schema to store Google Meet links instead of Zoom
+- [ ] Remove Zoom API integration and credentials
+- [ ] Implement Google Meet link generation for sessions
+- [ ] Create embedded Google Meet iframe in session pages
+- [ ] Update all UI text and icons from Zoom to Google Meet
+- [ ] Update email templates to reference Google Meet
+- [ ] Test Google Meet link generation and embedded access
+- [ ] Verify session booking flow with Google Meet
+
+## Replace Zoom Integration with Google Meet (Jan 20, 2026) - COMPLETED
+- [x] Update database schema to replace Zoom fields with Google Meet link
+- [x] Create Google Meet link generation helper (meet.ts)
+- [x] Remove Zoom SDK and API integration code
+- [x] Update routers.ts to use Google Meet instead of Zoom procedures
+- [x] Update stripe-webhook.ts to generate Meet links
+- [x] Rewrite SessionView.tsx to use embedded Google Meet iframe
+- [x] Update SessionDetail.tsx to use meetLink field
+- [x] Update MyBookings.tsx to check for meetLink availability
+- [x] Update Admin.tsx UI text from Zoom to Google Meet
+- [x] Test Google Meet link generation and embedded functionality

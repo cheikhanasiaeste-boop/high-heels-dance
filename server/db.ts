@@ -343,13 +343,7 @@ export async function getAvailabilitySlotById(id: number): Promise<AvailabilityS
   return result[0];
 }
 
-export async function getAvailabilitySlotByZoomId(zoomMeetingId: string): Promise<AvailabilitySlot | undefined> {
-  const db = await getDb();
-  if (!db) return undefined;
-  
-  const result = await db.select().from(availabilitySlots).where(eq(availabilitySlots.zoomMeetingId, zoomMeetingId)).limit(1);
-  return result[0];
-}
+// Removed getAvailabilitySlotByZoomId - no longer needed with Google Meet
 
 export async function updateAvailabilitySlot(id: number, updates: Partial<InsertAvailabilitySlot>): Promise<void> {
   const db = await getDb();
@@ -402,7 +396,7 @@ export async function getUserBookingsWithSlots(userId: number) {
       userId: bookings.userId,
       slotId: bookings.slotId,
       sessionType: bookings.sessionType,
-      zoomLink: bookings.zoomLink,
+      meetLink: bookings.meetLink,
       status: bookings.status,
       notes: bookings.notes,
       paymentRequired: bookings.paymentRequired,
@@ -416,9 +410,7 @@ export async function getUserBookingsWithSlots(userId: number) {
         location: availabilitySlots.location,
         title: availabilitySlots.title,
         description: availabilitySlots.description,
-        zoomMeetingId: availabilitySlots.zoomMeetingId,
-        zoomMeetingPassword: availabilitySlots.zoomMeetingPassword,
-        zoomJoinUrl: availabilitySlots.zoomJoinUrl,
+        meetLink: availabilitySlots.meetLink,
       },
     })
     .from(bookings)

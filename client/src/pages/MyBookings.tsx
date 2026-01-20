@@ -96,7 +96,7 @@ export default function MyBookings() {
               <div className="space-y-4">
                 {bookings.map((booking: any) => {
                   const sessionState = getSessionState(booking);
-                  const isJoinable = sessionState === 'live' && booking.slot?.eventType === 'online' && booking.slot?.zoomMeetingId;
+                  const isJoinable = sessionState === 'live' && booking.slot?.eventType === 'online' && booking.slot?.meetLink;
                   
                   return (
                     <Link key={booking.id} href={`/session/${booking.id}`}>

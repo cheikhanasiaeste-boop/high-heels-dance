@@ -10,7 +10,7 @@ import { storagePut } from "./storage";
 import Stripe from "stripe";
 import { getCourseStripePrice } from "./products";
 import { adminNotifications } from "./events";
-import { generateZoomSignature, createZoomMeeting, deleteZoomMeeting, updateZoomMeeting } from "./zoom";
+import { generateMeetLink } from "./meet";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-12-15.clover',
@@ -1013,140 +1013,49 @@ export const appRouter = router({
       }),
   }),
 
-  // Zoom integration
-  zoom: router({
-    // Get SDK signature for joining a meeting (protected - requires enrollment)
-    getSignature: protectedProcedure
-      .input(z.object({
-        meetingNumber: z.string(),
-        role: z.enum(['0', '1']), // 0 = participant, 1 = host
-      }))
-      .mutation(async ({ input, ctx }) => {
-        const { meetingNumber, role } = input;
-        
-        // Verify user has access to this meeting via booking
-        const bookings = await db.getUserBookingsWithSlots(ctx.user.id);
-        const hasAccess = bookings.some(booking => 
-          booking.slot?.zoomMeetingId === meetingNumber &&
-          booking.status === 'confirmed'
-        );
-        
-        if (!hasAccess && ctx.user.role !== 'admin') {
-          throw new TRPCError({
-            code: 'FORBIDDEN',
-            message: 'You do not have access to this session',
-          });
-        }
-        
-        // Find the session to check time window
-        const slot = await db.getAvailabilitySlotByZoomId(meetingNumber);
-        if (!slot) {
-          throw new TRPCError({
-            code: 'NOT_FOUND',
-            message: 'Session not found',
-          });
-        }
-        
-        // Check time window (allow joining 15 minutes before start)
-        const now = Date.now();
-        const sessionStart = new Date(slot.startTime).getTime();
-        const sessionEnd = new Date(slot.endTime).getTime();
-        const fifteenMinutesBefore = sessionStart - 15 * 60 * 1000;
-        
-        if (now < fifteenMinutesBefore && ctx.user.role !== 'admin') {
-          throw new TRPCError({
-            code: 'FORBIDDEN',
-            message: 'Session is not yet available. You can join 15 minutes before start time.',
-          });
-        }
-        
-        if (now > sessionEnd && ctx.user.role !== 'admin') {
-          throw new TRPCError({
-            code: 'FORBIDDEN',
-            message: 'This session has ended',
-          });
-        }
-        
-        // Generate SDK JWT signature
-        const signature = generateZoomSignature(meetingNumber, role);
-        
-        return {
-          signature,
-          sdkKey: process.env.ZOOM_CLIENT_ID!,
-          meetingNumber,
-          password: slot.zoomMeetingPassword || '',
-          userName: ctx.user.name || ctx.user.email || 'Guest',
-          userEmail: ctx.user.email || '',
-        };
-      }),
-    
-    // Create Zoom meeting for a session (admin only)
-    createMeeting: adminProcedure
+  // Google Meet integration
+  meet: router({
+    // Generate Meet link for a session (admin only)
+    generateLink: adminProcedure
       .input(z.object({
         slotId: z.number(),
-        topic: z.string(),
-        startTime: z.string(), // ISO 8601 format
-        duration: z.number(), // in minutes
       }))
       .mutation(async ({ input }) => {
-        const { slotId, topic, startTime, duration } = input;
+        const { slotId } = input;
         
-        // Check if slot exists
         const slot = await db.getAvailabilitySlotById(slotId);
         if (!slot) {
           throw new TRPCError({ code: 'NOT_FOUND', message: 'Session not found' });
         }
         
-        // Create Zoom meeting
-        const meeting = await createZoomMeeting({
-          topic,
-          start_time: startTime,
-          duration,
-          settings: {
-            join_before_host: false,
-            waiting_room: true,
-            mute_upon_entry: true,
-          },
-        });
+        // Generate Google Meet link
+        const meetLink = generateMeetLink();
         
-        // Update availability slot with Zoom meeting data
+        // Update availability slot with Meet link
         await db.updateAvailabilitySlot(slotId, {
-          zoomMeetingId: meeting.id.toString(),
-          zoomMeetingPassword: meeting.password,
-          zoomJoinUrl: meeting.join_url,
-          zoomStartUrl: meeting.start_url,
-          zoomCreatedAt: new Date(),
+          meetLink,
         });
         
         return {
           success: true,
-          meetingId: meeting.id,
-          joinUrl: meeting.join_url,
-          startUrl: meeting.start_url,
+          meetLink,
         };
       }),
     
-    // Delete Zoom meeting (admin only)
-    deleteMeeting: adminProcedure
+    // Remove Meet link from a session (admin only)
+    removeLink: adminProcedure
       .input(z.object({
         slotId: z.number(),
       }))
       .mutation(async ({ input }) => {
         const slot = await db.getAvailabilitySlotById(input.slotId);
-        if (!slot || !slot.zoomMeetingId) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Zoom meeting not found' });
+        if (!slot) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Session not found' });
         }
         
-        // Delete from Zoom
-        await deleteZoomMeeting(slot.zoomMeetingId);
-        
-        // Clear Zoom data from slot
+        // Clear Meet link from slot
         await db.updateAvailabilitySlot(input.slotId, {
-          zoomMeetingId: null,
-          zoomMeetingPassword: null,
-          zoomJoinUrl: null,
-          zoomStartUrl: null,
-          zoomCreatedAt: null,
+          meetLink: null,
         });
         
         return { success: true };
@@ -1205,9 +1114,9 @@ export const appRouter = router({
           }
         }
         
-        // Generate Zoom link for online sessions
-        const zoomLink = slot.eventType === 'online' 
-          ? `https://zoom.us/j/${Math.random().toString().slice(2, 12)}`
+        // Generate Google Meet link for online sessions
+        const meetLink = slot.eventType === 'online' 
+          ? generateMeetLink()
           : null;
         
         // Create booking
@@ -1215,7 +1124,7 @@ export const appRouter = router({
           userId: ctx.user.id,
           slotId: input.slotId,
           sessionType: slot.title,
-          zoomLink: zoomLink || undefined,
+          meetLink: meetLink || undefined,
           status: 'confirmed',
           notes: input.notes,
           paymentRequired: false,

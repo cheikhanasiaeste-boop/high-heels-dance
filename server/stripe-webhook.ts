@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Stripe from 'stripe';
 import * as db from './db';
+import { generateMeetLink } from './meet';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2025-12-15.clover',
@@ -79,9 +80,9 @@ export async function handleStripeWebhook(req: Request, res: Response) {
             break;
           }
           
-          // Generate Zoom link for online sessions
-          const zoomLink = slot.eventType === 'online' 
-            ? `https://zoom.us/j/${Math.random().toString().slice(2, 12)}`
+          // Generate Google Meet link for online sessions
+          const meetLink = slot.eventType === 'online' 
+            ? generateMeetLink()
             : null;
           
           // Create booking with payment info
@@ -89,7 +90,7 @@ export async function handleStripeWebhook(req: Request, res: Response) {
             userId: Number(userId),
             slotId: Number(slotId),
             sessionType: slot.title,
-            zoomLink: zoomLink || undefined,
+            meetLink: meetLink || undefined,
             status: 'confirmed',
             notes: session.metadata?.notes || undefined,
             paymentRequired: true,

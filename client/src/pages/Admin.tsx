@@ -470,7 +470,7 @@ export default function Admin() {
                         value={newSlot.eventType}
                         onChange={(e) => setNewSlot({ ...newSlot, eventType: e.target.value as 'online' | 'in-person' })}
                       >
-                        <option value="online">Online (Zoom)</option>
+                        <option value="online">Online (Google Meet)</option>
                         <option value="in-person">In-Person</option>
                       </select>
                     </div>

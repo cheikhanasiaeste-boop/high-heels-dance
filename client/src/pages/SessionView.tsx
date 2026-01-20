@@ -1,9 +1,9 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useLocation } from 'wouter';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, AlertCircle, Video, Clock, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Loader2, AlertCircle, Video, Clock, CheckCircle, ArrowLeft, ExternalLink } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 type SessionState = 'loading' | 'upcoming' | 'ready' | 'live' | 'ended' | 'error';
@@ -15,30 +15,11 @@ export default function SessionView() {
   const [sessionState, setSessionState] = useState<SessionState>('loading');
   const [errorMessage, setErrorMessage] = useState('');
   const [timeUntilStart, setTimeUntilStart] = useState('');
-  
-  const zoomContainerRef = useRef<HTMLDivElement>(null);
-  const clientRef = useRef<any>(null);
-  const zoomSDKRef = useRef<any>(null);
+  const [showMeetEmbed, setShowMeetEmbed] = useState(false);
   
   // Fetch booking details with slot information
   const { data: bookings, isLoading } = trpc.bookings.myBookings.useQuery();
   const booking = bookings?.find(b => b.id === parseInt(bookingId!));
-  
-  const joinMutation = trpc.zoom.getSignature.useMutation();
-  
-  // Dynamically load Zoom SDK only when needed
-  const loadZoomSDK = async () => {
-    if (zoomSDKRef.current) return zoomSDKRef.current;
-    
-    try {
-      const ZoomModule = await import('@zoom/meetingsdk/embedded');
-      zoomSDKRef.current = ZoomModule.default;
-      return ZoomModule.default;
-    } catch (error) {
-      console.error('Failed to load Zoom SDK:', error);
-      throw new Error('Failed to load Zoom SDK');
-    }
-  };
   
   // Check session state and time window
   useEffect(() => {
@@ -75,91 +56,51 @@ export default function SessionView() {
     return () => clearInterval(interval);
   }, [booking]);
   
-  // Initialize and join Zoom meeting
-  const handleJoinSession = async () => {
-    if (!booking?.slot?.zoomMeetingId) {
-      setErrorMessage('Meeting information is not available');
+  // Handle joining session - show embedded Meet
+  const handleJoinSession = () => {
+    if (!booking?.slot?.meetLink) {
+      setErrorMessage('Meeting link is not available');
       setSessionState('error');
       return;
     }
     
-    try {
-      setSessionState('loading');
-      
-      // Load Zoom SDK dynamically
-      const ZoomMtgEmbedded = await loadZoomSDK();
-      
-      // Get signature from backend
-      const signatureData = await joinMutation.mutateAsync({
-        meetingNumber: booking.slot.zoomMeetingId,
-        role: '0', // Participant
-      });
-      
-      // Initialize Zoom SDK
-      const client = ZoomMtgEmbedded.createClient();
-      clientRef.current = client;
-      
-      // Initialize the embedded view
-      await client.init({
-        zoomAppRoot: zoomContainerRef.current!,
-        language: 'en-US',
-        patchJsMedia: true,
-        leaveOnPageUnload: true,
-      });
-      
-      // Join the meeting
-      await client.join({
-        signature: signatureData.signature,
-        sdkKey: signatureData.sdkKey,
-        meetingNumber: signatureData.meetingNumber,
-        password: signatureData.password,
-        userName: signatureData.userName,
-        userEmail: signatureData.userEmail,
-        tk: '', // Registration token (not needed)
-      });
-      
-      setSessionState('live');
-      
-    } catch (error: any) {
-      console.error('Failed to join session:', error);
-      setErrorMessage(error.message || 'Failed to join session. Please try again.');
-      setSessionState('error');
+    setShowMeetEmbed(true);
+    setSessionState('live');
+  };
+  
+  // Handle opening in new tab
+  const handleOpenInNewTab = () => {
+    if (booking?.slot?.meetLink) {
+      window.open(booking.slot.meetLink, '_blank');
     }
   };
   
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (clientRef.current) {
-        try {
-          clientRef.current.leaveMeeting();
-        } catch (e) {
-          // Ignore errors during cleanup
-        }
-      }
-    };
-  }, []);
-  
-  if (isLoading) {
+  if (isLoading || !booking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-purple-100">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-2xl">
+          <CardContent className="p-12 flex flex-col items-center justify-center">
+            <Loader2 className="h-12 w-12 animate-spin text-purple-600 mb-4" />
+            <p className="text-lg text-gray-600">Loading session details...</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
   
-  if (!booking || !booking.slot) {
+  const slot = booking.slot;
+  
+  if (!slot) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-purple-100 p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="pt-6">
-            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-center mb-2">Session Not Found</h2>
-            <p className="text-muted-foreground text-center mb-4">
-              This session does not exist or you don't have access to it.
-            </p>
-            <Button onClick={() => navigate('/my-sessions')} className="w-full">
-              <ArrowLeft className="h-4 w-4 mr-2" />
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center p-4">
+        <Card className="w-full max-w-2xl">
+          <CardContent className="p-12">
+            <Alert variant="destructive">
+              <AlertCircle className="h-5 w-5" />
+              <AlertDescription>Session information not found</AlertDescription>
+            </Alert>
+            <Button onClick={() => navigate('/my-sessions')} className="mt-4">
+              <ArrowLeft className="mr-2 h-4 w-4" />
               Back to My Sessions
             </Button>
           </CardContent>
@@ -168,205 +109,193 @@ export default function SessionView() {
     );
   }
   
-  // Check if session is online
-  if (booking.slot.eventType !== 'online') {
+  // Show embedded Google Meet
+  if (showMeetEmbed && slot.meetLink) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 via-pink-50 to-purple-100 p-4">
-        <Card className="max-w-md w-full">
-          <CardContent className="pt-6">
-            <AlertCircle className="h-12 w-12 text-amber-600 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-center mb-2">In-Person Session</h2>
-            <p className="text-muted-foreground text-center mb-4">
-              This is an in-person session at: <strong>{booking.slot.location}</strong>
-            </p>
-            <Button onClick={() => navigate('/my-sessions')} className="w-full">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to My Sessions
+      <div className="h-screen w-screen flex flex-col bg-black">
+        <div className="bg-gray-900 text-white px-4 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setShowMeetEmbed(false);
+                setSessionState('ready');
+              }}
+              className="text-white hover:bg-gray-800"
+            >
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Exit Session
             </Button>
-          </CardContent>
-        </Card>
+            <div>
+              <h2 className="font-semibold">{slot.title}</h2>
+              <p className="text-sm text-gray-400">
+                {new Date(slot.startTime).toLocaleString()} - {new Date(slot.endTime).toLocaleTimeString()}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleOpenInNewTab}
+            className="bg-transparent border-gray-600 text-white hover:bg-gray-800"
+          >
+            <ExternalLink className="mr-2 h-4 w-4" />
+            Open in New Tab
+          </Button>
+        </div>
+        <iframe
+          src={slot.meetLink}
+          allow="camera; microphone; fullscreen; speaker; display-capture"
+          className="flex-1 w-full border-0"
+          title="Google Meet Session"
+        />
       </div>
     );
   }
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-purple-100">
-      {/* Session Header */}
-      <div className="border-b bg-white/80 backdrop-blur-sm shadow-sm">
-        <div className="container py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{booking.slot.title || 'Online Session'}</h1>
-              <p className="text-muted-foreground">
-                {new Date(booking.slot.startTime).toLocaleString('en-US', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </p>
-            </div>
-            <Button variant="outline" onClick={() => navigate('/my-sessions')}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
-            </Button>
-          </div>
-        </div>
-      </div>
-      
-      {/* Main Content */}
-      <div className="container py-8">
-        {/* Upcoming State */}
-        {sessionState === 'upcoming' && (
-          <Card className="max-w-2xl mx-auto">
-            <CardHeader className="text-center">
-              <Clock className="h-16 w-16 text-primary mx-auto mb-4" />
-              <CardTitle className="text-2xl">Session Starts Soon</CardTitle>
-              <CardDescription>
-                You can join this session 15 minutes before it starts.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-center">
-              <p className="text-lg font-medium text-primary mb-4">
-                Time until session: {timeUntilStart}
-              </p>
-              {booking.slot.description && (
-                <div className="mt-6 pt-6 border-t text-left">
-                  <h3 className="font-semibold mb-2">Session Details</h3>
-                  <p className="text-muted-foreground">{booking.slot.description}</p>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 py-8 px-4">
+      <div className="max-w-4xl mx-auto">
+        <Button
+          variant="ghost"
+          onClick={() => navigate('/my-sessions')}
+          className="mb-6"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to My Sessions
+        </Button>
+        
+        <Card className="overflow-hidden">
+          <CardHeader className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+            <CardTitle className="text-2xl">{slot.title}</CardTitle>
+            <CardDescription className="text-purple-100">
+              {slot.description || 'Dance session with Elizabeth Zolotova'}
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="p-6 space-y-6">
+            {/* Session Details */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="flex items-start gap-3">
+                <Clock className="h-5 w-5 text-purple-600 mt-0.5" />
+                <div>
+                  <p className="font-medium text-gray-900">Session Time</p>
+                  <p className="text-sm text-gray-600">
+                    {new Date(slot.startTime).toLocaleString('en-US', {
+                      weekday: 'long',
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Duration: {Math.round((new Date(slot.endTime).getTime() - new Date(slot.startTime).getTime()) / 1000 / 60)} minutes
+                  </p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-        
-        {/* Ready to Join State */}
-        {sessionState === 'ready' && (
-          <Card className="max-w-2xl mx-auto">
-            <CardHeader className="text-center">
-              <Video className="h-16 w-16 text-green-600 mx-auto mb-4" />
-              <CardTitle className="text-2xl">Ready to Join</CardTitle>
-              <CardDescription>
-                Your session is ready. Click the button below to join.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-center">
-              <Button 
-                size="lg" 
-                onClick={handleJoinSession}
-                disabled={joinMutation.isPending}
-                className="px-8 bg-green-600 hover:bg-green-700"
-              >
-                {joinMutation.isPending ? (
-                  <>
-                    <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                    Connecting...
-                  </>
-                ) : (
-                  <>
-                    <Video className="h-5 w-5 mr-2" />
-                    Join Session
-                  </>
-                )}
-              </Button>
-              
-              {booking.slot.description && (
-                <div className="mt-6 pt-6 border-t text-left">
-                  <h3 className="font-semibold mb-2">Session Details</h3>
-                  <p className="text-muted-foreground">{booking.slot.description}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-        
-        {/* Loading State */}
-        {sessionState === 'loading' && (
-          <Card className="max-w-2xl mx-auto">
-            <CardContent className="py-12 text-center">
-              <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-              <p className="text-lg font-medium">Connecting to session...</p>
-              <p className="text-muted-foreground mt-2">Please wait while we connect you to the session</p>
-            </CardContent>
-          </Card>
-        )}
-        
-        {/* Live Session State */}
-        {sessionState === 'live' && (
-          <div className="max-w-7xl mx-auto">
-            <Alert className="mb-4 bg-green-50 border-green-200">
-              <CheckCircle className="h-4 w-4 text-green-600" />
-              <AlertDescription className="text-green-800">
-                You're now in the live session. Enjoy your dance class!
-              </AlertDescription>
-            </Alert>
-            
-            {/* Zoom Embedded Container */}
-            <div 
-              ref={zoomContainerRef}
-              className="w-full bg-black rounded-lg overflow-hidden shadow-2xl"
-              style={{ height: 'calc(100vh - 250px)', minHeight: '600px' }}
-            />
-          </div>
-        )}
-        
-        {/* Ended State */}
-        {sessionState === 'ended' && (
-          <Card className="max-w-2xl mx-auto">
-            <CardHeader className="text-center">
-              <CheckCircle className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <CardTitle className="text-2xl">Session Ended</CardTitle>
-              <CardDescription>
-                This session has ended. Thank you for attending!
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="text-center">
-              <Button onClick={() => navigate('/my-sessions')}>
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to My Sessions
-              </Button>
-            </CardContent>
-          </Card>
-        )}
-        
-        {/* Error State */}
-        {sessionState === 'error' && (
-          <Card className="max-w-2xl mx-auto">
-            <CardHeader className="text-center">
-              <AlertCircle className="h-16 w-16 text-destructive mx-auto mb-4" />
-              <CardTitle className="text-2xl">Unable to Join Session</CardTitle>
-              <CardDescription>{errorMessage}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex gap-4 justify-center">
-                <Button variant="outline" onClick={() => navigate('/my-sessions')}>
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to My Sessions
-                </Button>
-                <Button onClick={handleJoinSession}>
-                  Try Again
-                </Button>
               </div>
               
-              {/* Fallback: Open in Zoom App */}
-              {booking.slot.zoomJoinUrl && (
-                <div className="mt-6 pt-6 border-t text-center">
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Having trouble? Open the session in the Zoom app:
+              <div className="flex items-start gap-3">
+                <Video className="h-5 w-5 text-purple-600 mt-0.5" />
+                <div>
+                  <p className="font-medium text-gray-900">Session Type</p>
+                  <p className="text-sm text-gray-600">
+                    {slot.eventType === 'online' ? 'Online via Google Meet' : 'In-Person'}
                   </p>
-                  <Button 
-                    variant="secondary"
-                    onClick={() => window.open(booking.slot!.zoomJoinUrl!, '_blank')}
-                  >
-                    Open in Zoom App
-                  </Button>
+                  {slot.eventType === 'in-person' && slot.location && (
+                    <p className="text-sm text-gray-500">{slot.location}</p>
+                  )}
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+              </div>
+            </div>
+            
+            {/* Session State UI */}
+            {sessionState === 'upcoming' && (
+              <Alert className="border-blue-200 bg-blue-50">
+                <Clock className="h-5 w-5 text-blue-600" />
+                <AlertDescription className="text-blue-900">
+                  <p className="font-medium mb-1">Session starts in {timeUntilStart}</p>
+                  <p className="text-sm">You can join 15 minutes before the start time.</p>
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {sessionState === 'ready' && slot.eventType === 'online' && (
+              <div className="space-y-4">
+                <Alert className="border-green-200 bg-green-50">
+                  <CheckCircle className="h-5 w-5 text-green-600" />
+                  <AlertDescription className="text-green-900">
+                    <p className="font-medium">Ready to join!</p>
+                    <p className="text-sm">Click the button below to enter the session.</p>
+                  </AlertDescription>
+                </Alert>
+                
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    onClick={handleJoinSession}
+                    size="lg"
+                    className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  >
+                    <Video className="mr-2 h-5 w-5" />
+                    Join Session (Embedded)
+                  </Button>
+                  
+                  {slot.meetLink && (
+                    <Button
+                      onClick={handleOpenInNewTab}
+                      variant="outline"
+                      size="lg"
+                      className="flex-1"
+                    >
+                      <ExternalLink className="mr-2 h-5 w-5" />
+                      Open in New Tab
+                    </Button>
+                  )}
+                </div>
+                
+                {slot.meetLink && (
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <p className="text-sm font-medium text-gray-700 mb-2">Direct Meeting Link:</p>
+                    <a
+                      href={slot.meetLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-purple-600 hover:text-purple-700 underline break-all"
+                    >
+                      {slot.meetLink}
+                    </a>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {sessionState === 'ended' && (
+              <Alert>
+                <AlertCircle className="h-5 w-5" />
+                <AlertDescription>
+                  This session has ended. Thank you for attending!
+                </AlertDescription>
+              </Alert>
+            )}
+            
+            {sessionState === 'error' && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-5 w-5" />
+                <AlertDescription>{errorMessage}</AlertDescription>
+              </Alert>
+            )}
+            
+            {/* Booking Details */}
+            {booking.notes && (
+              <div className="pt-4 border-t">
+                <p className="font-medium text-gray-900 mb-2">Your Notes</p>
+                <p className="text-sm text-gray-600">{booking.notes}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -100,14 +100,10 @@ export const availabilitySlots = mysqlTable("availabilitySlots", {
   endTime: timestamp("endTime").notNull(),
   eventType: mysqlEnum("eventType", ["online", "in-person"]).default("online").notNull(),
   location: text("location"), // Physical address for in-person events
-  sessionLink: text("sessionLink"), // Zoom/Meet link for online sessions (hidden until enrolled)
+  sessionLink: text("sessionLink"), // Google Meet link for online sessions (hidden until enrolled)
   
-  // Zoom Integration Fields
-  zoomMeetingId: varchar("zoomMeetingId", { length: 50 }), // Zoom meeting ID (e.g., "123456789")
-  zoomMeetingPassword: varchar("zoomMeetingPassword", { length: 50 }), // Meeting password
-  zoomJoinUrl: text("zoomJoinUrl"), // Fallback join URL
-  zoomStartUrl: text("zoomStartUrl"), // Host start URL (for admin)
-  zoomCreatedAt: timestamp("zoomCreatedAt"), // When Zoom meeting was created
+  // Google Meet Integration
+  meetLink: text("meetLink"), // Google Meet link (e.g., "https://meet.google.com/xxx-xxxx-xxx")
   
   isFree: boolean("isFree").default(true).notNull(),
   price: varchar("price", { length: 20 }), // Price in EUR (e.g., "50.00")
@@ -132,7 +128,7 @@ export const bookings = mysqlTable("bookings", {
   userId: int("userId").notNull(),
   slotId: int("slotId").notNull(),
   sessionType: varchar("sessionType", { length: 100 }).notNull(), // e.g., "One-on-One Dance Session"
-  zoomLink: text("zoomLink"),
+  meetLink: text("meetLink"), // Google Meet link for the session
   status: mysqlEnum("status", ["pending", "confirmed", "cancelled"]).default("confirmed").notNull(),
   notes: text("notes"), // User notes for the session
   paymentRequired: boolean("paymentRequired").default(false).notNull(),

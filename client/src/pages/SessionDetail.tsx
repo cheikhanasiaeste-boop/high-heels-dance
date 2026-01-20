@@ -77,8 +77,8 @@ export default function SessionDetail() {
 
   // Handle Join Session button click
   const handleJoinSession = async () => {
-    if (data?.slot?.eventType === 'online' && data.slot.zoomMeetingId) {
-      // Navigate to SessionView page for Zoom embed
+    if (data?.slot?.eventType === 'online' && data.slot.meetLink) {
+      // Navigate to SessionView page for Google Meet embed
       navigate(`/session-view/${bookingId}`);
     }
   };
@@ -172,7 +172,7 @@ export default function SessionDetail() {
 
   const { booking, slot } = data;
   const isOnline = slot.eventType === 'online';
-  const isJoinable = sessionState === 'live' && isOnline && slot.zoomMeetingId;
+  const isJoinable = sessionState === 'live' && isOnline && slot.meetLink;
 
   return (
     <div className="min-h-screen bg-gray-50">
