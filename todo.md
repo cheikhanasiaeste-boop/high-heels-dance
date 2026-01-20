@@ -1728,3 +1728,10 @@
 - [x] Change "Enroll Course" to "Browse Courses" in Home.tsx
 - [x] Update mobile navigation labels in MobileNav.tsx to match
 - [x] Test both authenticated and non-authenticated states
+
+## Enhance Non-Authenticated Button Prominence with Elegant Design (Jan 20, 2026)
+- [x] Add gradient backgrounds or subtle shadows to non-authenticated buttons
+- [x] Implement refined hover animations with scale or glow effects
+- [x] Add visual distinction between authenticated tabs and non-authenticated CTAs
+- [x] Ensure elegant, sophisticated appearance without being overwhelming
+- [x] Test visual hierarchy and attention-grabbing effectiveness

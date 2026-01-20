@@ -162,17 +162,29 @@ export default function Home() {
           
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-1">
-            {/* Tab-style navigation buttons */}
+            {/* Navigation buttons - Enhanced for non-authenticated users */}
             <Link href={isAuthenticated ? "/my-bookings" : "/book-session"}>
-              <button className="px-6 py-2.5 text-sm font-medium text-gray-700 hover:text-primary hover:bg-purple-50/50 transition-all duration-200 relative group">
+              <button className={`px-6 py-2.5 text-sm font-medium transition-all duration-200 relative group ${
+                isAuthenticated 
+                  ? "text-gray-700 hover:text-primary hover:bg-purple-50/50" 
+                  : "text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-md hover:shadow-lg hover:scale-105 rounded-full"
+              }`}>
                 {isAuthenticated ? "My Sessions" : "Book a Session"}
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+                {isAuthenticated && (
+                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+                )}
               </button>
             </Link>
             <Link href={isAuthenticated ? "/my-courses" : "/courses"}>
-              <button className="px-6 py-2.5 text-sm font-medium text-gray-700 hover:text-primary hover:bg-purple-50/50 transition-all duration-200 relative group">
+              <button className={`px-6 py-2.5 text-sm font-medium transition-all duration-200 relative group ${
+                isAuthenticated 
+                  ? "text-gray-700 hover:text-primary hover:bg-purple-50/50" 
+                  : "text-purple-700 bg-white border-2 border-purple-600 hover:bg-purple-50 hover:border-purple-700 shadow-md hover:shadow-lg hover:scale-105 rounded-full"
+              }`}>
                 {isAuthenticated ? "My Courses" : "Browse Courses"}
-                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+                {isAuthenticated && (
+                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+                )}
               </button>
             </Link>
             {isAuthenticated ? (
