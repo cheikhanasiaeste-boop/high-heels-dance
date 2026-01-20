@@ -19,7 +19,6 @@ export default function SessionDetail() {
   );
 
   const [sessionState, setSessionState] = useState<'upcoming' | 'live' | 'completed' | 'cancelled'>('upcoming');
-  const [zoomClient, setZoomClient] = useState<any>(null);
 
   // Calculate session state
   useEffect(() => {
@@ -352,7 +351,7 @@ export default function SessionDetail() {
                     {isOnline ? 'Platform' : 'Location'}
                   </p>
                   <p className="font-medium">
-                    {isOnline ? 'Zoom' : slot.location}
+                    {isOnline ? 'Google Meet' : slot.location}
                   </p>
                 </div>
                 <div>

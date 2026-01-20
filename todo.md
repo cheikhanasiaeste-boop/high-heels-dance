@@ -1758,3 +1758,7 @@
 - [x] Update MyBookings.tsx to check for meetLink availability
 - [x] Update Admin.tsx UI text from Zoom to Google Meet
 - [x] Test Google Meet link generation and embedded functionality
+
+## Fix SessionDetail Platform Field to Show Google Meet (Jan 20, 2026)
+- [x] Update SessionDetail.tsx to display "Google Meet" instead of "Zoom" in Platform field
+- [x] Test SessionDetail page to verify correct platform display
