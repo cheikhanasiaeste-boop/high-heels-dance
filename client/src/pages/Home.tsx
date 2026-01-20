@@ -161,17 +161,20 @@ export default function Home() {
           <MobileNav />
           
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-4">
-            <Button variant="default" asChild>
-              <Link href={isAuthenticated ? "/my-bookings" : "/book-session"}>
-                {isAuthenticated ? "🧑‍💻 My Sessions" : "Book a Session with Me"}
-              </Link>
-            </Button>
-            <Button variant="outline" className="shadow-lg border-2 border-primary hover:bg-primary hover:text-primary-foreground" asChild>
-              <Link href={isAuthenticated ? "/my-courses" : "/courses"}>
-                {isAuthenticated ? "🎓 My Courses" : "Enroll Course"}
-              </Link>
-            </Button>
+          <div className="hidden lg:flex items-center gap-1">
+            {/* Tab-style navigation buttons */}
+            <Link href={isAuthenticated ? "/my-bookings" : "/book-session"}>
+              <button className="px-6 py-2.5 text-sm font-medium text-gray-700 hover:text-primary hover:bg-purple-50/50 transition-all duration-200 relative group">
+                {isAuthenticated ? "My Sessions" : "Book a Session with Me"}
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+              </button>
+            </Link>
+            <Link href={isAuthenticated ? "/my-courses" : "/courses"}>
+              <button className="px-6 py-2.5 text-sm font-medium text-gray-700 hover:text-primary hover:bg-purple-50/50 transition-all duration-200 relative group">
+                {isAuthenticated ? "My Courses" : "Enroll Course"}
+                <span className="absolute bottom-0 left-0 w-full h-0.5 bg-primary scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></span>
+              </button>
+            </Link>
             {isAuthenticated ? (
               <>
                 {user?.role === 'admin' && (

@@ -67,7 +67,7 @@ export default function MyBookings() {
               Back to Home
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">My Sessions 🧑‍💻</h1>
+          <h1 className="text-2xl font-bold text-gray-900">My Sessions</h1>
         </div>
       </header>
 
