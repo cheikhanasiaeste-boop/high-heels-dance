@@ -2,13 +2,22 @@ import { useAuth } from '@/_core/hooks/useAuth';
 import { Link } from 'wouter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Calendar, ArrowLeft, Clock, MapPin, Video, ArrowRight } from 'lucide-react';
+import { Calendar, ArrowLeft, Clock, MapPin, Video, ArrowRight, Filter } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { Badge } from '@/components/ui/badge';
+import { useState, useMemo } from 'react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function MyBookings() {
   const { user } = useAuth();
   const { data: bookings, isLoading } = trpc.bookings.myBookings.useQuery();
+  
+  // Date filter state
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'upcoming' | 'past' | 'custom'>('all');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
 
   // Helper function to determine session state
   const getSessionState = (booking: any) => {
@@ -55,6 +64,41 @@ export default function MyBookings() {
         return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
+  
+  // Filter bookings by date
+  const filteredBookings = useMemo(() => {
+    if (!bookings) return [];
+    
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    return bookings.filter((booking: any) => {
+      const sessionStart = new Date(booking.slot!.startTime);
+      
+      switch (dateFilter) {
+        case 'today':
+          const sessionDate = new Date(sessionStart.getFullYear(), sessionStart.getMonth(), sessionStart.getDate());
+          return sessionDate.getTime() === today.getTime();
+        
+        case 'upcoming':
+          return sessionStart > now;
+        
+        case 'past':
+          return sessionStart < now;
+        
+        case 'custom':
+          if (!customStartDate || !customEndDate) return true;
+          const start = new Date(customStartDate);
+          const end = new Date(customEndDate);
+          end.setHours(23, 59, 59, 999); // Include entire end date
+          return sessionStart >= start && sessionStart <= end;
+        
+        case 'all':
+        default:
+          return true;
+      }
+    });
+  }, [bookings, dateFilter, customStartDate, customEndDate]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -72,8 +116,78 @@ export default function MyBookings() {
       </header>
 
       {/* Content */}
-      <div className="container py-8 max-w-5xl">
-        <Card>
+      <div className="container py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Left Sidebar - Calendar Filter */}
+          <div className="lg:col-span-1">
+            <Card className="sticky top-24">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <Filter className="w-5 h-5 text-purple-600" />
+                  <CardTitle className="text-lg">Filter Sessions</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Date Filter Dropdown */}
+                <div className="space-y-2">
+                  <Label htmlFor="date-filter" className="text-sm font-medium">
+                    Date Range
+                  </Label>
+                  <Select value={dateFilter} onValueChange={(value: any) => setDateFilter(value)}>
+                    <SelectTrigger id="date-filter">
+                      <SelectValue placeholder="Select date range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Sessions</SelectItem>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="upcoming">Upcoming</SelectItem>
+                      <SelectItem value="past">Past</SelectItem>
+                      <SelectItem value="custom">Custom Range</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {/* Custom Date Range Inputs */}
+                {dateFilter === 'custom' && (
+                  <div className="space-y-3 pt-2 border-t">
+                    <div className="space-y-2">
+                      <Label htmlFor="start-date" className="text-sm">
+                        Start Date
+                      </Label>
+                      <Input
+                        id="start-date"
+                        type="date"
+                        value={customStartDate}
+                        onChange={(e) => setCustomStartDate(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="end-date" className="text-sm">
+                        End Date
+                      </Label>
+                      <Input
+                        id="end-date"
+                        type="date"
+                        value={customEndDate}
+                        onChange={(e) => setCustomEndDate(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {/* Filter Summary */}
+                <div className="pt-3 border-t">
+                  <p className="text-sm text-gray-600">
+                    Showing <span className="font-semibold text-purple-600">{filteredBookings.length}</span> of <span className="font-semibold">{bookings?.length || 0}</span> sessions
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Right Main Area - Sessions List */}
+          <div className="lg:col-span-3">
+            <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
               <div className="p-3 bg-purple-100 rounded-lg">
@@ -92,9 +206,9 @@ export default function MyBookings() {
               <div className="text-center py-12">
                 <p className="text-gray-600">Loading your bookings...</p>
               </div>
-            ) : bookings && bookings.length > 0 ? (
+            ) : filteredBookings && filteredBookings.length > 0 ? (
               <div className="space-y-4">
-                {bookings.map((booking: any) => {
+                {filteredBookings.map((booking: any) => {
                   const sessionState = getSessionState(booking);
                   const isJoinable = sessionState === 'live' && booking.slot?.eventType === 'online' && booking.slot?.meetLink;
                   
@@ -179,6 +293,21 @@ export default function MyBookings() {
                   );
                 })}
               </div>
+            ) : bookings && bookings.length > 0 ? (
+              <div className="text-center py-12">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+                  <Calendar className="w-8 h-8 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  No sessions match your filter
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Try adjusting your date filter to see more sessions.
+                </p>
+                <Button variant="outline" onClick={() => setDateFilter('all')}>
+                  Show All Sessions
+                </Button>
+              </div>
             ) : (
               <div className="text-center py-12">
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
@@ -197,6 +326,8 @@ export default function MyBookings() {
             )}
           </CardContent>
         </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

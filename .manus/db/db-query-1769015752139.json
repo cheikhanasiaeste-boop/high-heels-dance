@@ -1,0 +1,18 @@
+{
+  "query": "SELECT a.id, a.title, a.meetLink, a.sessionLink, a.startTime, a.endTime FROM availabilitySlots a JOIN bookings b ON b.slotId = a.id WHERE b.id = 210001;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4HtU1c2nK4A5Wb2.root --database M2v4Dnk4LCsJQ3Qwy7fUfL --execute SELECT a.id, a.title, a.meetLink, a.sessionLink, a.startTime, a.endTime FROM availabilitySlots a JOIN bookings b ON b.slotId = a.id WHERE b.id = 210001;",
+  "rows": [
+    {
+      "id": "210001",
+      "title": "XYXO",
+      "meetLink": "NULL",
+      "sessionLink": "https://meet.google.com/ecc-nppf-fll",
+      "startTime": "2026-01-21 17:10:00",
+      "endTime": "2026-01-21 17:55:00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\ttitle\tmeetLink\tsessionLink\tstartTime\tendTime\n210001\tXYXO\tNULL\thttps://meet.google.com/ecc-nppf-fll\t2026-01-21 17:10:00\t2026-01-21 17:55:00\n",
+  "stderr": "",
+  "execution_time_ms": 56
+}

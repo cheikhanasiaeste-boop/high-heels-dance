@@ -277,7 +277,7 @@ export default function SessionDetail() {
                           This session has ended. Thank you for attending!
                         </p>
                       </div>
-                    ) : (
+                    ) : sessionState === 'cancelled' ? (
                       <div className="bg-red-50 rounded-lg p-8 text-center border-2 border-red-200">
                         <h3 className="text-xl font-semibold text-gray-900 mb-2">
                           Session Cancelled
@@ -286,7 +286,7 @@ export default function SessionDetail() {
                           This session has been cancelled.
                         </p>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 ) : (
                   <div className="space-y-4">

@@ -1,0 +1,21 @@
+{
+  "query": "SELECT b.id as booking_id, b.status as booking_status, b.meetLink as booking_meetLink, a.id as slot_id, a.meetLink as slot_meetLink, a.status as slot_status, a.startTime, a.endTime, a.title FROM bookings b JOIN availabilitySlots a ON b.slotId = a.id WHERE b.id = 210001;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4HtU1c2nK4A5Wb2.root --database M2v4Dnk4LCsJQ3Qwy7fUfL --execute SELECT b.id as booking_id, b.status as booking_status, b.meetLink as booking_meetLink, a.id as slot_id, a.meetLink as slot_meetLink, a.status as slot_status, a.startTime, a.endTime, a.title FROM bookings b JOIN availabilitySlots a ON b.slotId = a.id WHERE b.id = 210001;",
+  "rows": [
+    {
+      "booking_id": "210001",
+      "booking_status": "confirmed",
+      "booking_meetLink": "https://meet.google.com/evf-dlry-kdv",
+      "slot_id": "210001",
+      "slot_meetLink": "NULL",
+      "slot_status": "published",
+      "startTime": "2026-01-21 17:10:00",
+      "endTime": "2026-01-21 17:55:00",
+      "title": "XYXO"
+    }
+  ],
+  "messages": [],
+  "stdout": "booking_id\tbooking_status\tbooking_meetLink\tslot_id\tslot_meetLink\tslot_status\tstartTime\tendTime\ttitle\n210001\tconfirmed\thttps://meet.google.com/evf-dlry-kdv\t210001\tNULL\tpublished\t2026-01-21 17:10:00\t2026-01-21 17:55:00\tXYXO\n",
+  "stderr": "",
+  "execution_time_ms": 60
+}

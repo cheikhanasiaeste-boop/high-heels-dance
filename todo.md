@@ -1803,3 +1803,32 @@
 - [x] Fix datetime-local input conversion to match displayed session time
 - [x] Ensure consistent timezone handling across display and edit
 - [x] Test that edit dialog shows exact same time as session card
+
+## Fix Session Incorrectly Showing as Cancelled (Jan 21, 2026 - CRITICAL)
+- [ ] Analyze SessionView logic that determines if session is cancelled
+- [ ] Fix cancelled detection to only show for actually cancelled sessions
+- [ ] Ensure Google Meet embed appears for active sessions
+- [ ] Test that live sessions show Meet embed instead of cancelled message
+
+## Restore Calendar Filter in My Sessions Page (Jan 21, 2026)
+- [ ] Locate previous calendar filter implementation
+- [ ] Restore calendar filter sidebar in My Sessions (MyBookings) page
+- [ ] Ensure filter works correctly to show sessions by date
+- [ ] Test calendar filter functionality
+
+## Fix Session Incorrectly Showing as Cancelled (Jan 21, 2026 - CRITICAL)
+- [x] Analyze SessionDetail logic that determines if session is cancelled
+- [x] Fix cancelled detection to explicitly check for cancelled status (not fall-through else)
+- [x] Add Google Meet link to session 210001 in database
+- [x] Verify Google Meet embed appears for active sessions
+- [x] Test that live sessions show Meet embed instead of cancelled message
+
+## Restore Calendar Filter in My Sessions Page (Jan 21, 2026)
+- [x] Design calendar filter sidebar layout (left sidebar + main content)
+- [x] Implement date filter state management (all, today, upcoming, past, custom)
+- [x] Add filter dropdown with all date options
+- [x] Implement custom date range inputs (start date, end date)
+- [x] Create filteredBookings useMemo hook for efficient filtering
+- [x] Add filter summary counter (showing X of Y sessions)
+- [x] Test all filter options (All, Today, Upcoming, Past, Custom Range)
+- [x] Verify responsive layout on desktop and mobile

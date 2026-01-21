@@ -1,0 +1,37 @@
+{
+  "query": "SELECT b.*, a.* FROM bookings b JOIN availabilitySlots a ON b.slotId = a.id WHERE b.id = 210001;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4HtU1c2nK4A5Wb2.root --database M2v4Dnk4LCsJQ3Qwy7fUfL --execute SELECT b.*, a.* FROM bookings b JOIN availabilitySlots a ON b.slotId = a.id WHERE b.id = 210001;",
+  "rows": [
+    {
+      "id": "210001",
+      "userId": "1",
+      "slotId": "210001",
+      "sessionType": "private",
+      "status": "published",
+      "notes": "NULL",
+      "bookedAt": "2026-01-21 16:50:16",
+      "paymentRequired": "0",
+      "paymentStatus": "not_required",
+      "stripePaymentIntentId": "NULL",
+      "amountPaid": "NULL",
+      "meetLink": "NULL",
+      "startTime": "2026-01-21 17:10:00",
+      "endTime": "2026-01-21 17:55:00",
+      "isBooked": "1",
+      "createdAt": "2026-01-21 16:48:21",
+      "eventType": "online",
+      "location": "",
+      "isFree": "1",
+      "price": "",
+      "title": "XYXO",
+      "description": "XXYIIIO",
+      "capacity": "1",
+      "currentBookings": "0",
+      "sessionLink": "https://meet.google.com/ecc-nppf-fll"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tuserId\tslotId\tsessionType\tstatus\tnotes\tbookedAt\tpaymentRequired\tpaymentStatus\tstripePaymentIntentId\tamountPaid\tmeetLink\tid\tstartTime\tendTime\tisBooked\tcreatedAt\teventType\tlocation\tisFree\tprice\ttitle\tdescription\tsessionType\tcapacity\tcurrentBookings\tsessionLink\tstatus\tmeetLink\n210001\t1\t210001\tXYXO\tconfirmed\tNULL\t2026-01-21 16:50:16\t0\tnot_required\tNULL\tNULL\thttps://meet.google.com/evf-dlry-kdv\t210001\t2026-01-21 17:10:00\t2026-01-21 17:55:00\t1\t2026-01-21 16:48:21\tonline\t\t1\t\tXYXO\tXXYIIIO\tprivate\t1\t0\thttps://meet.google.com/ecc-nppf-fll\tpublished\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 58
+}
