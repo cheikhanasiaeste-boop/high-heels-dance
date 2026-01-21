@@ -1785,3 +1785,8 @@
 - [x] Ensure auto-generation triggers when sessionLink is empty or not provided
 - [x] Test session creation with empty link
 - [x] Test session creation with provided Meet link
+
+## Fix HTML Nesting Error in SessionView (Jan 21, 2026 - CRITICAL)
+- [x] Locate invalid p tag containing div in SessionView.tsx
+- [x] Replace p tag with div or restructure to avoid nested block elements
+- [x] Test SessionView page to verify error is resolved

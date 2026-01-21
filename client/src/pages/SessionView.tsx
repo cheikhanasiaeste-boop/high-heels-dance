@@ -216,8 +216,8 @@ export default function SessionView() {
               <Alert className="border-blue-200 bg-blue-50">
                 <Clock className="h-5 w-5 text-blue-600" />
                 <AlertDescription className="text-blue-900">
-                  <p className="font-medium mb-1">Session starts in {timeUntilStart}</p>
-                  <p className="text-sm">You can join 15 minutes before the start time.</p>
+                  <div className="font-medium mb-1">Session starts in {timeUntilStart}</div>
+                  <div className="text-sm">You can join 15 minutes before the start time.</div>
                 </AlertDescription>
               </Alert>
             )}
@@ -227,8 +227,8 @@ export default function SessionView() {
                 <Alert className="border-green-200 bg-green-50">
                   <CheckCircle className="h-5 w-5 text-green-600" />
                   <AlertDescription className="text-green-900">
-                    <p className="font-medium">Ready to join!</p>
-                    <p className="text-sm">Click the button below to enter the session.</p>
+                    <div className="font-medium">Ready to join!</div>
+                    <div className="text-sm">Click the button below to enter the session.</div>
                   </AlertDescription>
                 </Alert>
                 
