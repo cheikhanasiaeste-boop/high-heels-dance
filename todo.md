@@ -1790,3 +1790,10 @@
 - [x] Locate invalid p tag containing div in SessionView.tsx
 - [x] Replace p tag with div or restructure to avoid nested block elements
 - [x] Test SessionView page to verify error is resolved
+
+## Add Chronological Ordering and Date Filtering to Admin Sessions (Jan 21, 2026)
+- [x] Update backend query to sort sessions by startTime in chronological order
+- [x] Add date filter UI controls at top of Sessions page
+- [x] Implement filter logic to show sessions by selected date range
+- [x] Test that sessions appear in correct chronological order
+- [x] Test date filtering functionality

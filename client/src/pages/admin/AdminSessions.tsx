@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AdminLayout } from "@/components/AdminLayout";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -57,6 +57,9 @@ export default function AdminSessions() {
   const [selectedSession, setSelectedSession] = useState<number | null>(null);
   const [formData, setFormData] = useState<SessionFormData>(defaultFormData);
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
+  const [dateFilter, setDateFilter] = useState<'all' | 'upcoming' | 'past' | 'today' | 'custom'>('all');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
 
   // Queries
   const { data: sessions, isLoading } = trpc.sessions.list.useQuery();
@@ -244,6 +247,38 @@ export default function AdminSessions() {
     return allUsers.filter((user: any) => !enrolledIds.includes(user.id));
   };
 
+  // Filter sessions based on date filter
+  const filteredSessions = useMemo(() => {
+    if (!sessions) return [];
+    
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    return sessions.filter((session: any) => {
+      const sessionDate = new Date(session.startTime);
+      
+      switch (dateFilter) {
+        case 'today':
+          return sessionDate >= today && sessionDate < tomorrow;
+        case 'upcoming':
+          return sessionDate >= now;
+        case 'past':
+          return sessionDate < now;
+        case 'custom':
+          if (!customStartDate && !customEndDate) return true;
+          const start = customStartDate ? new Date(customStartDate) : new Date(0);
+          const end = customEndDate ? new Date(customEndDate) : new Date(9999, 11, 31);
+          end.setHours(23, 59, 59, 999); // Include entire end date
+          return sessionDate >= start && sessionDate <= end;
+        case 'all':
+        default:
+          return true;
+      }
+    });
+  }, [sessions, dateFilter, customStartDate, customEndDate]);
+
   if (isLoading) {
     return (
       <AdminLayout>
@@ -257,7 +292,7 @@ export default function AdminSessions() {
   return (
     <AdminLayout>
       <div className="space-y-8">
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">Sessions</h1>
           <p className="text-muted-foreground mt-1">
@@ -270,8 +305,61 @@ export default function AdminSessions() {
         </Button>
       </div>
 
+      {/* Date Filter Controls */}
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Label className="text-sm font-medium">Filter by date:</Label>
+              <Select value={dateFilter} onValueChange={(value: any) => setDateFilter(value)}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sessions</SelectItem>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="upcoming">Upcoming</SelectItem>
+                  <SelectItem value="past">Past</SelectItem>
+                  <SelectItem value="custom">Custom Range</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {dateFilter === 'custom' && (
+              <>
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm">From:</Label>
+                  <Input
+                    type="date"
+                    value={customStartDate}
+                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    className="w-[150px]"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm">To:</Label>
+                  <Input
+                    type="date"
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    className="w-[150px]"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4">
-        {sessions?.map((session: any) => (
+        {filteredSessions.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <p className="text-muted-foreground">No sessions found matching the selected filter.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          filteredSessions.map((session: any) => (
           <Card key={session.id}>
             <CardHeader>
               <div className="flex justify-between items-start">
@@ -363,17 +451,8 @@ export default function AdminSessions() {
               </Button>
             </CardContent>
           </Card>
-        ))}
-
-        {sessions?.length === 0 && (
-          <Card>
-            <CardContent className="py-12 text-center">
-              <p className="text-muted-foreground">
-                No sessions yet. Create your first session to get started.
-              </p>
-            </CardContent>
-          </Card>
-        )}
+        )))
+        }
       </div>
 
       {/* Create Session Dialog */}
