@@ -1797,3 +1797,9 @@
 - [x] Implement filter logic to show sessions by selected date range
 - [x] Test that sessions appear in correct chronological order
 - [x] Test date filtering functionality
+
+## Fix Timezone Inconsistency in Session Edit Dialog (Jan 21, 2026 - CRITICAL)
+- [x] Analyze how session times are displayed in session cards vs edit dialog
+- [x] Fix datetime-local input conversion to match displayed session time
+- [x] Ensure consistent timezone handling across display and edit
+- [x] Test that edit dialog shows exact same time as session card

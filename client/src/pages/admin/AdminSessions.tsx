@@ -186,11 +186,22 @@ export default function AdminSessions() {
 
   const handleEditClick = (session: any) => {
     setSelectedSession(session.id);
+    // Convert UTC time to local time for datetime-local input
+    const formatDateTimeLocal = (dateString: string) => {
+      const date = new Date(dateString);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    };
+    
     setFormData({
       title: session.title,
       description: session.description || "",
-      startTime: new Date(session.startTime).toISOString().slice(0, 16),
-      endTime: new Date(session.endTime).toISOString().slice(0, 16),
+      startTime: formatDateTimeLocal(session.startTime),
+      endTime: formatDateTimeLocal(session.endTime),
       eventType: session.eventType,
       location: session.location || "",
       sessionLink: session.sessionLink || "",
