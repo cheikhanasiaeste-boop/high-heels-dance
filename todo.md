@@ -1832,3 +1832,14 @@
 - [x] Add filter summary counter (showing X of Y sessions)
 - [x] Test all filter options (All, Today, Upcoming, Past, Custom Range)
 - [x] Verify responsive layout on desktop and mobile
+
+## Replace Google Meet with Zoom (Jan 22, 2026 - CRITICAL)
+- [x] Update all UI text from "Google Meet" to "Zoom"
+- [x] Update SessionDetail.tsx to show "Join Zoom" instead of "Google Meet"
+- [x] Update SessionView.tsx to remove embedded iframe and open Zoom in new tab
+- [x] Update MyBookings.tsx session type labels to show "Zoom"
+- [x] Update admin session creation form labels (AdminSessions.tsx)
+- [x] Fix embedded Zoom meeting view (removed iframe, opens in new tab - Zoom cannot be embedded)
+- [x] Update button text to "Join Zoom Session"
+- [x] Test Zoom link opening in new tab
+- [x] Verify all pages show correct Zoom branding

@@ -34,6 +34,7 @@ export default function Admin() {
     endTime: '', 
     eventType: 'online' as 'online' | 'in-person',
     location: '',
+    meetLink: '',
     isFree: true,
     price: '',
     title: 'One-on-One Dance Session',
@@ -146,6 +147,7 @@ export default function Admin() {
         endTime: '', 
         eventType: 'online',
         location: '',
+        meetLink: '',
         isFree: true,
         price: '',
         title: 'One-on-One Dance Session',
@@ -470,7 +472,7 @@ export default function Admin() {
                         value={newSlot.eventType}
                         onChange={(e) => setNewSlot({ ...newSlot, eventType: e.target.value as 'online' | 'in-person' })}
                       >
-                        <option value="online">Online (Google Meet)</option>
+                        <option value="online">Online (Zoom)</option>
                         <option value="in-person">In-Person</option>
                       </select>
                     </div>
@@ -483,6 +485,18 @@ export default function Admin() {
                           onChange={(e) => setNewSlot({ ...newSlot, location: e.target.value })}
                           placeholder="Studio address..."
                         />
+                      </div>
+                    )}
+                    {newSlot.eventType === 'online' && (
+                      <div className="space-y-2">
+                        <Label htmlFor="slot-meetlink">Zoom Meeting Link</Label>
+                        <Input
+                          id="slot-meetlink"
+                          value={newSlot.meetLink}
+                          onChange={(e) => setNewSlot({ ...newSlot, meetLink: e.target.value })}
+                          placeholder="https://zoom.us/j/..."
+                        />
+                        <p className="text-xs text-gray-500">Enter the Zoom meeting link for this session</p>
                       </div>
                     )}
                     <div className="space-y-2">

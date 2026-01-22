@@ -77,7 +77,7 @@ export default function SessionDetail() {
   // Handle Join Session button click
   const handleJoinSession = async () => {
     if (data?.slot?.eventType === 'online' && data.slot.meetLink) {
-      // Navigate to SessionView page for Google Meet embed
+      // Navigate to SessionView page for Zoom embed
       navigate(`/session-view/${bookingId}`);
     }
   };
@@ -251,7 +251,7 @@ export default function SessionDetail() {
                           onClick={handleJoinSession}
                         >
                           <Video className="w-5 h-5 mr-2" />
-                          Join Session Now
+                          Join Zoom Session
                         </Button>
                       </div>
                     ) : sessionState === 'upcoming' ? (
@@ -351,7 +351,7 @@ export default function SessionDetail() {
                     {isOnline ? 'Platform' : 'Location'}
                   </p>
                   <p className="font-medium">
-                    {isOnline ? 'Google Meet' : slot.location}
+                    {isOnline ? 'Zoom' : slot.location}
                   </p>
                 </div>
                 <div>
@@ -379,7 +379,7 @@ export default function SessionDetail() {
                     onClick={handleJoinSession}
                   >
                     <Video className="w-4 h-4 mr-2" />
-                    Join Session
+                    Join Zoom
                   </Button>
                 )}
                 <Button

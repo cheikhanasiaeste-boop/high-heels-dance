@@ -15,7 +15,7 @@ export default function SessionView() {
   const [sessionState, setSessionState] = useState<SessionState>('loading');
   const [errorMessage, setErrorMessage] = useState('');
   const [timeUntilStart, setTimeUntilStart] = useState('');
-  const [showMeetEmbed, setShowMeetEmbed] = useState(false);
+  // Zoom cannot be embedded, always opens in new tab
   
   // Fetch booking details with slot information
   const { data: bookings, isLoading } = trpc.bookings.myBookings.useQuery();
@@ -56,7 +56,7 @@ export default function SessionView() {
     return () => clearInterval(interval);
   }, [booking]);
   
-  // Handle joining session - show embedded Meet
+  // Handle joining session - open Zoom in new tab
   const handleJoinSession = () => {
     if (!booking?.slot?.meetLink) {
       setErrorMessage('Meeting link is not available');
@@ -64,8 +64,7 @@ export default function SessionView() {
       return;
     }
     
-    setShowMeetEmbed(true);
-    setSessionState('live');
+    window.open(booking.slot.meetLink, '_blank');
   };
   
   // Handle opening in new tab
@@ -109,50 +108,7 @@ export default function SessionView() {
     );
   }
   
-  // Show embedded Google Meet
-  if (showMeetEmbed && slot.meetLink) {
-    return (
-      <div className="h-screen w-screen flex flex-col bg-black">
-        <div className="bg-gray-900 text-white px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setShowMeetEmbed(false);
-                setSessionState('ready');
-              }}
-              className="text-white hover:bg-gray-800"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Exit Session
-            </Button>
-            <div>
-              <h2 className="font-semibold">{slot.title}</h2>
-              <p className="text-sm text-gray-400">
-                {new Date(slot.startTime).toLocaleString()} - {new Date(slot.endTime).toLocaleTimeString()}
-              </p>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleOpenInNewTab}
-            className="bg-transparent border-gray-600 text-white hover:bg-gray-800"
-          >
-            <ExternalLink className="mr-2 h-4 w-4" />
-            Open in New Tab
-          </Button>
-        </div>
-        <iframe
-          src={slot.meetLink}
-          allow="camera; microphone; fullscreen; speaker; display-capture"
-          className="flex-1 w-full border-0"
-          title="Google Meet Session"
-        />
-      </div>
-    );
-  }
+  // Zoom cannot be embedded in iframe - removed embedded view
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 py-8 px-4">
@@ -202,7 +158,7 @@ export default function SessionView() {
                 <div>
                   <p className="font-medium text-gray-900">Session Type</p>
                   <p className="text-sm text-gray-600">
-                    {slot.eventType === 'online' ? 'Online via Google Meet' : 'In-Person'}
+                    {slot.eventType === 'online' ? 'Online via Zoom' : 'In-Person'}
                   </p>
                   {slot.eventType === 'in-person' && slot.location && (
                     <p className="text-sm text-gray-500">{slot.location}</p>
@@ -232,28 +188,14 @@ export default function SessionView() {
                   </AlertDescription>
                 </Alert>
                 
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Button
-                    onClick={handleJoinSession}
-                    size="lg"
-                    className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-                  >
-                    <Video className="mr-2 h-5 w-5" />
-                    Join Session (Embedded)
-                  </Button>
-                  
-                  {slot.meetLink && (
-                    <Button
-                      onClick={handleOpenInNewTab}
-                      variant="outline"
-                      size="lg"
-                      className="flex-1"
-                    >
-                      <ExternalLink className="mr-2 h-5 w-5" />
-                      Open in New Tab
-                    </Button>
-                  )}
-                </div>
+                <Button
+                  onClick={handleJoinSession}
+                  size="lg"
+                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                >
+                  <Video className="mr-2 h-5 w-5" />
+                  Join Zoom Session
+                </Button>
                 
                 {slot.meetLink && (
                   <div className="p-4 bg-gray-50 rounded-lg">

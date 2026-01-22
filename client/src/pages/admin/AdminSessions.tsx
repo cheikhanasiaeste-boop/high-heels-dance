@@ -591,16 +591,16 @@ export default function AdminSessions() {
 
               {formData.eventType === "online" ? (
                 <div className="space-y-2">
-                  <Label htmlFor="sessionLink">Google Meet Link (Optional)</Label>
+                  <Label htmlFor="sessionLink">Zoom Meeting Link (Optional)</Label>
                   <Input
                     id="sessionLink"
                     type="url"
                     value={formData.sessionLink}
                     onChange={(e) => setFormData({ ...formData, sessionLink: e.target.value })}
-                    placeholder="https://meet.google.com/xxx-xxxx-xxx (auto-generated if empty)"
+                    placeholder="https://zoom.us/j/..."
                   />
                   <p className="text-sm text-muted-foreground">
-                    Leave empty to auto-generate a Google Meet link. Only visible to enrolled users.
+                    Enter the Zoom meeting link for this session. Only visible to enrolled users.
                   </p>
                 </div>
               ) : (
@@ -761,16 +761,16 @@ export default function AdminSessions() {
 
               {formData.eventType === "online" ? (
                 <div className="space-y-2">
-                  <Label htmlFor="edit-sessionLink">Google Meet Link</Label>
+                  <Label htmlFor="edit-sessionLink">Zoom Meeting Link</Label>
                   <Input
                     id="edit-sessionLink"
                     type="url"
                     value={formData.sessionLink}
                     onChange={(e) => setFormData({ ...formData, sessionLink: e.target.value })}
-                    placeholder="https://meet.google.com/xxx-xxxx-xxx"
+                    placeholder="https://zoom.us/j/..."
                   />
                   <p className="text-sm text-muted-foreground">
-                    Google Meet link for this session. View in session details after creation.
+                    Zoom meeting link for this session. View in session details after creation.
                   </p>
                 </div>
               ) : (
