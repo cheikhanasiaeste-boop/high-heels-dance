@@ -1,6 +1,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
+import { zoomRouter } from "./zoomRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -26,6 +27,7 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
 
 export const appRouter = router({
   system: systemRouter,
+  zoom: zoomRouter,
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
@@ -449,6 +451,7 @@ export const appRouter = router({
           endTime: z.string(),
           eventType: z.enum(["online", "in-person"]),
           location: z.string().optional(),
+          sessionLink: z.string().optional(), // Zoom Meeting ID
           isFree: z.boolean(),
           price: z.string().optional(),
           title: z.string(),
@@ -462,6 +465,7 @@ export const appRouter = router({
             endTime: new Date(input.endTime),
             eventType: input.eventType,
             location: input.location,
+            zoomMeetingId: input.sessionLink, // Store Zoom Meeting ID
             isFree: input.isFree,
             price: input.price,
             title: input.title,

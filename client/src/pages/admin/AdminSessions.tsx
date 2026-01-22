@@ -591,16 +591,16 @@ export default function AdminSessions() {
 
               {formData.eventType === "online" ? (
                 <div className="space-y-2">
-                  <Label htmlFor="sessionLink">Zoom Meeting Link (Optional)</Label>
+                  <Label htmlFor="sessionLink">Zoom Meeting ID (Optional)</Label>
                   <Input
                     id="sessionLink"
-                    type="url"
+                    type="text"
                     value={formData.sessionLink}
                     onChange={(e) => setFormData({ ...formData, sessionLink: e.target.value })}
-                    placeholder="https://zoom.us/j/..."
+                    placeholder="123-456-7890 or 1234567890"
                   />
                   <p className="text-sm text-muted-foreground">
-                    Enter the Zoom meeting link for this session. Only visible to enrolled users.
+                    Enter the numeric Zoom meeting ID (not the URL). Users will join via embedded Zoom SDK.
                   </p>
                 </div>
               ) : (
@@ -761,16 +761,16 @@ export default function AdminSessions() {
 
               {formData.eventType === "online" ? (
                 <div className="space-y-2">
-                  <Label htmlFor="edit-sessionLink">Zoom Meeting Link</Label>
+                  <Label htmlFor="edit-sessionLink">Zoom Meeting ID</Label>
                   <Input
                     id="edit-sessionLink"
-                    type="url"
+                    type="text"
                     value={formData.sessionLink}
                     onChange={(e) => setFormData({ ...formData, sessionLink: e.target.value })}
-                    placeholder="https://zoom.us/j/..."
+                    placeholder="123-456-7890 or 1234567890"
                   />
                   <p className="text-sm text-muted-foreground">
-                    Zoom meeting link for this session. View in session details after creation.
+                    Numeric Zoom meeting ID. Users will join via embedded Zoom SDK.
                   </p>
                 </div>
               ) : (

@@ -411,6 +411,7 @@ export async function getUserBookingsWithSlots(userId: number) {
         title: availabilitySlots.title,
         description: availabilitySlots.description,
         meetLink: availabilitySlots.meetLink,
+        zoomMeetingId: availabilitySlots.zoomMeetingId,
       },
     })
     .from(bookings)

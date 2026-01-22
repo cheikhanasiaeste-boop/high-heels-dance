@@ -102,8 +102,11 @@ export const availabilitySlots = mysqlTable("availabilitySlots", {
   location: text("location"), // Physical address for in-person events
   sessionLink: text("sessionLink"), // Google Meet link for online sessions (hidden until enrolled)
   
-  // Google Meet Integration
+  // Google Meet Integration (deprecated - use Zoom instead)
   meetLink: text("meetLink"), // Google Meet link (e.g., "https://meet.google.com/xxx-xxxx-xxx")
+  
+  // Zoom Web SDK Integration
+  zoomMeetingId: varchar("zoomMeetingId", { length: 50 }), // Zoom meeting ID (numeric, stored as string)
   
   isFree: boolean("isFree").default(true).notNull(),
   price: varchar("price", { length: 20 }), // Price in EUR (e.g., "50.00")

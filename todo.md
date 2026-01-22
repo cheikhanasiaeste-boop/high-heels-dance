@@ -1849,3 +1849,20 @@
 - [x] Filter out past/completed sessions from initial display
 - [x] Ensure users can still access past sessions via filter dropdown
 - [x] Test that only upcoming and live sessions show by default
+
+## Zoom Web SDK Integration - Embedded Meetings (Jan 22, 2026 - CRITICAL)
+- [x] Install Zoom SDK npm packages (@zoom/meetingsdk, jsrsasign)
+- [x] Create Zoom API helper (server/_core/zoom.ts) with OAuth and signature generation
+- [x] Add zoomMeetingId field to database schema
+- [x] Update admin session creation to accept Zoom Meeting ID
+- [x] Create /api/zoom/join endpoint with signature generation (server/zoomRouter.ts)
+- [x] Implement access control (auth, booking verification, 15-min window)
+- [x] Generate short-lived SDK signature (60 sec expiry)
+- [x] Create ZoomMeeting component with embedded SDK (client/src/components/ZoomMeeting.tsx)
+- [x] Update SessionView to show Join button only within 15-min window
+- [x] Initialize Zoom SDK with meeting_id and signature
+- [x] Configure Zoom settings (Waiting Room ON, Join Before Host OFF)
+- [x] Remove all Zoom URL exposure from UI
+- [x] Update admin forms to use Zoom Meeting ID instead of URL
+- [x] Write vitest test for Zoom SDK signature generation
+- [ ] Test complete embedded meeting flow with real Zoom meeting (requires manual testing with actual Zoom meeting ID)

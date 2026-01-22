@@ -1,0 +1,1 @@
+ALTER TABLE `availabilitySlots` ADD `zoomMeetingId` varchar(50);

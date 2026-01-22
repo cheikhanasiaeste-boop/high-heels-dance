@@ -3,7 +3,9 @@ import { useParams, useLocation } from 'wouter';
 import { trpc } from '@/lib/trpc';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, AlertCircle, Video, Clock, CheckCircle, ArrowLeft, ExternalLink } from 'lucide-react';
+import { Loader2, AlertCircle, Video, Clock, CheckCircle, ArrowLeft, ExternalLink, X } from 'lucide-react';
+import { ZoomMeeting } from '@/components/ZoomMeeting';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 type SessionState = 'loading' | 'upcoming' | 'ready' | 'live' | 'ended' | 'error';
@@ -15,7 +17,7 @@ export default function SessionView() {
   const [sessionState, setSessionState] = useState<SessionState>('loading');
   const [errorMessage, setErrorMessage] = useState('');
   const [timeUntilStart, setTimeUntilStart] = useState('');
-  // Zoom cannot be embedded, always opens in new tab
+  const [showZoomMeeting, setShowZoomMeeting] = useState(false);
   
   // Fetch booking details with slot information
   const { data: bookings, isLoading } = trpc.bookings.myBookings.useQuery();
@@ -56,22 +58,20 @@ export default function SessionView() {
     return () => clearInterval(interval);
   }, [booking]);
   
-  // Handle joining session - open Zoom in new tab
+  // Handle joining session - show embedded Zoom meeting
   const handleJoinSession = () => {
-    if (!booking?.slot?.meetLink) {
-      setErrorMessage('Meeting link is not available');
+    if (!booking?.slot?.zoomMeetingId) {
+      setErrorMessage('Zoom meeting is not configured for this session');
       setSessionState('error');
       return;
     }
     
-    window.open(booking.slot.meetLink, '_blank');
+    setShowZoomMeeting(true);
   };
   
-  // Handle opening in new tab
-  const handleOpenInNewTab = () => {
-    if (booking?.slot?.meetLink) {
-      window.open(booking.slot.meetLink, '_blank');
-    }
+  // Handle closing Zoom meeting
+  const handleCloseZoom = () => {
+    setShowZoomMeeting(false);
   };
   
   if (isLoading || !booking) {
@@ -111,6 +111,7 @@ export default function SessionView() {
   // Zoom cannot be embedded in iframe - removed embedded view
   
   return (
+    <>
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <Button
@@ -240,5 +241,16 @@ export default function SessionView() {
         </Card>
       </div>
     </div>
+    
+    {/* Zoom Meeting Dialog */}
+    <Dialog open={showZoomMeeting} onOpenChange={setShowZoomMeeting}>
+      <DialogContent className="max-w-[95vw] w-full h-[90vh] p-0">
+        <ZoomMeeting 
+          bookingId={parseInt(bookingId!)} 
+          onClose={handleCloseZoom}
+        />
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
