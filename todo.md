@@ -1843,3 +1843,9 @@
 - [x] Update button text to "Join Zoom Session"
 - [x] Test Zoom link opening in new tab
 - [x] Verify all pages show correct Zoom branding
+
+## Hide Completed Sessions from My Sessions Page (Jan 22, 2026)
+- [x] Update default date filter to "Upcoming" instead of "All Sessions"
+- [x] Filter out past/completed sessions from initial display
+- [x] Ensure users can still access past sessions via filter dropdown
+- [x] Test that only upcoming and live sessions show by default

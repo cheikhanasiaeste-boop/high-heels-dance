@@ -15,7 +15,7 @@ export default function MyBookings() {
   const { data: bookings, isLoading } = trpc.bookings.myBookings.useQuery();
   
   // Date filter state
-  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'upcoming' | 'past' | 'custom'>('all');
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'upcoming' | 'past' | 'custom'>('upcoming');
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
 
