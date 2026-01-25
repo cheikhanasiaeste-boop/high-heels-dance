@@ -43,9 +43,9 @@ async function startServer() {
     handleStripeWebhook
   );
   
-  // Configure body parser with larger size limit for file uploads
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  // Configure body parser with larger size limit for file uploads (300MB for videos)
+  app.use(express.json({ limit: "300mb" }));
+  app.use(express.urlencoded({ limit: "300mb", extended: true }));
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
   // SSE endpoint for admin notifications (requires admin auth)

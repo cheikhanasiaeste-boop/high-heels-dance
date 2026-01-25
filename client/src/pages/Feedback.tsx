@@ -108,9 +108,9 @@ export default function Feedback() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (max 50MB)
-    if (file.size > 50 * 1024 * 1024) {
-      toast.error("Video file must be less than 50MB");
+    // Check file size (max 300MB)
+    if (file.size > 300 * 1024 * 1024) {
+      toast.error("Video file must be less than 300MB");
       return;
     }
 
