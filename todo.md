@@ -1908,3 +1908,16 @@
 - [ ] Implement Stripe subscription creation (webhook handling needed)
 - [ ] Test membership access control with real subscriptions
 - [ ] Document membership system for deployment
+
+## Subscription Visibility and Management (Jan 25, 2026 - CRITICAL)
+- [x] Add "Membership" item to user profile dropdown menu
+- [x] Update Membership page to show current subscription status prominently
+- [x] Add subscription status card (Free/Monthly/Annual) at top of Membership page
+- [x] Show subscription expiry date for active memberships
+- [x] Add "Upgrade" or "Change Plan" buttons based on current status
+- [x] Add subscription CTA section to CourseDetail page
+- [x] Show "Or get unlimited access with membership" option on course pages
+- [x] Add subscription CTA to BookSession page
+- [x] Show membership benefits comparison on enrollment pages
+- [ ] Test subscription visibility across all pages
+- [ ] Verify correct buttons show based on membership status

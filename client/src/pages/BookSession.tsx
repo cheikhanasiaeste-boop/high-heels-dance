@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Clock, Video, MapPin, Euro, Sparkles, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Clock, Video, MapPin, Euro, Sparkles, ChevronLeft, ChevronRight, Crown } from "lucide-react";
 import { Link } from "wouter";
 import { useState, useEffect, useMemo } from "react";
 import { toast } from "sonner";
@@ -574,6 +574,21 @@ export default function BookSession() {
                 rows={3}
               />
             </div>
+
+            {/* Membership CTA - Show only for paid sessions when user is authenticated */}
+            {selectedSlot && selectedSlot.price && Number(selectedSlot.price) > 0 && isAuthenticated && (
+              <div className="pt-4 border-t">
+                <p className="text-sm text-muted-foreground mb-3 text-center">
+                  Or get unlimited access to all sessions with membership
+                </p>
+                <a href="/membership">
+                  <Button variant="outline" className="w-full" size="sm">
+                    <Crown className="h-4 w-4 mr-2" />
+                    View Membership Plans
+                  </Button>
+                </a>
+              </div>
+            )}
           </div>
 
           <DialogFooter>

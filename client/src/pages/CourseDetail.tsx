@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Lock, CheckCircle, Play, X } from "lucide-react";
+import { ArrowLeft, Lock, CheckCircle, Play, X, Crown } from "lucide-react";
 import { Link, useParams } from "wouter";
 import { toast } from "sonner";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
@@ -390,6 +390,21 @@ export default function CourseDetail() {
 
                   {/* Primary CTA Button */}
                   <CTAButton />
+
+                  {/* Membership CTA - Show only for paid courses when user doesn't have membership */}
+                  {!course.isFree && !canAccess && isAuthenticated && (
+                    <div className="pt-4 border-t">
+                      <p className="text-sm text-muted-foreground mb-3 text-center">
+                        Or get unlimited access to all courses
+                      </p>
+                      <a href="/membership">
+                        <Button variant="outline" className="w-full" size="lg">
+                          <Crown className="h-4 w-4 mr-2" />
+                          View Membership Plans
+                        </Button>
+                      </a>
+                    </div>
+                  )}
 
                   {/* Course Metadata - Visually grouped */}
                   <div className="pt-4 border-t space-y-3">
