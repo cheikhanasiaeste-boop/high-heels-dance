@@ -2330,3 +2330,175 @@ export async function updateMembershipEndDate(userId: number, endDate: Date) {
 
   return getUserById(userId);
 }
+
+
+// ============================================================================
+// Discount Code Management
+// ============================================================================
+
+/**
+ * Get discount code by code string
+ */
+export async function getDiscountCodeByCode(code: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const { discountCodes } = await import("../drizzle/schema");
+  const [discount] = await db.select()
+    .from(discountCodes)
+    .where(eq(discountCodes.code, code.toUpperCase()))
+    .limit(1);
+
+  return discount || null;
+}
+
+/**
+ * Get all discount codes (admin)
+ */
+export async function getAllDiscountCodes() {
+  const db = await getDb();
+  if (!db) return [];
+
+  const { discountCodes } = await import("../drizzle/schema");
+  return db.select().from(discountCodes).orderBy(desc(discountCodes.createdAt));
+}
+
+/**
+ * Create discount code (admin)
+ */
+export async function createDiscountCode(data: {
+  code: string;
+  description?: string;
+  discountType: 'percentage' | 'fixed';
+  discountValue: number;
+  validFrom: Date;
+  validTo: Date;
+  maxUses?: number;
+  applicableTo: 'all' | 'subscriptions' | 'courses';
+  createdBy: number;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { discountCodes } = await import("../drizzle/schema");
+  await db.insert(discountCodes).values({
+    code: data.code.toUpperCase(),
+    description: data.description || null,
+    discountType: data.discountType,
+    discountValue: data.discountValue.toString(),
+    validFrom: data.validFrom,
+    validTo: data.validTo,
+    maxUses: data.maxUses || null,
+    applicableTo: data.applicableTo,
+    createdBy: data.createdBy,
+  });
+
+  return getDiscountCodeByCode(data.code);
+}
+
+/**
+ * Update discount code (admin)
+ */
+export async function updateDiscountCode(
+  id: number,
+  data: Partial<{
+    description: string;
+    discountValue: number;
+    validFrom: Date;
+    validTo: Date;
+    maxUses: number;
+    isActive: boolean;
+    applicableTo: 'all' | 'subscriptions' | 'courses';
+  }>
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { discountCodes } = await import("../drizzle/schema");
+  const updateData: any = { ...data, updatedAt: new Date() };
+  if (data.discountValue !== undefined) {
+    updateData.discountValue = data.discountValue.toString();
+  }
+  await db.update(discountCodes)
+    .set(updateData)
+    .where(eq(discountCodes.id, id));
+
+  const [updated] = await db.select().from(discountCodes).where(eq(discountCodes.id, id));
+  return updated || null;
+}
+
+/**
+ * Delete discount code (admin)
+ */
+export async function deleteDiscountCode(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { discountCodes } = await import("../drizzle/schema");
+  await db.delete(discountCodes).where(eq(discountCodes.id, id));
+  return true;
+}
+
+/**
+ * Increment discount code usage
+ */
+export async function incrementDiscountUsage(discountCodeId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { discountCodes } = await import("../drizzle/schema");
+  const { sql } = await import("drizzle-orm");
+  await db.update(discountCodes)
+    .set({ currentUses: sql`${discountCodes.currentUses} + 1` })
+    .where(eq(discountCodes.id, discountCodeId));
+}
+
+/**
+ * Record discount usage
+ */
+export async function recordDiscountUsage(data: {
+  discountCodeId: number;
+  userId: number;
+  discountAmount: number;
+  originalAmount: number;
+  finalAmount: number;
+  transactionType: 'subscription' | 'course';
+  transactionId?: string;
+}) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const { discountUsage } = await import("../drizzle/schema");
+  const values: any = {
+    discountCodeId: data.discountCodeId,
+    userId: data.userId,
+    discountAmount: data.discountAmount,
+    originalAmount: data.originalAmount,
+    finalAmount: data.finalAmount,
+    transactionType: data.transactionType,
+  };
+  if (data.transactionId) {
+    values.transactionId = data.transactionId;
+  }
+  await db.insert(discountUsage).values(values);
+}
+
+/**
+ * Get discount usage statistics
+ */
+export async function getDiscountUsageStats(discountCodeId: number) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const { discountUsage } = await import("../drizzle/schema");
+  const { sql } = await import("drizzle-orm");
+  const [stats] = await db.select({
+    totalUses: sql<number>`COUNT(*)`,
+    totalDiscounted: sql<number>`SUM(${discountUsage.discountAmount})`,
+    totalRevenue: sql<number>`SUM(${discountUsage.finalAmount})`,
+  })
+    .from(discountUsage)
+    .where(eq(discountUsage.discountCodeId, discountCodeId));
+
+  return stats;
+}

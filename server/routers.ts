@@ -3,6 +3,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { zoomRouter } from "./zoomRouter";
 import { membershipRouter } from "./membershipRouter";
+import { discountRouter } from "./discountRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -30,6 +31,7 @@ export const appRouter = router({
   system: systemRouter,
   zoom: zoomRouter,
   membership: membershipRouter,
+  discount: discountRouter,
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),

@@ -1956,3 +1956,21 @@
 - [ ] Test monthly subscription workflow
 - [ ] Test annual subscription workflow (monthly billing)
 - [x] Verify activation and end dates are accurate (17 vitest tests passing)
+
+
+## Discount Code System (Jan 25, 2026 - NEW)
+- [x] Create discount codes table in database schema
+- [x] Add discount fields: code, description, discountType (percentage/fixed), discountValue, validFrom, validTo, maxUses, currentUses, isActive
+- [x] Create discount validation functions (checkCodeValidity, applyDiscount)
+- [x] Implement discount calculation logic for pricing updates
+- [x] Create admin discount management page/component
+- [x] Add discount CRUD endpoints (create, read, update, delete)
+- [x] Implement discount code input field in checkout
+- [x] Update subscription checkout to apply discount codes
+- [ ] Update course purchase checkout to apply discount codes
+- [x] Display discounted price in payment pages
+- [x] Add discount validation error messages
+- [x] Test discount code creation and validation
+- [ ] Test discount application to subscriptions
+- [ ] Test discount application to course purchases
+- [x] Test discount expiration and max uses limits (16 vitest tests passing)

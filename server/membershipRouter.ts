@@ -50,6 +50,7 @@ export const membershipRouter = router({
   createSubscriptionCheckout: protectedProcedure
     .input(z.object({
       plan: z.enum(['monthly', 'annual']),
+      discountCode: z.string().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       // Check if user already has active membership
@@ -88,6 +89,7 @@ export const membershipRouter = router({
         metadata: {
           user_id: ctx.user.id.toString(),
           plan: input.plan,
+          discountCode: input.discountCode || '',
           customer_email: ctx.user.email || '',
           customer_name: ctx.user.name || '',
         },

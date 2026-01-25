@@ -204,6 +204,13 @@
       "when": 1769340136832,
       "tag": "0028_simple_bishop",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "5",
+      "when": 1769351062769,
+      "tag": "0029_past_jubilee",
+      "breakpoints": true
     }
   ]
 }

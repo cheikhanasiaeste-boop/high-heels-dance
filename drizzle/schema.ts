@@ -386,3 +386,51 @@ export const messages = mysqlTable("messages", {
 
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = typeof messages.$inferInsert;
+
+
+/**
+ * Discount codes table - stores all discount codes for subscriptions and courses
+ */
+export const discountCodes = mysqlTable("discountCodes", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 50 }).notNull().unique(),
+  description: text("description"),
+  discountType: mysqlEnum("discountType", ["percentage", "fixed"]).notNull(), // percentage (0-100) or fixed amount
+  discountValue: decimal("discountValue", { precision: 10, scale: 2 }).notNull(), // e.g., 20 for 20% or $20 off
+  validFrom: timestamp("validFrom").notNull(), // When the code becomes valid
+  validTo: timestamp("validTo").notNull(), // When the code expires
+  maxUses: int("maxUses"), // null = unlimited
+  currentUses: int("currentUses").default(0).notNull(), // How many times used
+  isActive: boolean("isActive").default(true).notNull(),
+  applicableTo: mysqlEnum("applicableTo", ["all", "subscriptions", "courses"]).default("all").notNull(), // What this code applies to
+  createdBy: int("createdBy").notNull(), // Admin who created it
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  codeIdx: index("discountCodes_code_idx").on(table.code),
+  createdByIdx: index("discountCodes_createdBy_idx").on(table.createdBy),
+}));
+
+export type DiscountCode = typeof discountCodes.$inferSelect;
+export type InsertDiscountCode = typeof discountCodes.$inferInsert;
+
+/**
+ * Discount usage tracking - tracks which users used which discount codes
+ */
+export const discountUsage = mysqlTable("discountUsage", {
+  id: int("id").autoincrement().primaryKey(),
+  discountCodeId: int("discountCodeId").notNull().references(() => discountCodes.id),
+  userId: int("userId").notNull().references(() => users.id),
+  usedAt: timestamp("usedAt").defaultNow().notNull(),
+  discountAmount: decimal("discountAmount", { precision: 10, scale: 2 }).notNull(), // Amount discounted
+  originalAmount: decimal("originalAmount", { precision: 10, scale: 2 }).notNull(), // Original price before discount
+  finalAmount: decimal("finalAmount", { precision: 10, scale: 2 }).notNull(), // Final price after discount
+  transactionType: mysqlEnum("transactionType", ["subscription", "course"]).notNull(),
+  transactionId: varchar("transactionId", { length: 255 }), // Stripe subscription/payment ID or course purchase ID
+}, (table) => ({
+  discountCodeIdIdx: index("discountUsage_discountCodeId_idx").on(table.discountCodeId),
+  userIdIdx: index("discountUsage_userId_idx").on(table.userId),
+}));
+
+export type DiscountUsage = typeof discountUsage.$inferSelect;
+export type InsertDiscountUsage = typeof discountUsage.$inferInsert;
