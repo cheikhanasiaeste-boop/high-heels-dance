@@ -3,11 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Check, Crown, Sparkles, ArrowLeft } from "lucide-react";
-import { Link } from "wouter";
+import { useLocation } from "wouter";
 
 
 export default function Membership() {
-
+  const [, navigate] = useLocation();
   const { data: membershipStatus, isLoading: statusLoading } = trpc.membership.getStatus.useQuery();
   const { data: pricing, isLoading: pricingLoading } = trpc.membership.getPricing.useQuery();
 
@@ -36,12 +36,14 @@ export default function Membership() {
   return (
     <div className="container mx-auto py-8 px-4">
       {/* Back Button */}
-      <Link href="/">
-        <Button variant="ghost" className="mb-4">
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Home
-        </Button>
-      </Link>
+      <Button 
+        variant="ghost" 
+        className="mb-4"
+        onClick={() => window.history.back()}
+      >
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back
+      </Button>
 
       {/* Current Status */}
       <div className="mb-8">
@@ -96,7 +98,7 @@ export default function Membership() {
           <h2 className="text-2xl font-bold mb-6">Upgrade Your Membership</h2>
           <div className="grid md:grid-cols-2 gap-6">
             {/* Monthly Plan */}
-            <Card className="relative">
+            <Card className="relative flex flex-col">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Sparkles className="size-5 text-purple-600" />
@@ -104,7 +106,7 @@ export default function Membership() {
                 </CardTitle>
                 <CardDescription>{pricing?.monthly.description}</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-1">
                 <div className="mb-6">
                   <span className="text-4xl font-bold">${pricing?.monthly.price}</span>
                   <span className="text-muted-foreground">/month</span>
@@ -140,7 +142,7 @@ export default function Membership() {
             </Card>
 
             {/* Annual Plan */}
-            <Card className="relative border-purple-600 border-2">
+            <Card className="relative border-purple-600 border-2 flex flex-col">
               <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                 <Badge className="bg-purple-600">Best Value</Badge>
               </div>
@@ -151,7 +153,7 @@ export default function Membership() {
                 </CardTitle>
                 <CardDescription>{pricing?.annual.description}</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="flex-1">
                 <div className="mb-6">
                   <span className="text-4xl font-bold">${pricing?.annual.price}</span>
                   <span className="text-muted-foreground">/year</span>

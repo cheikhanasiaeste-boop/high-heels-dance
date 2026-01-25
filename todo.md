@@ -1934,4 +1934,10 @@
 - [x] Verify back button on Course Learn page (breadcrumb navigation exists)
 - [x] Review all pages to ensure back buttons exist where needed
 - [x] Show subscription CTA on free courses (not just paid courses)
-- [ ] Test all navigation flows and verify fixes
+- [x] Test all navigation flows and verify fixes
+
+## Navigation and Button Alignment Fixes (Jan 25, 2026 - FOLLOW-UP)
+- [x] Fixed back button on Membership page to use browser history (window.history.back()) instead of navigating to home
+- [x] Fixed subscription button alignment on Membership page using flexbox (flex flex-col on cards, flex-1 on CardContent)
+- [x] Buttons now align perfectly regardless of content differences between Monthly and Annual cards
+- [x] Back button now returns to previous page (e.g., booking page) instead of always going to home
