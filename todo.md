@@ -1926,3 +1926,12 @@
 - [x] Update DialogOverlay component to use React.forwardRef()
 - [x] Test that warning is resolved
 - [x] Verify dialog functionality still works correctly
+
+## UI Fixes - Button Alignment, Back Buttons, Membership CTA (Jan 25, 2026 - CRITICAL)
+- [x] Fix button alignment on Membership page (buttons already have w-full class)
+- [x] Make "View Membership Plans" button stand out more in booking dialog (gradient purple-to-pink)
+- [x] Add back button to Membership page (Back to Home)
+- [x] Verify back button on Course Learn page (breadcrumb navigation exists)
+- [x] Review all pages to ensure back buttons exist where needed
+- [x] Show subscription CTA on free courses (not just paid courses)
+- [ ] Test all navigation flows and verify fixes

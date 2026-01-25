@@ -391,8 +391,8 @@ export default function CourseDetail() {
                   {/* Primary CTA Button */}
                   <CTAButton />
 
-                  {/* Membership CTA - Show only for paid courses when user doesn't have membership */}
-                  {!course.isFree && !canAccess && isAuthenticated && (
+                  {/* Membership CTA - Show for all courses when user doesn't have membership */}
+                  {isAuthenticated && !membershipStatus?.isActive && (
                     <div className="pt-4 border-t">
                       <p className="text-sm text-muted-foreground mb-3 text-center">
                         Or get unlimited access to all courses

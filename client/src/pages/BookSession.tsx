@@ -582,7 +582,10 @@ export default function BookSession() {
                   Or get unlimited access to all sessions with membership
                 </p>
                 <a href="/membership">
-                  <Button variant="outline" className="w-full" size="sm">
+                  <Button 
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white border-0" 
+                    size="sm"
+                  >
                     <Crown className="h-4 w-4 mr-2" />
                     View Membership Plans
                   </Button>
