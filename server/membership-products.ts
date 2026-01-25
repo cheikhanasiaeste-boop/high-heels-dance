@@ -13,10 +13,11 @@ export const MEMBERSHIP_PRODUCTS = {
   },
   ANNUAL: {
     name: 'Annual Membership',
-    description: 'Full access to all courses and classes for 1 year',
-    priceInCents: 29999, // $299.99/year
-    interval: 'year' as const,
+    description: 'Full access to all courses and classes for 1 year (billed monthly)',
+    priceInCents: 2499, // $24.99/month, billed monthly for 12 months
+    interval: 'month' as const,
     intervalCount: 1,
+    billingCycles: 12, // 12 months = 1 year commitment
   },
 };
 

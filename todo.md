@@ -1941,3 +1941,18 @@
 - [x] Fixed subscription button alignment on Membership page using flexbox (flex flex-col on cards, flex-1 on CardContent)
 - [x] Buttons now align perfectly regardless of content differences between Monthly and Annual cards
 - [x] Back button now returns to previous page (e.g., booking page) instead of always going to home
+
+## Stripe Subscription Implementation (Jan 25, 2026 - CRITICAL)
+- [x] Change Annual subscription to monthly billing ($24.99/month for 12-month commitment)
+- [x] Update pricing display to show "$24.99/month billed monthly" for Annual plan
+- [x] Update pricing description to clarify 12-month commitment
+- [x] Create Stripe products for Monthly and Annual subscriptions
+- [x] Implement Stripe subscription creation endpoint
+- [ ] Handle Stripe webhook for subscription events (created, updated, deleted)
+- [x] Set up accurate membership activation dates (immediate upon subscription)
+- [x] Set up accurate membership end dates (based on subscription period)
+- [ ] Create subscription status sync from Stripe to database
+- [x] Grant admin yearly subscription starting from today
+- [ ] Test monthly subscription workflow
+- [ ] Test annual subscription workflow (monthly billing)
+- [x] Verify activation and end dates are accurate (17 vitest tests passing)

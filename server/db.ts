@@ -2242,3 +2242,91 @@ export async function getPublishedAvailableSlots(startDate?: Date, endDate?: Dat
   
   return availableSlots;
 }
+
+
+// ============================================================================
+// Membership Management
+// ============================================================================
+
+/**
+ * Set user membership with activation and end dates
+ */
+export async function setUserMembership(
+  userId: number,
+  membershipStatus: 'free' | 'monthly' | 'annual',
+  stripeSubscriptionId?: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const now = new Date();
+  
+  // Calculate end date based on membership type
+  let endDate: Date | null = null;
+  if (membershipStatus === 'monthly') {
+    endDate = new Date(now);
+    endDate.setMonth(endDate.getMonth() + 1);
+  } else if (membershipStatus === 'annual') {
+    endDate = new Date(now);
+    endDate.setFullYear(endDate.getFullYear() + 1);
+  }
+
+  await db.update(users)
+    .set({
+      membershipStatus,
+      membershipStartDate: membershipStatus === 'free' ? null : now,
+      membershipEndDate: endDate,
+      stripeSubscriptionId: stripeSubscriptionId || null,
+    })
+    .where(eq(users.id, userId));
+
+  return getUserById(userId);
+}
+
+/**
+ * Cancel user membership
+ */
+export async function cancelUserMembership(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(users)
+    .set({
+      membershipStatus: 'free',
+      membershipStartDate: null,
+      membershipEndDate: null,
+      stripeSubscriptionId: null,
+    })
+    .where(eq(users.id, userId));
+
+  return getUserById(userId);
+}
+
+/**
+ * Get user by Stripe subscription ID
+ */
+export async function getUserByStripeSubscriptionId(subscriptionId: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  const [user] = await db.select()
+    .from(users)
+    .where(eq(users.stripeSubscriptionId, subscriptionId))
+    .limit(1);
+
+  return user || null;
+}
+
+/**
+ * Update membership end date (for subscription renewals)
+ */
+export async function updateMembershipEndDate(userId: number, endDate: Date) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  await db.update(users)
+    .set({ membershipEndDate: endDate })
+    .where(eq(users.id, userId));
+
+  return getUserById(userId);
+}

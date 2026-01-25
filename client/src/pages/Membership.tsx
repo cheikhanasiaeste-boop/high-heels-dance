@@ -2,8 +2,9 @@ import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Crown, Sparkles, ArrowLeft } from "lucide-react";
+import { Check, Crown, Sparkles, ArrowLeft, Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
+import { useState } from "react";
 
 
 export default function Membership() {
@@ -11,8 +12,22 @@ export default function Membership() {
   const { data: membershipStatus, isLoading: statusLoading } = trpc.membership.getStatus.useQuery();
   const { data: pricing, isLoading: pricingLoading } = trpc.membership.getPricing.useQuery();
 
-  const handleUpgrade = (plan: "monthly" | "annual") => {
-    alert(`${plan === "monthly" ? "Monthly" : "Annual"} membership subscription is being set up. Coming soon!`);
+  const [isLoading, setIsLoading] = useState(false);
+  const createCheckout = trpc.membership.createSubscriptionCheckout.useMutation();
+
+  const handleUpgrade = async (plan: "monthly" | "annual") => {
+    try {
+      setIsLoading(true);
+      const { url } = await createCheckout.mutateAsync({ plan });
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Failed to create checkout session. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (statusLoading || pricingLoading) {
@@ -135,7 +150,9 @@ export default function Membership() {
                   className="w-full"
                   size="lg"
                   onClick={() => handleUpgrade("monthly")}
+                  disabled={isLoading}
                 >
+                  {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                   Subscribe Monthly
                 </Button>
               </CardFooter>
@@ -156,9 +173,10 @@ export default function Membership() {
               <CardContent className="flex-1">
                 <div className="mb-6">
                   <span className="text-4xl font-bold">${pricing?.annual.price}</span>
-                  <span className="text-muted-foreground">/year</span>
-                  <p className="text-sm text-green-600 font-semibold mt-1">
-                    Save ${((parseFloat(pricing?.monthly.price || "0") * 12) - parseFloat(pricing?.annual.price || "0")).toFixed(2)} per year
+                  <span className="text-muted-foreground">/month</span>
+                  <p className="text-xs text-muted-foreground mt-1">Billed monthly for 12 months</p>
+                  <p className="text-sm text-green-600 font-semibold mt-2">
+                    Save ${(pricing?.annual.savingsPerYear || 0).toFixed(2)} per year
                   </p>
                 </div>
                 <ul className="space-y-3">
@@ -189,7 +207,9 @@ export default function Membership() {
                   className="w-full bg-purple-600 hover:bg-purple-700"
                   size="lg"
                   onClick={() => handleUpgrade("annual")}
+                  disabled={isLoading}
                 >
+                  {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                   Subscribe Annually
                 </Button>
               </CardFooter>
