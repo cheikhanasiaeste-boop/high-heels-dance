@@ -2,6 +2,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { zoomRouter } from "./zoomRouter";
+import { membershipRouter } from "./membershipRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -28,6 +29,7 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
 export const appRouter = router({
   system: systemRouter,
   zoom: zoomRouter,
+  membership: membershipRouter,
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
@@ -68,8 +70,16 @@ export const appRouter = router({
         // Free courses are accessible to all authenticated users
         if (course.isFree) return true;
         
-        // Check if user purchased the course
-        return await db.hasUserPurchasedCourse(ctx.user.id, input.courseId);
+        // Check if user has active membership
+        const { canAccessContent } = await import("./membership-products");
+        const hasPurchased = await db.hasUserPurchasedCourse(ctx.user.id, input.courseId);
+        
+        return canAccessContent(
+          ctx.user.membershipStatus,
+          ctx.user.membershipEndDate,
+          course.isFree,
+          hasPurchased
+        );
       }),
     
     // Get modules with lessons for course learning page
@@ -93,7 +103,17 @@ export const appRouter = router({
         const course = await db.getCourseById(input.courseId);
         if (!course) return false;
         if (course.isFree) return true;
-        return await db.hasUserPurchasedCourse(ctx.user.id, input.courseId);
+        
+        // Check membership or purchase
+        const { canAccessContent } = await import("./membership-products");
+        const hasPurchased = await db.hasUserPurchasedCourse(ctx.user.id, input.courseId);
+        
+        return canAccessContent(
+          ctx.user.membershipStatus,
+          ctx.user.membershipEndDate,
+          course.isFree,
+          hasPurchased
+        );
       }),
     
     // Mark lesson as completed

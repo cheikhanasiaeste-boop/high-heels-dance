@@ -12,6 +12,11 @@ export const users = mysqlTable("users", {
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
   hasSeenWelcome: boolean("hasSeenWelcome").default(false).notNull(),
   lastViewedByAdmin: timestamp("lastViewedByAdmin"),
+  // Membership fields
+  membershipStatus: mysqlEnum("membershipStatus", ["free", "monthly", "annual"]).default("free").notNull(),
+  membershipStartDate: timestamp("membershipStartDate"),
+  membershipEndDate: timestamp("membershipEndDate"),
+  stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),

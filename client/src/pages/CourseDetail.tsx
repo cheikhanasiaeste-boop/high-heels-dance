@@ -32,6 +32,11 @@ export default function CourseDetail() {
     { enabled: isAuthenticated }
   );
   
+  const { data: membershipStatus } = trpc.membership.getStatus.useQuery(
+    undefined,
+    { enabled: isAuthenticated }
+  );
+  
   const checkoutMutation = trpc.purchases.createCheckoutSession.useMutation({
     onSuccess: (data) => {
       if (data.url) {
@@ -169,6 +174,30 @@ export default function CourseDetail() {
       );
     }
 
+    // Show upgrade to membership option for paid courses
+    if (!course.isFree && !membershipStatus?.isActive) {
+      return (
+        <div className="space-y-3">
+          <Button 
+            className="w-full text-lg py-6" 
+            size="lg"
+            onClick={handlePurchase}
+            disabled={checkoutMutation.isPending}
+          >
+            {checkoutMutation.isPending 
+              ? "Processing..." 
+              : `Purchase for €${course.price}`}
+          </Button>
+          <div className="text-center text-sm text-muted-foreground">
+            or{" "}
+            <Link href="/membership" className="text-purple-600 hover:underline font-semibold">
+              Get Membership for unlimited access
+            </Link>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <Button 
         className="w-full text-lg py-6" 
@@ -178,9 +207,7 @@ export default function CourseDetail() {
       >
         {checkoutMutation.isPending 
           ? "Processing..." 
-          : course.isFree 
-            ? "Enroll for Free" 
-            : `Purchase for €${course.price}`}
+          : "Enroll for Free"}
       </Button>
     );
   };

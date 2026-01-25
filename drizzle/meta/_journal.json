@@ -197,6 +197,13 @@
       "when": 1769107483978,
       "tag": "0027_cool_thunderbird",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "5",
+      "when": 1769340136832,
+      "tag": "0028_simple_bishop",
+      "breakpoints": true
     }
   ]
 }

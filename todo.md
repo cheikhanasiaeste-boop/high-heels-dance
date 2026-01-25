@@ -1874,3 +1874,37 @@
 - [x] Restart server and verify no errors
 - [x] Test homepage loads without React errors
 - [x] Verify no other breaking changes from React downgrade
+
+
+## Membership System Implementation (Jan 25, 2026 - CRITICAL)
+- [ ] Add membership fields to users table (membershipStatus, membershipStartDate, membershipEndDate, stripeSubscriptionId)
+- [ ] Create memberships table to track membership history
+- [ ] Add membershipType enum (free, monthly, annual)
+- [ ] Push database migrations
+- [ ] Create Stripe products for monthly and annual memberships
+- [ ] Implement subscription creation endpoint
+- [ ] Implement subscription cancellation endpoint
+- [ ] Create access control helper to check membership status
+- [ ] Update course enrollment to check membership access
+- [ ] Update session booking to check membership access
+- [ ] Update course/session detail pages to show membership-aware enroll buttons
+- [ ] Create membership management page
+- [ ] Add membership status display in user profile
+- [ ] Test free account individual purchases
+- [ ] Test monthly membership full access
+- [ ] Test annual membership full access
+- [ ] Test subscription cancellation and access revocation
+
+## Membership System Implementation (Jan 25, 2026 - HIGH PRIORITY)
+- [x] Update database schema for membership tracking
+- [x] Add membershipStatus, membershipStartDate, membershipEndDate fields
+- [x] Add stripeSubscriptionId field
+- [x] Create membership products configuration (server/membership-products.ts)
+- [x] Implement backend access control logic (canAccessContent function)
+- [x] Update course access procedures to check membership
+- [x] Create membership router with endpoints (server/membershipRouter.ts)
+- [x] Create membership management page (client/src/pages/Membership.tsx)
+- [x] Update course enrollment buttons to show membership option
+- [ ] Implement Stripe subscription creation (webhook handling needed)
+- [ ] Test membership access control with real subscriptions
+- [ ] Document membership system for deployment

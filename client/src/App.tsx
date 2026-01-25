@@ -34,6 +34,7 @@ import Activity from "./pages/Activity";
 import MyBookings from "./pages/MyBookings";
 import MyMessages from "./pages/MyMessages";
 import Conversations from "./pages/Conversations";
+import Membership from "./pages/Membership";
 
 
 function Router() {
@@ -47,6 +48,7 @@ function Router() {
       <Route path="/courses/:id/learn" component={CourseLearn} />
       <Route path="/my-courses" component={MyCourses} />
       <Route path="/my-bookings" component={MyBookings} />
+      <Route path="/membership" component={Membership} />
       <Route path="/session/:bookingId" component={SessionDetail} />
       <Route path="/session-view/:bookingId" component={SessionView} />
       <Route path="/my-messages" component={Conversations} />
