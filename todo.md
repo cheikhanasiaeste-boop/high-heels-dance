@@ -1921,3 +1921,8 @@
 - [x] Show membership benefits comparison on enrollment pages
 - [ ] Test subscription visibility across all pages
 - [ ] Verify correct buttons show based on membership status
+
+## Fix React forwardRef Warning in Dialog Component (Jan 25, 2026)
+- [x] Update DialogOverlay component to use React.forwardRef()
+- [x] Test that warning is resolved
+- [x] Verify dialog functionality still works correctly
