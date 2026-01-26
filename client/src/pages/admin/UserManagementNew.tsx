@@ -83,6 +83,17 @@ function UserRow({
           </Badge>
         </TableCell>
         <TableCell onClick={() => onToggleExpand(user.id)}>
+          <Badge variant={user.membershipStatus === 'free' ? 'outline' : user.membershipStatus === 'monthly' ? 'secondary' : 'default'}>
+            {user.membershipStatus || 'free'}
+          </Badge>
+        </TableCell>
+        <TableCell onClick={() => onToggleExpand(user.id)}>
+          {user.membershipStartDate ? new Date(user.membershipStartDate).toLocaleDateString() : '-'}
+        </TableCell>
+        <TableCell onClick={() => onToggleExpand(user.id)}>
+          {user.membershipEndDate ? new Date(user.membershipEndDate).toLocaleDateString() : '-'}
+        </TableCell>
+        <TableCell onClick={() => onToggleExpand(user.id)}>
           <Badge variant="outline">{user.courseCount || 0}</Badge>
         </TableCell>
         <TableCell>
@@ -115,7 +126,7 @@ function UserRow({
 
       {isExpanded && (
         <TableRow>
-          <TableCell colSpan={6} className="bg-accent/20">
+          <TableCell colSpan={9} className="bg-accent/20">
             <div className="p-4 space-y-4">
               <div className="font-medium">Enrolled Courses:</div>
               
@@ -516,6 +527,9 @@ export default function UserManagementNew() {
                       <TableHead>Name</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Role</TableHead>
+                      <TableHead>Membership</TableHead>
+                      <TableHead>Start Date</TableHead>
+                      <TableHead>End Date</TableHead>
                       <TableHead>Courses</TableHead>
                       <TableHead className="w-24">Actions</TableHead>
                     </TableRow>
