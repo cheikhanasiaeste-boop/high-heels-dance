@@ -8,7 +8,8 @@ import {
   Settings,
   ArrowLeft,
   Users,
-  Activity
+  Activity,
+  Percent
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AdminNotifications } from "@/components/AdminNotifications";
@@ -25,6 +26,7 @@ const menuItems = [
   { path: "/admin/users", icon: Users, label: "Users" },
   { path: "/admin/user-activity", icon: Activity, label: "User Activity" },
   { path: "/admin/testimonials", icon: MessageSquare, label: "Testimonials" },
+  { path: "/admin/discounts", icon: Percent, label: "Discounts" },
   { path: "/admin/settings", icon: Settings, label: "Site Settings" },
 ];
 

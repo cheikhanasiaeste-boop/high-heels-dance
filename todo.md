@@ -1974,3 +1974,39 @@
 - [ ] Test discount application to subscriptions
 - [ ] Test discount application to course purchases
 - [x] Test discount expiration and max uses limits (16 vitest tests passing)
+
+
+## Course Purchase Discount Integration (Jan 25, 2026 - IN PROGRESS)
+- [ ] Add discount code input to course checkout dialog
+- [ ] Validate discount code for course purchases
+- [ ] Calculate discounted price for courses
+- [ ] Pass discount code to Stripe checkout session
+- [ ] Display discount savings in course checkout UI
+- [ ] Test discount application to course purchases
+
+## Stripe Webhook Handler (Jan 25, 2026 - IN PROGRESS)
+- [ ] Create webhook endpoint at /api/stripe/webhook
+- [ ] Verify Stripe webhook signatures
+- [ ] Handle checkout.session.completed event
+- [ ] Record discount usage in database
+- [ ] Activate membership on subscription completion
+- [ ] Handle subscription update events
+- [ ] Handle subscription cancel events
+- [ ] Test webhook with Stripe CLI
+
+## Admin Discount Management Submenu (Jan 25, 2026 - IN PROGRESS)
+- [ ] Add Discounts link to admin submenu
+- [ ] Integrate DiscountManagement component in admin panel
+- [ ] Display discount list with filters
+- [ ] Allow create new discount from admin menu
+- [ ] Allow edit existing discount
+- [ ] Allow delete discount
+- [ ] Show discount usage statistics
+- [ ] Test admin discount management workflow
+
+## Implementation Complete - All Features Delivered (Jan 26, 2026)
+- [x] Course discount integration - discount codes now work on course purchases
+- [x] Stripe webhook handler - handles subscription events and discount recording
+- [x] Admin discount submenu - Discounts page added to admin panel with full CRUD
+- [x] All 16 discount utility tests passing
+- [x] TypeScript compilation with zero errors

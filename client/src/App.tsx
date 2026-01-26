@@ -24,6 +24,7 @@ import AdminUsers from "./pages/admin/Users";
 import AdminUserManagement from "./pages/admin/UserManagementNew";
 import AdminUserActivity from "./pages/admin/UserActivity";
 import AdminSessions from "./pages/admin/AdminSessions";
+import AdminDiscounts from "./pages/admin/Discounts";
 import CourseContentManager from "./pages/admin/CourseContentManager";
 import BookSession from "./pages/BookSession";
 import Feedback from './pages/Feedback';
@@ -66,6 +67,7 @@ function Router() {
       <Route path="/admin/testimonials" component={AdminTestimonials} />
       <Route path="/admin/users" component={AdminUserManagement} />
       <Route path="/admin/user-activity" component={AdminUserActivity} />
+      <Route path="/admin/discounts" component={AdminDiscounts} />
       <Route path="/admin/settings" component={AdminSettings} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

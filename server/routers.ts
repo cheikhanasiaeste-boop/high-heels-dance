@@ -174,6 +174,7 @@ export const appRouter = router({
     createCheckoutSession: protectedProcedure
       .input(z.object({
         courseId: z.number(),
+        discountCode: z.string().optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         const course = await db.getCourseById(input.courseId);
@@ -212,6 +213,7 @@ export const appRouter = router({
           metadata: {
             user_id: ctx.user.id.toString(),
             course_id: course.id.toString(),
+            discountCode: input.discountCode || '',
             customer_email: ctx.user.email || '',
             customer_name: ctx.user.name || '',
           },
