@@ -34,6 +34,9 @@ import { ChevronDown, ChevronRight, Trash2, Plus, X, AlertTriangle, Mail } from 
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { MessageComposeModal } from "@/components/MessageComposeModal";
+import { ColumnFilterUI } from "@/components/ColumnFilterUI";
+import { getColumnValues, filterRows, getActiveFilterCount, clearAllFilters, type ColumnFilter } from "@/lib/table-filters";
+
 
 // User Row Component with expansion
 function UserRow({
@@ -211,6 +214,10 @@ export default function UserManagementNew() {
   const [courseFilter, setCourseFilter] = useState<number | undefined>();
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   const [selectedUsers, setSelectedUsers] = useState<Set<number>>(new Set());
+  const [columnFilters, setColumnFilters] = useState<ColumnFilter>({
+    role: [],
+    membershipStatus: [],
+  });
   
   // Dialog states
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -419,6 +426,22 @@ export default function UserManagementNew() {
     return usersData.users.filter((u: any) => selectedUsers.has(u.id));
   }, [usersData, selectedUsers]);
 
+  // Get filter options and apply filters
+  const filterOptions = useMemo(() => {
+    if (!usersData?.users) return { role: [], membershipStatus: [] };
+    return {
+      role: getColumnValues(usersData.users, 'role'),
+      membershipStatus: getColumnValues(usersData.users, 'membershipStatus'),
+    };
+  }, [usersData?.users]);
+
+  const filteredUsers = useMemo(() => {
+    if (!usersData?.users) return [];
+    return filterRows(usersData.users, columnFilters);
+  }, [usersData?.users, columnFilters]);
+
+  const activeFilterCount = useMemo(() => getActiveFilterCount(columnFilters), [columnFilters]);
+
   if (!isAuthenticated || currentUser?.role !== 'admin') {
     return (
       <AdminLayout>
@@ -512,8 +535,18 @@ export default function UserManagementNew() {
 
             {!isLoading && usersData && (
               <>
+                <ColumnFilterUI
+                  columns={[
+                    { name: 'role', label: 'Role', options: filterOptions.role },
+                    { name: 'membershipStatus', label: 'Membership', options: filterOptions.membershipStatus },
+                  ]}
+                  filters={columnFilters}
+                  onFilterChange={setColumnFilters}
+                  activeFilterCount={activeFilterCount}
+                  onClearAll={() => setColumnFilters(clearAllFilters(columnFilters))}
+                />
                 <div className="p-4 border-b text-sm text-muted-foreground">
-                  Showing {usersData.users.length} of {usersData.total} users
+                  Showing {filteredUsers.length} of {usersData.total} users
                 </div>
                 <Table>
                   <TableHeader>
@@ -535,7 +568,7 @@ export default function UserManagementNew() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {usersData.users.map((user: any) => (
+                    {filteredUsers.map((user: any) => (
                       <UserRow
                         key={user.id}
                         user={user}

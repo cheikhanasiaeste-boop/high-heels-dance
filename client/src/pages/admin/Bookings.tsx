@@ -5,17 +5,39 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { ColumnFilterUI } from "@/components/ColumnFilterUI";
+import { getColumnValues, filterRows, getActiveFilterCount, clearAllFilters, type ColumnFilter } from "@/lib/table-filters";
 
 export default function AdminBookings() {
   const { user, isAuthenticated } = useAuth();
   const utils = trpc.useUtils();
   const [selectedBookings, setSelectedBookings] = useState<number[]>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFilter>({
+    status: [],
+    sessionType: [],
+  });
   
   const { data: bookings, isLoading } = trpc.admin.bookings.list.useQuery(
     undefined,
     { enabled: isAuthenticated && user?.role === 'admin' }
   );
+
+  // Get filter options and apply filters
+  const filterOptions = useMemo(() => {
+    if (!bookings) return { status: [], sessionType: [] };
+    return {
+      status: getColumnValues(bookings, 'status'),
+      sessionType: getColumnValues(bookings, 'sessionType'),
+    };
+  }, [bookings]);
+
+  const filteredBookings = useMemo(() => {
+    if (!bookings) return [];
+    return filterRows(bookings, columnFilters);
+  }, [bookings, columnFilters]);
+
+  const activeFilterCount = useMemo(() => getActiveFilterCount(columnFilters), [columnFilters]);
 
   const cancelMutation = trpc.admin.bookings.cancel.useMutation({
     onSuccess: () => {
@@ -63,26 +85,37 @@ export default function AdminBookings() {
           </Card>
         )}
 
+        <ColumnFilterUI
+          columns={[
+            { name: 'status', label: 'Status', options: filterOptions.status },
+            { name: 'sessionType', label: 'Type', options: filterOptions.sessionType },
+          ]}
+          filters={columnFilters}
+          onFilterChange={setColumnFilters}
+          activeFilterCount={activeFilterCount}
+          onClearAll={() => setColumnFilters(clearAllFilters(columnFilters))}
+        />
+
         {/* Select All Button */}
-        {bookings && bookings.length > 0 && (
+        {filteredBookings && filteredBookings.length > 0 && (
           <Button
             variant="outline"
             size="sm"
             onClick={() => {
-              if (selectedBookings.length === bookings.length) {
+              if (selectedBookings.length === filteredBookings.length) {
                 setSelectedBookings([]);
               } else {
-                setSelectedBookings(bookings.map((b: any) => b.id));
+                setSelectedBookings(filteredBookings.map((b: any) => b.id));
               }
             }}
           >
-            {selectedBookings.length === bookings.length ? 'Deselect All' : 'Select All'}
+            {selectedBookings.length === filteredBookings.length ? 'Deselect All' : 'Select All'}
           </Button>
         )}
 
         <div className="space-y-4">
-          {bookings && bookings.length > 0 ? (
-            bookings.map((booking: any) => (
+          {filteredBookings && filteredBookings.length > 0 ? (
+            filteredBookings.map((booking: any) => (
               <Card key={booking.id}>
                 <CardHeader className="flex flex-row items-start gap-4">
                   <Checkbox

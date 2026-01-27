@@ -1,5 +1,5 @@
-import { useAuth } from "@/_core/hooks/useAuth";
 import { AdminLayout } from "@/components/AdminLayout";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -9,10 +9,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { trpc } from "@/lib/trpc";
 import { Plus, Pencil, Trash2, BookOpen } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useLocation } from "wouter";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { ColumnFilterUI } from "@/components/ColumnFilterUI";
+import { getColumnValues, filterRows, getActiveFilterCount, clearAllFilters, type ColumnFilter } from "@/lib/table-filters";
 
 export default function AdminCourses() {
   const { user, isAuthenticated } = useAuth();
@@ -23,11 +25,31 @@ export default function AdminCourses() {
   const [editingCourse, setEditingCourse] = useState<any>(null);
   const [uploading, setUploading] = useState(false);
   const [selectedCourses, setSelectedCourses] = useState<number[]>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFilter>({
+    isFree: [],
+  });
 
   const { data: courses, isLoading } = trpc.admin.courses.list.useQuery(
     undefined,
     { enabled: isAuthenticated && user?.role === 'admin' }
   );
+
+  // Get filter options and apply filters
+  const filterOptions = useMemo(() => {
+    if (!courses) return { isFree: [] };
+    return {
+      isFree: getColumnValues(courses, 'isFree', (v) => v ? 'Paid' : 'Free'),
+    };
+  }, [courses]);
+
+  const filteredCourses = useMemo(() => {
+    if (!courses) return [];
+    return filterRows(courses, columnFilters, {
+      isFree: (v) => v ? 'Paid' : 'Free',
+    });
+  }, [courses, columnFilters]);
+
+  const activeFilterCount = useMemo(() => getActiveFilterCount(columnFilters), [columnFilters]);
 
   const createMutation = trpc.admin.courses.create.useMutation({
     onSuccess: () => {
@@ -301,9 +323,19 @@ export default function AdminCourses() {
           </Button>
         )}
 
+        <ColumnFilterUI
+          columns={[
+            { name: 'isFree', label: 'Type', options: filterOptions.isFree },
+          ]}
+          filters={columnFilters}
+          onFilterChange={setColumnFilters}
+          activeFilterCount={activeFilterCount}
+          onClearAll={() => setColumnFilters(clearAllFilters(columnFilters))}
+        />
+
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {courses && courses.length > 0 ? (
-            courses.map((course: any) => (
+          {filteredCourses && filteredCourses.length > 0 ? (
+            filteredCourses.map((course: any) => (
               <Card key={course.id} className="relative">
                 <div className="absolute top-2 left-2 z-10">
                   <Checkbox

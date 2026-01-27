@@ -2020,3 +2020,28 @@
 - [x] Format dates for readability (using toLocaleDateString())
 - [x] Add membership status badge/indicator (color-coded by type)
 - [x] Test membership display in admin panel (zero TypeScript errors)
+
+
+## Column-Based Table Filtering (Jan 26, 2026)
+- [ ] Create reusable ColumnFilter component
+- [ ] Create filter utilities for extracting unique column values
+- [ ] Implement filtering in Users table (role, membership type)
+- [ ] Implement filtering in Courses table (status, type)
+- [ ] Implement filtering in Bookings table (status, session type)
+- [ ] Implement filtering in Testimonials table (status, rating)
+- [ ] Add filter UI with dropdown/select for each column
+- [ ] Add "Clear All Filters" button
+- [ ] Add active filter count display
+- [ ] Test all table filters
+
+
+## Column-Based Table Filtering - COMPLETED (Jan 27, 2026)
+- [x] Created reusable ColumnFilterUI component with dropdown menus
+- [x] Created table-filters utility functions (getColumnValues, filterRows, etc.)
+- [x] Implemented filtering in Users table (role, membership status)
+- [x] Implemented filtering in Courses table (course type: free/paid)
+- [x] Implemented filtering in Bookings table (status, session type)
+- [x] Implemented filtering in Testimonials table (status, rating)
+- [x] Added clear/reset all filters functionality
+- [x] Created comprehensive vitest tests for filter utilities (all passing)
+- [x] Verified TypeScript compilation with zero errors

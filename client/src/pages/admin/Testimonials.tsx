@@ -6,18 +6,42 @@ import { trpc } from "@/lib/trpc";
 import { Check, X, Star, Image as ImageIcon, Video, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
+import { ColumnFilterUI } from "@/components/ColumnFilterUI";
+import { getColumnValues, filterRows, getActiveFilterCount, clearAllFilters, type ColumnFilter } from "@/lib/table-filters";
 
 export default function AdminTestimonials() {
   const { user, isAuthenticated } = useAuth();
   const utils = trpc.useUtils();
   const [selectedTestimonials, setSelectedTestimonials] = useState<number[]>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFilter>({
+    status: [],
+    rating: [],
+  });
   
   const { data: testimonials, isLoading } = trpc.admin.testimonials.list.useQuery(
     undefined,
     { enabled: isAuthenticated && user?.role === 'admin' }
   );
+
+  // Get filter options and apply filters
+  const filterOptions = useMemo(() => {
+    if (!testimonials) return { status: [], rating: [] };
+    return {
+      status: getColumnValues(testimonials, 'status'),
+      rating: getColumnValues(testimonials, 'rating', (v) => `${v} stars`),
+    };
+  }, [testimonials]);
+
+  const filteredTestimonials = useMemo(() => {
+    if (!testimonials) return [];
+    return filterRows(testimonials, columnFilters, {
+      rating: (v) => `${v} stars`,
+    });
+  }, [testimonials, columnFilters]);
+
+  const activeFilterCount = useMemo(() => getActiveFilterCount(columnFilters), [columnFilters]);
 
   const approveMutation = trpc.admin.testimonials.approve.useMutation({
     onSuccess: () => {
@@ -80,6 +104,17 @@ export default function AdminTestimonials() {
         </div>
 
         {/* Bulk Actions */}
+        <ColumnFilterUI
+          columns={[
+            { name: 'status', label: 'Status', options: filterOptions.status },
+            { name: 'rating', label: 'Rating', options: filterOptions.rating },
+          ]}
+          filters={columnFilters}
+          onFilterChange={setColumnFilters}
+          activeFilterCount={activeFilterCount}
+          onClearAll={() => setColumnFilters(clearAllFilters(columnFilters))}
+        />
+
         {selectedTestimonials.length > 0 && (
           <Card className="bg-primary/5 border-primary">
             <CardContent className="flex items-center justify-between py-4">
@@ -127,8 +162,8 @@ export default function AdminTestimonials() {
         )}
 
         <div className="space-y-4">
-          {testimonials && testimonials.length > 0 ? (
-            testimonials.map((testimonial: any) => (
+          {filteredTestimonials && filteredTestimonials.length > 0 ? (
+            filteredTestimonials.map((testimonial: any) => (
               <Card key={testimonial.id} className={cn(
                 testimonial.status === 'pending' ? 'border-2 border-yellow-500 shadow-lg shadow-yellow-500/20' : '',
                 'transition-all'
