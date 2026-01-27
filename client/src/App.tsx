@@ -36,6 +36,7 @@ import MyBookings from "./pages/MyBookings";
 import MyMessages from "./pages/MyMessages";
 import Conversations from "./pages/Conversations";
 import Membership from "./pages/Membership";
+import { SubscriptionSuccess } from "./pages/SubscriptionSuccess";
 
 
 function Router() {
@@ -50,6 +51,7 @@ function Router() {
       <Route path="/my-courses" component={MyCourses} />
       <Route path="/my-bookings" component={MyBookings} />
       <Route path="/membership" component={Membership} />
+      <Route path="/subscription-success" component={SubscriptionSuccess} />
       <Route path="/session/:bookingId" component={SessionDetail} />
       <Route path="/session-view/:bookingId" component={SessionView} />
       <Route path="/my-messages" component={Conversations} />

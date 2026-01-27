@@ -36,6 +36,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MessageComposeModal } from "@/components/MessageComposeModal";
 import { ColumnFilterUI } from "@/components/ColumnFilterUI";
 import { getColumnValues, filterRows, getActiveFilterCount, clearAllFilters, type ColumnFilter } from "@/lib/table-filters";
+import { MembershipManagementDialog } from "@/components/MembershipManagementDialog";
+import { Settings } from "lucide-react";
 
 
 // User Row Component with expansion
@@ -50,6 +52,7 @@ function UserRow({
   onAssignCourse,
   onRemoveCourse,
   allCourses,
+  onMembershipManage,
 }: any) {
   const { data: userCourses, isLoading: coursesLoading } = trpc.admin.courseAssignment.getUserCourses.useQuery(
     { userId: user.id },
@@ -115,6 +118,14 @@ function UserRow({
               title="Send message"
             >
               <Mail className="w-4 h-4 text-primary" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onMembershipManage(user.id, user.membershipStatus || 'free')}
+              title="Manage membership"
+            >
+              <Settings className="w-4 h-4 text-blue-500" />
             </Button>
             <Button
               variant="ghost"
@@ -226,6 +237,9 @@ export default function UserManagementNew() {
   const [showBulkRemoveDialog, setShowBulkRemoveDialog] = useState(false);
   const [showRemoveCourseDialog, setShowRemoveCourseDialog] = useState(false);
   const [showMessageDialog, setShowMessageDialog] = useState(false);
+  const [showMembershipDialog, setShowMembershipDialog] = useState(false);
+  const [membershipUserId, setMembershipUserId] = useState<number | null>(null);
+  const [membershipStatus, setMembershipStatus] = useState<string>('free');
   const [userToDelete, setUserToDelete] = useState<{ id: number; name: string; courseCount: number } | null>(null);
   const [courseToRemove, setCourseToRemove] = useState<{ userId: number; courseId: number; courseName: string } | null>(null);
   const [messageRecipient, setMessageRecipient] = useState<{ id: number; name: string; email: string } | null>(null);
@@ -360,6 +374,12 @@ export default function UserManagementNew() {
   const handleRemoveCourse = (userId: number, courseId: number, courseName: string) => {
     setCourseToRemove({ userId, courseId, courseName });
     setShowRemoveCourseDialog(true);
+  };
+
+  const handleMembershipManage = (userId: number, currentStatus: string) => {
+    setMembershipUserId(userId);
+    setMembershipStatus(currentStatus);
+    setShowMembershipDialog(true);
   };
 
   const confirmRemoveCourse = () => {
@@ -579,6 +599,7 @@ export default function UserManagementNew() {
                         onDelete={() => handleDeleteUser(user.id, user.name, user.courseCount || 0)}
                         onMessage={handleMessage}
                         onAssignCourse={handleAssignCourse}
+                        onMembershipManage={handleMembershipManage}
                         onRemoveCourse={handleRemoveCourse}
                         allCourses={allCourses}
                       />
@@ -853,6 +874,17 @@ export default function UserManagementNew() {
             recipientId={messageRecipient.id}
             recipientName={messageRecipient.name}
             recipientEmail={messageRecipient.email}
+          />
+        )}
+        {membershipUserId && (
+          <MembershipManagementDialog
+            open={showMembershipDialog}
+            onOpenChange={setShowMembershipDialog}
+            userId={membershipUserId}
+            currentMembership={membershipStatus}
+            onSuccess={() => {
+              utils.admin.users.listPaginated.invalidate();
+            }}
           />
         )}
       </div>

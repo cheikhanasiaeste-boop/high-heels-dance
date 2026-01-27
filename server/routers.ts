@@ -3,6 +3,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { zoomRouter } from "./zoomRouter";
 import { membershipRouter } from "./membershipRouter";
+import { membershipManagementRouter } from "./membershipManagementRouter";
 import { discountRouter } from "./discountRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
@@ -31,6 +32,7 @@ export const appRouter = router({
   system: systemRouter,
   zoom: zoomRouter,
   membership: membershipRouter,
+  membershipManagement: membershipManagementRouter,
   discount: discountRouter,
   
   auth: router({
