@@ -72,7 +72,6 @@ export function ColumnFilterUI({
                 <SelectValue placeholder={`Filter by ${column.label}`} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All {column.label}</SelectItem>
                 {column.options.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
