@@ -1,0 +1,8 @@
+{
+  "query": "SELECT `key`, `value` FROM settings WHERE `key` IN ('heroBackgroundUrl', 'backgroundAnimationUrl', 'bgVideoUrl', 'heroVideoUrl') LIMIT 10;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway03.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4HtU1c2nK4A5Wb2.root --database M2v4Dnk4LCsJQ3Qwy7fUfL --execute SELECT `key`, `value` FROM settings WHERE `key` IN ('heroBackgroundUrl', 'backgroundAnimationUrl', 'bgVideoUrl', 'heroVideoUrl') LIMIT 10;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1146 (42S02) at line 1: Table 'm2v4dnk4lcsjq3qwy7fufl.settings' doesn't exist"
+  ]
+}

@@ -56,9 +56,21 @@ export function BackgroundImage({
   const videoRef = useRef<HTMLVideoElement>(null);
   const imgRef = useRef<HTMLImageElement>(null);
 
+  // Check if URL is valid (not a placeholder like "url1.webp")
+  const isValidUrl = (url: string): boolean => {
+    if (!url) return false;
+    // Check if it's a placeholder or invalid URL
+    if (url === 'url1.webp' || url.startsWith('url') && /^url\d+\./.test(url)) {
+      return false;
+    }
+    // Check if it starts with http, https, or /
+    return url.startsWith('http://') || url.startsWith('https://') || url.startsWith('/');
+  };
+
   useEffect(() => {
-    if (!src) {
+    if (!src || !isValidUrl(src)) {
       setIsLoading(false);
+      setHasError(!src); // Only set error if src is empty, not if it's just a placeholder
       return;
     }
 
@@ -204,12 +216,18 @@ export function BackgroundImage({
 
   const handleImageError = () => {
     const encodedSrc = encodeUrlProperly(src);
-    console.error('Image failed to load. Original:', src, 'Encoded:', encodedSrc);
+    // Only log as error if it's a valid URL format
+    if (isValidUrl(src)) {
+      console.error('Image failed to load. Original:', src, 'Encoded:', encodedSrc);
+    } else {
+      console.warn('Image URL is invalid or placeholder:', src);
+    }
     setHasError(true);
     onError?.();
   };
 
-  if (hasError || !src) {
+  // Return null if there's an error or no valid src
+  if (hasError || !src || !isValidUrl(src)) {
     return null;
   }
 
