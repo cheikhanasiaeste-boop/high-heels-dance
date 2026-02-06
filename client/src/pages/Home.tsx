@@ -212,7 +212,7 @@ export default function Home() {
       </header>
 
       {/* Hero/Profile Section */}
-      <section className="relative py-20 overflow-hidden">
+      <section className="relative py-12 md:py-20 overflow-hidden">
         {/* Background - Animated or Static - Robust handling for any format */}
         {backgroundUrl ? (
           <>
@@ -252,43 +252,43 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-br from-pink-50 via-lavender-50 to-purple-50"></div>
         )}
         
-        <div className="container text-center relative z-10">
-          <div className="flex justify-center mb-6">
+        <div className="container text-center relative z-10 px-4 md:px-6">
+          <div className="flex justify-center mb-4 md:mb-6">
             <img 
               src={heroProfilePictureUrl || "/profile-photo.jpeg"} 
               alt="Elizabeth Zolotova" 
-              className="w-40 h-40 rounded-full object-cover shadow-xl ring-4 ring-white/20"
+              className="w-24 h-24 md:w-40 md:h-40 rounded-full object-cover shadow-xl ring-4 ring-white/20"
             />
           </div>
-          <h2 className="text-5xl font-bold mb-4 bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
+          <h2 className="text-3xl md:text-5xl font-bold mb-2 md:mb-4 bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
             {heroTitle || 'Elizabeth Zolotova'}
           </h2>
-          <p className="text-2xl mb-10 max-w-3xl mx-auto leading-relaxed text-gray-900 font-medium text-center">
+          <p className="text-base md:text-2xl mb-6 md:mb-10 max-w-3xl mx-auto leading-relaxed text-gray-900 font-medium text-center">
             <span className="block mb-2">{(heroTagline || "I'm a professional dancer and dance teacher").split('.')[0]}.</span>
             <span className="block">{(heroTagline || "I'm a professional dancer and dance teacher who can make you fall in love with dance.").split('.').slice(1).join('.').trim() || "Who can make you fall in love with dance."}</span>
           </p>
-          <div className="flex justify-center gap-4 mb-8">
+          <div className="flex justify-center gap-2 md:gap-4 mb-4 md:mb-8">
             <a href="https://www.instagram.com/elizabeth_zolotova/" target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" size="icon" className="rounded-full hover:bg-pink-100 transition-colors">
-                <Instagram className="h-5 w-5" />
+              <Button variant="outline" size="icon-sm" className="rounded-full hover:bg-pink-100 transition-colors">
+                <Instagram className="h-4 w-4" />
               </Button>
             </a>
             <a href="https://www.youtube.com/@HighHeelsTutorials" target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" size="icon" className="rounded-full hover:bg-pink-100 transition-colors">
-                <Youtube className="h-5 w-5" />
+              <Button variant="outline" size="icon-sm" className="rounded-full hover:bg-pink-100 transition-colors">
+                <Youtube className="h-4 w-4" />
               </Button>
             </a>
             <a href="https://www.facebook.com/liza.zolotova.399/" target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" size="icon" className="rounded-full hover:bg-pink-100 transition-colors">
-                <Facebook className="h-5 w-5" />
+              <Button variant="outline" size="icon-sm" className="rounded-full hover:bg-pink-100 transition-colors">
+                <Facebook className="h-4 w-4" />
               </Button>
             </a>
           </div>
-          <div className="flex justify-center gap-6">
-            <Button size="lg" className="shadow-2xl px-10 py-7 text-lg font-bold bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 transition-all duration-300 hover:scale-105" asChild>
+          <div className="flex flex-col md:flex-row justify-center gap-3 md:gap-6">
+            <Button size="lg" className="shadow-2xl px-6 md:px-10 py-2 md:py-7 text-sm md:text-lg font-bold bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 transition-all duration-300 hover:scale-105" asChild>
               <Link href="/book-session">Book a Dance Session</Link>
             </Button>
-            <Button size="lg" variant="outline" className="shadow-2xl px-10 py-7 text-lg font-bold border-3 border-pink-600 text-pink-600 hover:bg-pink-600 hover:text-white transition-all duration-300 hover:scale-105" asChild>
+            <Button size="lg" variant="outline" className="shadow-2xl px-6 md:px-10 py-2 md:py-7 text-sm md:text-lg font-bold border-2 md:border-3 border-pink-600 text-pink-600 hover:bg-pink-600 hover:text-white transition-all duration-300 hover:scale-105" asChild>
               <Link href="/courses">Explore Courses</Link>
             </Button>
           </div>
@@ -299,7 +299,7 @@ export default function Home() {
       <UpcomingSessionsWidget />
 
       {/* Courses Section - PROMINENT */}
-      <section className="py-20 bg-gradient-to-b from-white via-pink-50/30 to-white relative overflow-hidden">
+      <section className="py-12 md:py-20 bg-gradient-to-b from-white via-pink-50/30 to-white relative overflow-hidden">
         {/* Decorative background elements */}
         <div className="absolute inset-0 opacity-5 z-0">
           <div className="absolute top-20 left-10 w-72 h-72 bg-pink-400 rounded-full blur-3xl"></div>
@@ -307,10 +307,10 @@ export default function Home() {
         </div>
         <div className="container relative z-10">
           <div className="text-center mb-16">
-            <h3 className="text-5xl font-bold mb-4 bg-gradient-to-r from-pink-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
+            <h3 className="text-3xl md:text-5xl font-bold mb-2 md:mb-4 bg-gradient-to-r from-pink-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
               {coursesHeading || 'Dance Courses'}
             </h3>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
+            <p className="text-base md:text-xl text-muted-foreground max-w-2xl mx-auto mb-6 md:mb-10 leading-relaxed">
               Transform your dance skills with professionally designed courses for all levels
             </p>
             
@@ -498,7 +498,7 @@ export default function Home() {
 
       {/* Testimonials Section - Mixed Text & Video */}
       {allTestimonials.length > 0 && (
-        <section className="py-20 bg-gradient-to-br from-purple-50 via-pink-50 to-lavender-50">
+        <section className="py-12 md:py-20 bg-gradient-to-br from-purple-50 via-pink-50 to-lavender-50">
           <div className="container">
             <div className="text-center mb-12">
               <h3 className="text-4xl font-bold mb-4">{testimonialsHeading || 'Student Success Stories'}</h3>
@@ -605,7 +605,7 @@ export default function Home() {
       <Button
         onClick={() => setShowChat(!showChat)}
         className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg hover:shadow-xl transition-shadow"
-        size="icon"
+        size="icon-sm"
       >
         <MessageCircle className="h-6 w-6" />
       </Button>
