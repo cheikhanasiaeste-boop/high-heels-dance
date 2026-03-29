@@ -136,12 +136,16 @@ Two-layer approach:
 
 ```ts
 // Input: { name: string, email: string }
-// Auth: public procedure (uses supabase_uid from context, not ctx.user)
-// Context: createContext always resolves supabase_uid even if users row missing
+// Auth: publicProcedure — MUST work when ctx.user is null (first-time sync)
+// Uses: ctx.supabaseUid (always populated if JWT is valid, even before users row exists)
 // Returns: full User row
+// Safety net for account linking:
+//   1. Look up users by supabaseId → found → return (fast path)
+//   2. Look up users by email → found → SET supabaseId, return (link existing account)
+//   3. Neither → INSERT new users row with supabaseId + name + email
 ```
 
-Context must be updated to carry `supabaseUid: string | null` in addition to `user: User | null`, so `syncUser` can provision the row before the user exists in the DB.
+`createContext` always resolves `supabaseUid` (UUID) from a valid JWT even when no `users` row exists yet. This allows `syncUser` to run as the very first authenticated call for a new user.
 
 ### 5.5 Sign out
 
@@ -162,18 +166,23 @@ No server-side logout mutation needed — token is invalidated by Supabase.
 type TrpcContext = {
   req: Request;
   res: Response;
-  supabaseUid: string | null;   // UUID from verified JWT (always present if token valid)
-  user: User | null;             // full users row (null if not yet synced)
+  supabaseUid: string | null;   // UUID from verified Supabase JWT (null if no/invalid token)
+  user: User | null;             // full users row (null if not yet synced via syncUser)
 };
 ```
 
+**Safety guarantee:** `createContext` NEVER throws. It returns `{ supabaseUid: null, user: null }` on any error (missing token, expired token, network issue). `protectedProcedure` is the enforcement point — it throws UNAUTHORIZED if `ctx.user` is null.
+
 ### 6.2 `createContext` logic
 ```
-1. Read Authorization: Bearer <token> from req.headers
-2. If no token → { supabaseUid: null, user: null }
-3. supabaseAdmin.auth.getUser(token) → { data: { user: { id: uuid } } }
-4. db.getUserBySupabaseId(uuid) → User | null
-5. return { supabaseUid: uuid, user }
+1. Read Authorization: Bearer <token> from req.headers.authorization
+2. If no token → return { supabaseUid: null, user: null }
+3. try:
+     supabaseAdmin.auth.getUser(token) → { data: { user: { id: uuid } } }
+     db.getUserBySupabaseId(uuid) → User | null
+     return { supabaseUid: uuid, user }
+   catch:
+     return { supabaseUid: null, user: null }  // never throws
 ```
 
 ### 6.3 Server-side Supabase client (`server/lib/supabase.ts`)
@@ -220,8 +229,9 @@ export const supabase = createClient(
 ### 7.3 Internal state sources
 - `supabase.auth.getSession()` — initial session on mount
 - `supabase.auth.onAuthStateChange()` — live updates (sign in, sign out, token refresh)
-- `trpc.auth.me` — full internal user row (role, membership, etc.), keyed off `isAuthenticated`
-- On `SIGNED_IN` event: call `trpc.auth.syncUser` then invalidate `auth.me`
+- `trpc.auth.me` — full internal user row (role, membership, etc.), enabled only when `isAuthenticated`
+- On `SIGNED_IN` event: call `trpc.auth.syncUser({ name, email })` → then invalidate `trpc.auth.me`
+- `refresh()` — calls `supabase.auth.refreshSession()` then invalidates `trpc.auth.me` query cache
 
 ### 7.4 tRPC `httpBatchLink` headers
 ```ts
@@ -242,11 +252,18 @@ New route: `client/src/pages/AuthCallback.tsx`
 On mount:
 1. Extract `code` from URL search params
 2. Call supabase.auth.exchangeCodeForSession(code)
-3. On success → navigate to '/'
-4. On error → navigate to '/login?error=oauth_failed'
+3. On success → navigate to '/' (onAuthStateChange fires SIGNED_IN → syncUser runs)
+4. On error → navigate to '/?error=oauth_failed'
 ```
 
-React Router route added in `App.tsx` (or wherever routes are defined).
+React Router route added in `App.tsx`.
+
+**Redirect URLs to register in Supabase Dashboard (Auth → URL Configuration):**
+- `http://localhost:5173/auth/callback` (Vite default port)
+- `http://localhost:3000/auth/callback` (alternate dev port)
+- `https://<production-domain>/auth/callback`
+
+All three must be listed in the "Redirect URLs" allowlist — Supabase will reject redirects to unlisted origins.
 
 ---
 
@@ -258,26 +275,33 @@ RLS is defense-in-depth — all server access uses service role (bypasses RLS). 
 
 **Pattern for user-scoped tables** (purchases, bookings, userLessonProgress, messages, chatMessages, userCourseEnrollments):
 ```sql
--- Enable RLS
+-- Enable RLS on the table
 ALTER TABLE purchases ENABLE ROW LEVEL SECURITY;
 
--- Users can access their own rows (join via supabaseId → integer userId)
+-- Efficient subquery: resolves auth.uid() (UUID) to internal integer userId via supabaseId index.
+-- The supabaseId column has a UNIQUE index so this lookup is O(1).
 CREATE POLICY "users_own_purchases" ON purchases
-  FOR ALL USING (
-    user_id = (SELECT id FROM users WHERE "supabaseId" = auth.uid())
+  FOR ALL
+  USING (
+    "userId" = (
+      SELECT id FROM users WHERE "supabaseId" = auth.uid()  -- uses unique index
+    )
   );
-```
 
-**Admin bypass** (for tables where admins need full read access):
-```sql
-CREATE POLICY "admin_full_access" ON purchases
-  FOR SELECT USING (
+-- Admin bypass: admins can read all rows on sensitive tables.
+-- Uses EXISTS with indexed lookup — does not scan full users table.
+CREATE POLICY "admin_full_access_purchases" ON purchases
+  FOR SELECT
+  USING (
     EXISTS (
       SELECT 1 FROM users
-      WHERE "supabaseId" = auth.uid() AND role = 'admin'
+      WHERE "supabaseId" = auth.uid()  -- unique index lookup
+        AND role = 'admin'
     )
   );
 ```
+
+**Note:** Both policies coexist via OR logic (Postgres evaluates all permissive policies with OR). A user satisfying either policy gets access. The `UNIQUE` constraint on `users.supabaseId` ensures the subquery never returns multiple rows.
 
 Tables with RLS enabled: `purchases`, `bookings`, `user_lesson_progress`, `messages`, `chat_messages`, `user_course_enrollments`, `discount_usage`, `popup_interactions`.
 
