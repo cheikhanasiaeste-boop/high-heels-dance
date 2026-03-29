@@ -5,11 +5,19 @@ import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
-import { getLoginUrl } from "./const";
+import ErrorBoundary from "./components/ErrorBoundary";
+import { supabase } from "./lib/supabase";
 import "./index.css";
 import { Toaster } from "sonner";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,         // Default is 3 — reduces failed-query delay from 7s → ~1s
+      staleTime: 30_000, // 30s — prevents redundant refetches on window focus
+    },
+  },
+});
 
 // Log errors for debugging but don't automatically redirect guests
 // Components should handle unauthorized errors explicitly when needed
@@ -32,21 +40,24 @@ const trpcClient = trpc.createClient({
     httpBatchLink({
       url: "/api/trpc",
       transformer: superjson,
-      fetch(input, init) {
-        return globalThis.fetch(input, {
-          ...(init ?? {}),
-          credentials: "include",
-        });
+      async headers() {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session) return {};
+        return { Authorization: `Bearer ${session.access_token}` };
       },
     }),
   ],
 });
 
 createRoot(document.getElementById("root")!).render(
-  <trpc.Provider client={trpcClient} queryClient={queryClient}>
-    <QueryClientProvider client={queryClient}>
-      <Toaster position="top-right" richColors />
-      <App />
-    </QueryClientProvider>
-  </trpc.Provider>
+  <ErrorBoundary>
+    <trpc.Provider client={trpcClient} queryClient={queryClient}>
+      <QueryClientProvider client={queryClient}>
+        <Toaster position="top-right" richColors />
+        <App />
+      </QueryClientProvider>
+    </trpc.Provider>
+  </ErrorBoundary>
 );

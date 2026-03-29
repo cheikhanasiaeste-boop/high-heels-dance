@@ -4,10 +4,13 @@ import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
 import { useAuth } from '@/_core/hooks/useAuth';
-import { getLoginUrl } from '@/const';
 import { trpc } from '@/lib/trpc';
 
-export function MobileNav() {
+interface MobileNavProps {
+  onSignInClick?: () => void;
+}
+
+export function MobileNav({ onSignInClick }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false);
   const { user, isAuthenticated } = useAuth();
   const { data: unreadCount } = trpc.messages.unreadCount.useQuery(undefined, { enabled: isAuthenticated });
@@ -166,11 +169,14 @@ export function MobileNav() {
               </div>
             </>
           ) : (
-            <a href={getLoginUrl()} onClick={closeMenu}>
-              <Button variant="default" className="w-full justify-start" size="lg">
-                Sign In
-              </Button>
-            </a>
+            <Button
+              variant="default"
+              className="w-full justify-start"
+              size="lg"
+              onClick={() => { closeMenu(); onSignInClick?.(); }}
+            >
+              Sign In
+            </Button>
           )}
         </div>
       </div>

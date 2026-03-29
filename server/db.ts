@@ -1429,8 +1429,8 @@ export async function createCourseModule(data: {
       order: data.order || 0,
       isPublished: true,
     })
-    .$returningId();
-  
+    .returning();
+
   return module;
 }
 
@@ -1512,8 +1512,8 @@ export async function createCourseLesson(data: {
       isFree: data.isFree || false,
       isPublished: true,
     })
-    .$returningId();
-  
+    .returning();
+
   return lesson;
 }
 
@@ -1646,16 +1646,10 @@ export async function upsertVisualSettings(data: Partial<InsertVisualSettings> &
     const [inserted] = await db
       .insert(visualSettings)
       .values(data as InsertVisualSettings)
-      .$returningId();
-    
-    const created = await db
-      .select()
-      .from(visualSettings)
-      .where(eq(visualSettings.id, inserted.id))
-      .limit(1);
-    
-    if (!created[0]) throw new Error("Failed to retrieve created settings");
-    return created[0];
+      .returning();
+
+    if (!inserted) throw new Error("Failed to retrieve created settings");
+    return inserted;
   }
 }
 
@@ -1754,15 +1748,9 @@ export async function markLessonComplete(userId: number, lessonId: number, cours
         lastWatchedAt: new Date(),
         watchedDuration: 0,
       })
-      .$returningId();
-    
-    const created = await db
-      .select()
-      .from(userLessonProgress)
-      .where(eq(userLessonProgress.id, inserted.id))
-      .limit(1);
-    
-    return created[0];
+      .returning();
+
+    return inserted;
   }
 }
 
@@ -1811,15 +1799,9 @@ export async function updateLessonProgress(
         lastWatchedAt: new Date(),
         watchedDuration,
       })
-      .$returningId();
-    
-    const created = await db
-      .select()
-      .from(userLessonProgress)
-      .where(eq(userLessonProgress.id, inserted.id))
-      .limit(1);
-    
-    return created[0];
+      .returning();
+
+    return inserted;
   }
 }
 
@@ -1924,7 +1906,7 @@ export async function createMessage(data: {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const [message] = await db.insert(messages).values(data).$returningId();
+  const [message] = await db.insert(messages).values(data).returning();
   
   // Send email notification to recipient
   const { sendEmail, getMessageNotificationEmail } = await import("./_core/email");

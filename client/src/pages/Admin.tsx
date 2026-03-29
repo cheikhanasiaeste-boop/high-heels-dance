@@ -11,7 +11,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { trpc } from "@/lib/trpc";
 import { ArrowLeft, Plus, Pencil, Trash2, AlertCircle, Calendar, X } from "lucide-react";
 import { Link } from "wouter";
-import { getLoginUrl } from "@/const";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ContentEditor } from "@/components/ContentEditor";

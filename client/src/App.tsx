@@ -37,6 +37,7 @@ import MyMessages from "./pages/MyMessages";
 import Conversations from "./pages/Conversations";
 import Membership from "./pages/Membership";
 import { SubscriptionSuccess } from "./pages/SubscriptionSuccess";
+import AuthCallback from "./pages/AuthCallback";
 
 
 function Router() {
@@ -71,6 +72,7 @@ function Router() {
       <Route path="/admin/user-activity" component={AdminUserActivity} />
       <Route path="/admin/discounts" component={AdminDiscounts} />
       <Route path="/admin/settings" component={AdminSettings} />
+      <Route path="/auth/callback" component={AuthCallback} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

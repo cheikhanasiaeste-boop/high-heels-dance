@@ -1,22 +1,20 @@
 import { describe, it, expect, beforeAll } from "vitest";
+import { randomUUID } from "node:crypto";
 import { appRouter } from "./routers";
 import * as db from "./db";
-import type { Context } from "./_core/context";
+import type { TrpcContext } from "./_core/context";
 
 describe("Welcome Modal", () => {
   let testUserId: number;
+  let testSupabaseId: string;
 
   beforeAll(async () => {
-    // Create a test user
-    const testUser = {
-      openId: `test-welcome-${Date.now()}`,
+    testSupabaseId = randomUUID();
+    const user = await db.syncUser({
+      supabaseId: testSupabaseId,
       name: "Welcome Test User",
       email: `welcome-test-${Date.now()}@example.com`,
-      loginMethod: "google",
-    };
-
-    await db.upsertUser(testUser);
-    const user = await db.getUserByOpenId(testUser.openId);
+    });
     if (!user) throw new Error("Failed to create test user");
     testUserId = user.id;
   });
@@ -28,8 +26,9 @@ describe("Welcome Modal", () => {
     expect(userBefore?.hasSeenWelcome).toBe(false);
 
     // Create mock context
-    const mockContext: Context = {
+    const mockContext: TrpcContext = {
       user: userBefore!,
+      supabaseUid: testSupabaseId,
       req: {} as any,
       res: {} as any,
     };
@@ -60,8 +59,9 @@ describe("Welcome Modal", () => {
 
   it("should require authentication to mark welcome as seen", async () => {
     // Create mock context without user (unauthenticated)
-    const mockContext: Context = {
+    const mockContext: TrpcContext = {
       user: null,
+      supabaseUid: null,
       req: {} as any,
       res: {} as any,
     };

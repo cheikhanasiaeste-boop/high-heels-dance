@@ -11,7 +11,6 @@ import {
   ChevronDown 
 } from 'lucide-react';
 import { useAuth } from '@/_core/hooks/useAuth';
-import { trpc } from '@/lib/trpc';
 
 interface UserProfileDropdownProps {
   unreadMessagesCount?: number;
@@ -21,8 +20,7 @@ export function UserProfileDropdown({ unreadMessagesCount = 0 }: UserProfileDrop
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
-  const { user } = useAuth();
-  const logoutMutation = trpc.auth.logout.useMutation();
+  const { user, logout } = useAuth();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -92,7 +90,7 @@ export function UserProfileDropdown({ unreadMessagesCount = 0 }: UserProfileDrop
   }, [isOpen]);
 
   const handleLogout = async () => {
-    await logoutMutation.mutateAsync();
+    await logout();
     window.location.href = '/';
   };
 

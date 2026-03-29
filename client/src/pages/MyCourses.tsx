@@ -4,7 +4,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { trpc } from "@/lib/trpc";
 import { ArrowLeft, BookOpen } from "lucide-react";
 import { Link } from "wouter";
-import { getLoginUrl } from "@/const";
 
 export default function MyCourses() {
   const { user, isAuthenticated, loading } = useAuth();
@@ -23,7 +22,7 @@ export default function MyCourses() {
   }
 
   if (!isAuthenticated) {
-    window.location.href = getLoginUrl();
+    window.location.href = "/";
     return null;
   }
 

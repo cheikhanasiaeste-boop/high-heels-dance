@@ -1,5 +1,4 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { getLoginUrl } from "@/const";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -47,7 +46,7 @@ export default function MyMessages() {
             <CardDescription>Please log in to view your messages</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => window.location.href = getLoginUrl()} className="w-full">
+            <Button onClick={() => window.location.href = "/"} className="w-full">
               Log In
             </Button>
           </CardContent>
