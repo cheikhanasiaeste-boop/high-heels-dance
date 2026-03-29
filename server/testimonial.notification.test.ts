@@ -8,11 +8,19 @@ function createAdminContext(): TrpcContext {
     res: {} as any,
     user: {
       id: 1,
-      openId: "admin1",
+      supabaseId: "00000000-0000-0000-0000-000000000001",
       name: "Admin User",
       email: "admin@test.com",
-      role: 'admin',
+      role: 'admin' as const,
       hasSeenWelcome: true,
+      membershipStatus: "free" as const,
+      membershipStartDate: null,
+      membershipEndDate: null,
+      stripeSubscriptionId: null,
+      lastViewedByAdmin: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastSignedIn: new Date(),
     },
   };
 }
@@ -23,11 +31,19 @@ function createUserContext(userId: number): TrpcContext {
     res: {} as any,
     user: {
       id: userId,
-      openId: `user${userId}`,
+      supabaseId: `00000000-0000-0000-0000-${userId.toString().padStart(12, "0")}`,
       name: `Test User ${userId}`,
       email: `user${userId}@test.com`,
-      role: 'user',
+      role: 'user' as const,
       hasSeenWelcome: true,
+      membershipStatus: "free" as const,
+      membershipStartDate: null,
+      membershipEndDate: null,
+      stripeSubscriptionId: null,
+      lastViewedByAdmin: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      lastSignedIn: new Date(),
     },
   };
 }

@@ -11,16 +11,14 @@ describe('Unread Message Notifications', () => {
     sender = await db.createUserManually({
       name: 'Sender User',
       email: `sender-${timestamp}@example.com`,
-      openId: `sender-${timestamp}`,
       role: 'admin',
-    });
+    }, 1);
 
     recipient = await db.createUserManually({
       name: 'Recipient User',
       email: `recipient-${timestamp}@example.com`,
-      openId: `recipient-${timestamp}`,
       role: 'user',
-    });
+    }, 1);
   });
 
   it('should return 0 unread count when user has no messages', async () => {

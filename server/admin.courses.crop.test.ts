@@ -8,18 +8,25 @@ describe('admin.courses crop settings', () => {
   let testCourseId: number;
 
   beforeAll(async () => {
-    // Create admin context
     adminContext = {
       user: {
         id: 1,
-        openId: 'admin-open-id',
+        supabaseId: "00000000-0000-0000-0000-000000000001",
         name: 'Admin User',
         email: 'admin@example.com',
-        avatar: null,
-        role: 'admin',
-        createdAt: Date.now(),
+        role: 'admin' as const,
+        hasSeenWelcome: false,
+        membershipStatus: "free" as const,
+        membershipStartDate: null,
+        membershipEndDate: null,
+        stripeSubscriptionId: null,
+        lastViewedByAdmin: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastSignedIn: new Date(),
       },
-      sessionId: 'admin-session-id',
+      req: {} as any,
+      res: {} as any,
     };
 
     // Create a test course

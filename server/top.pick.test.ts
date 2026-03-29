@@ -7,15 +7,19 @@ type AuthenticatedUser = NonNullable<TrpcContext['user']>;
 function createTestContext() {
   const adminUser: AuthenticatedUser = {
     id: 1,
-    openId: 'admin-user',
+    supabaseId: "00000000-0000-0000-0000-000000000001",
     email: 'admin@example.com',
     name: 'Admin User',
     role: 'admin',
     hasSeenWelcome: true,
+    membershipStatus: "free",
+    membershipStartDate: null,
+    membershipEndDate: null,
+    stripeSubscriptionId: null,
+    lastViewedByAdmin: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     lastSignedIn: new Date(),
-    loginMethod: 'email',
   };
 
   const adminCtx: TrpcContext = {

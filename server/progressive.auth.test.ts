@@ -23,11 +23,16 @@ function createTestContext(options: { role: 'admin' | 'user' | null }): TrpcCont
 
   const user: AuthenticatedUser = {
     id: options.role === 'admin' ? 1 : 2,
-    openId: `test-${options.role}-${Date.now()}`,
+    supabaseId: `00000000-0000-0000-0000-${Date.now().toString().padStart(12, "0")}`,
     email: `${options.role}@test.com`,
     name: `Test ${options.role}`,
-    loginMethod: 'manus',
     role: options.role,
+    hasSeenWelcome: false,
+    membershipStatus: "free",
+    membershipStartDate: null,
+    membershipEndDate: null,
+    stripeSubscriptionId: null,
+    lastViewedByAdmin: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     lastSignedIn: new Date(),

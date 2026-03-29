@@ -7,11 +7,16 @@ type AuthenticatedUser = NonNullable<TrpcContext["user"]>;
 function createAuthContext(role: "user" | "admin" = "user"): { ctx: TrpcContext } {
   const user: AuthenticatedUser = {
     id: role === "admin" ? 1 : 2,
-    openId: role === "admin" ? "admin-user" : "test-user",
+    supabaseId: role === "admin" ? "00000000-0000-0000-0000-000000000001" : "00000000-0000-0000-0000-000000000002",
     email: role === "admin" ? "admin@example.com" : "user@example.com",
     name: role === "admin" ? "Admin User" : "Test User",
-    loginMethod: "manus",
     role,
+    hasSeenWelcome: false,
+    membershipStatus: "free",
+    membershipStartDate: null,
+    membershipEndDate: null,
+    stripeSubscriptionId: null,
+    lastViewedByAdmin: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     lastSignedIn: new Date(),

@@ -30,7 +30,7 @@ describe('Admin Notifications', () => {
         id: 2,
         name: 'Test User',
         email: 'test@example.com',
-        openId: 'test123',
+        supabaseId: '00000000-0000-0000-0000-000000000001',
         role: 'user' as const,
       };
 

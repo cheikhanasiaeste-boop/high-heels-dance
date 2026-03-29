@@ -4,12 +4,24 @@ import * as db from "./db";
 
 describe("Course Learning Interface", () => {
   let caller: ReturnType<typeof appRouter.createCaller>;
-  let mockUser: { id: number; openId: string; role: "user" | "admin" };
-
   beforeEach(() => {
-    mockUser = { id: 1, openId: "test-user", role: "user" };
     caller = appRouter.createCaller({
-      user: mockUser,
+      user: {
+        id: 1,
+        supabaseId: "00000000-0000-0000-0000-000000000001",
+        email: "test@example.com",
+        name: "Test User",
+        role: "user" as const,
+        hasSeenWelcome: false,
+        membershipStatus: "free" as const,
+        membershipStartDate: null,
+        membershipEndDate: null,
+        stripeSubscriptionId: null,
+        lastViewedByAdmin: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastSignedIn: new Date(),
+      },
       req: {} as any,
       res: {} as any,
     });

@@ -1,5 +1,9 @@
 import { defineConfig } from "vitest/config";
 import path from "path";
+import dotenv from "dotenv";
+
+// Load .env so server-side tests have DB + service credentials
+dotenv.config({ path: path.resolve(import.meta.dirname, ".env") });
 
 const templateRoot = path.resolve(import.meta.dirname);
 

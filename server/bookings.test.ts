@@ -24,11 +24,16 @@ function createMockContext(user?: AuthenticatedUser): TrpcContext {
 function createTestUser(overrides?: Partial<AuthenticatedUser>): AuthenticatedUser {
   return {
     id: Math.floor(Math.random() * 1000000) + 1000,
-    openId: `test-user-${Date.now()}-${Math.random()}`,
+    supabaseId: `00000000-0000-0000-0000-${Date.now().toString().padStart(12, "0")}`,
     email: `test-${Date.now()}@example.com`,
     name: "Test User",
-    loginMethod: "manus",
     role: "user",
+    hasSeenWelcome: false,
+    membershipStatus: "free",
+    membershipStartDate: null,
+    membershipEndDate: null,
+    stripeSubscriptionId: null,
+    lastViewedByAdmin: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     lastSignedIn: new Date(),
@@ -38,7 +43,7 @@ function createTestUser(overrides?: Partial<AuthenticatedUser>): AuthenticatedUs
 
 function createAdminUser(): AuthenticatedUser {
   return createTestUser({
-    openId: `admin-user-${Date.now()}-${Math.random()}`,
+    supabaseId: `00000000-0000-0000-0000-${(Date.now() + 1).toString().padStart(12, "0")}`,
     email: `admin-${Date.now()}@example.com`,
     name: "Admin User",
     role: "admin",

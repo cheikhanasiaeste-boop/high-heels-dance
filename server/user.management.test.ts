@@ -7,7 +7,22 @@ describe("User Management Enhancements", () => {
 
   beforeEach(() => {
     caller = appRouter.createCaller({
-      user: { id: 1, role: "admin" as const, openId: "admin-openid", name: "Admin User", email: "admin@test.com" },
+      user: {
+        id: 1,
+        supabaseId: "00000000-0000-0000-0000-000000000001",
+        role: "admin" as const,
+        name: "Admin User",
+        email: "admin@test.com",
+        hasSeenWelcome: false,
+        membershipStatus: "free" as const,
+        membershipStartDate: null,
+        membershipEndDate: null,
+        stripeSubscriptionId: null,
+        lastViewedByAdmin: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        lastSignedIn: new Date(),
+      },
       req: {} as any,
       res: {} as any,
     });

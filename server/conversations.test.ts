@@ -7,22 +7,19 @@ describe("Conversation System", () => {
 
   beforeAll(async () => {
     // Create two test users
+    const ts = Date.now();
     const user1 = await db.createUserManually({
-      openId: `test-conv-${Date.now()}-1`,
       name: "Test User 1",
-      email: `testconv1-${Date.now()}@example.com`,
-      loginMethod: "oauth",
+      email: `testconv1-${ts}@example.com`,
       role: "user",
-    });
+    }, 1);
     userId1 = user1.id;
 
     const user2 = await db.createUserManually({
-      openId: `test-conv-${Date.now()}-2`,
       name: "Test User 2 (Admin)",
-      email: `testconv2-${Date.now()}@example.com`,
-      loginMethod: "oauth",
+      email: `testconv2-${ts}@example.com`,
       role: "admin",
-    });
+    }, 1);
     userId2 = user2.id;
   });
 

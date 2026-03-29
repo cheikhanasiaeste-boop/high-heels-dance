@@ -10,11 +10,19 @@ describe("Availability Bulk Operations and Search", () => {
     // Create admin context for testing
     const adminUser = {
       id: 1,
-      openId: "test-admin",
+      supabaseId: "00000000-0000-0000-0000-000000000001",
       name: "Test Admin",
       email: "admin@test.com",
       role: "admin" as const,
+      hasSeenWelcome: false,
+      membershipStatus: "free" as const,
+      membershipStartDate: null,
+      membershipEndDate: null,
+      stripeSubscriptionId: null,
+      lastViewedByAdmin: null,
       createdAt: new Date(),
+      updatedAt: new Date(),
+      lastSignedIn: new Date(),
     };
 
     adminContext = {

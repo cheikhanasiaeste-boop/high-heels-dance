@@ -24,11 +24,16 @@ function createMockContext(user?: AuthenticatedUser): TrpcContext {
 function createTestUser(overrides?: Partial<AuthenticatedUser>): AuthenticatedUser {
   return {
     id: 1,
-    openId: "test-user",
+    supabaseId: "00000000-0000-0000-0000-000000000001",
     email: "test@example.com",
     name: "Test User",
-    loginMethod: "manus",
     role: "user",
+    hasSeenWelcome: false,
+    membershipStatus: "free",
+    membershipStartDate: null,
+    membershipEndDate: null,
+    stripeSubscriptionId: null,
+    lastViewedByAdmin: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     lastSignedIn: new Date(),
@@ -39,7 +44,7 @@ function createTestUser(overrides?: Partial<AuthenticatedUser>): AuthenticatedUs
 function createAdminUser(): AuthenticatedUser {
   return createTestUser({
     id: 2,
-    openId: "admin-user",
+    supabaseId: "00000000-0000-0000-0000-000000000002",
     email: "admin@example.com",
     name: "Admin User",
     role: "admin",
