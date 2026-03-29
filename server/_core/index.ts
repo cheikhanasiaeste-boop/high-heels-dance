@@ -3,13 +3,11 @@ import express from "express";
 import { createServer } from "http";
 import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
-import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { handleStripeWebhook } from "../stripe-webhook";
 import { setupSSE } from "../sse";
-import { sdk } from "./sdk";
 import { setupCronJobs } from "../jobs/setupCron";
 
 function isPortAvailable(port: number): Promise<boolean> {
@@ -46,20 +44,23 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads (300MB for videos)
   app.use(express.json({ limit: "300mb" }));
   app.use(express.urlencoded({ limit: "300mb", extended: true }));
-  // OAuth callback under /api/oauth/callback
-  registerOAuthRoutes(app);
-  // SSE endpoint for admin notifications (requires admin auth)
+  // SSE endpoint for admin notifications (requires admin auth via tRPC context)
   app.get("/api/admin/notifications/stream", async (req, res) => {
-    try {
-      const user = await sdk.authenticateRequest(req);
-      if (!user || user.role !== 'admin') {
-        return res.status(403).json({ error: 'Admin access required' });
-      }
-      
-      setupSSE(req, res);
-    } catch (error) {
-      res.status(401).json({ error: 'Unauthorized' });
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+      return res.status(401).json({ error: "Unauthorized" });
     }
+    const { supabaseAdmin } = await import("../lib/supabase");
+    const { data: { user: supabaseUser }, error } = await supabaseAdmin.auth.getUser(authHeader.slice(7));
+    if (error || !supabaseUser) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    const { getUserBySupabaseId } = await import("../db");
+    const user = await getUserBySupabaseId(supabaseUser.id);
+    if (!user || user.role !== "admin") {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    setupSSE(req, res);
   });
   
   // tRPC API

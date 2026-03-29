@@ -1,28 +1,49 @@
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import type { User } from "../../drizzle/schema";
-import { sdk } from "./sdk";
+import { supabaseAdmin } from "../lib/supabase";
+import { getUserBySupabaseId } from "../db";
 
 export type TrpcContext = {
   req: CreateExpressContextOptions["req"];
   res: CreateExpressContextOptions["res"];
+  /** UUID from verified Supabase JWT. Populated even when no users row exists yet
+   *  (new user, pre-syncUser). Null if no token or token is invalid/expired. */
+  supabaseUid: string | null;
+  /** Full users row from our database. Null if not yet synced via auth.syncUser. */
   user: User | null;
 };
 
 export async function createContext(
   opts: CreateExpressContextOptions
 ): Promise<TrpcContext> {
-  let user: User | null = null;
+  const base = { req: opts.req, res: opts.res };
+  const authHeader = opts.req.headers.authorization;
 
-  try {
-    user = await sdk.authenticateRequest(opts.req);
-  } catch (error) {
-    // Authentication is optional for public procedures.
-    user = null;
+  if (!authHeader?.startsWith("Bearer ")) {
+    return { ...base, supabaseUid: null, user: null };
   }
 
-  return {
-    req: opts.req,
-    res: opts.res,
-    user,
-  };
+  const token = authHeader.slice(7); // strip "Bearer "
+
+  try {
+    const {
+      data: { user: supabaseUser },
+      error,
+    } = await supabaseAdmin.auth.getUser(token);
+
+    if (error || !supabaseUser) {
+      return { ...base, supabaseUid: null, user: null };
+    }
+
+    const user = await getUserBySupabaseId(supabaseUser.id);
+
+    return {
+      ...base,
+      supabaseUid: supabaseUser.id,
+      user, // may be null on first login before syncUser runs
+    };
+  } catch {
+    // Never throw — auth failure = unauthenticated, not a 500
+    return { ...base, supabaseUid: null, user: null };
+  }
 }

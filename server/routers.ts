@@ -1,5 +1,3 @@
-import { COOKIE_NAME } from "@shared/const";
-import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { zoomRouter } from "./zoomRouter";
 import { membershipRouter } from "./membershipRouter";
@@ -36,16 +34,40 @@ export const appRouter = router({
   discount: discountRouter,
   
   auth: router({
-    me: publicProcedure.query(opts => opts.ctx.user),
-    logout: publicProcedure.mutation(({ ctx }) => {
-      const cookieOptions = getSessionCookieOptions(ctx.req);
-      ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return { success: true } as const;
-    }),
+    /** Returns the full internal user row, or null if not authenticated. */
+    me: publicProcedure.query((opts) => opts.ctx.user),
+
+    /** Mark that the user has seen the welcome modal. */
     markWelcomeSeen: protectedProcedure.mutation(async ({ ctx }) => {
       await db.markUserWelcomeSeen(ctx.user.id);
       return { success: true };
     }),
+
+    /**
+     * Called by the frontend on every SIGNED_IN event.
+     * Provisions or links the users row for this Supabase identity.
+     * Runs as a publicProcedure because ctx.user is null on first call.
+     */
+    syncUser: publicProcedure
+      .input(
+        z.object({
+          name: z.string(),
+          email: z.string().email(),
+        })
+      )
+      .mutation(async ({ ctx, input }) => {
+        if (!ctx.supabaseUid) {
+          throw new TRPCError({
+            code: "UNAUTHORIZED",
+            message: "No active Supabase session",
+          });
+        }
+        return db.syncUser({
+          supabaseId: ctx.supabaseUid,
+          name: input.name || null,
+          email: input.email,
+        });
+      }),
   }),
 
   // Public course procedures
