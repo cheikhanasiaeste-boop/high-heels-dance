@@ -160,6 +160,7 @@ export default function Home() {
   const [prefersReducedMotion] = useState(() =>
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
+  const [heroVideoFailed, setHeroVideoFailed] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
@@ -303,7 +304,7 @@ export default function Home() {
       <section className="relative py-12 md:py-20 overflow-hidden min-h-[520px] md:min-h-[620px] flex items-center">
         {/* Background — animated WebP rendered as video for smooth playback, img fallback */}
         <div className="absolute inset-0 z-0 overflow-hidden">
-          {!prefersReducedMotion ? (
+          {!prefersReducedMotion && !heroVideoFailed ? (
             <video
               key={backgroundUrl}
               autoPlay
@@ -312,14 +313,7 @@ export default function Home() {
               playsInline
               className="absolute inset-0 w-full h-full object-cover"
               style={{ opacity: 0.78, filter: 'saturate(1.2) brightness(0.75)' }}
-              onError={e => {
-                // If video fails (static WebP), fall back to img
-                const vid = e.currentTarget;
-                const img = document.createElement('img');
-                img.src = backgroundUrl;
-                img.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.78;filter:saturate(1.2) brightness(0.75)';
-                vid.parentNode?.replaceChild(img, vid);
-              }}
+              onError={() => setHeroVideoFailed(true)}
             >
               <source src={backgroundUrl} />
             </video>
@@ -725,7 +719,7 @@ export default function Home() {
         <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
+              <span className="flex items-center gap-1">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <Star
                     key={i}
@@ -736,7 +730,7 @@ export default function Home() {
                     }`}
                   />
                 ))}
-              </div>
+              </span>
               <span>{selectedVideo?.userName}</span>
             </DialogTitle>
           </DialogHeader>
