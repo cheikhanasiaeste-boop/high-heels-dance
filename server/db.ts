@@ -1,5 +1,6 @@
 import { eq, and, desc, asc, isNull, gte, lte, or, like, inArray, ne, sql, SQL } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import { 
   InsertUser,
   User,
@@ -44,14 +45,14 @@ import {
   Message,
   InsertMessage
 } from "../drizzle/schema";
-import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
 export async function getDb() {
-  if (!_db && process.env.DATABASE_URL) {
+  if (!_db && process.env.SUPABASE_DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const client = postgres(process.env.SUPABASE_DATABASE_URL);
+      _db = drizzle(client);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -60,75 +61,94 @@ export async function getDb() {
   return _db;
 }
 
-export async function upsertUser(user: InsertUser): Promise<void> {
-  if (!user.openId) {
-    throw new Error("User openId is required for upsert");
-  }
-
+/**
+ * Look up a user by their Supabase auth UUID.
+ * Used in createContext on every tRPC request.
+ */
+export async function getUserBySupabaseId(supabaseId: string): Promise<User | null> {
   const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot upsert user: database not available");
-    return;
-  }
-
-  try {
-    const values: InsertUser = {
-      openId: user.openId,
-    };
-    const updateSet: Record<string, unknown> = {};
-
-    const textFields = ["name", "email", "loginMethod"] as const;
-    type TextField = (typeof textFields)[number];
-
-    const assignNullable = (field: TextField) => {
-      const value = user[field];
-      if (value === undefined) return;
-      const normalized = value ?? null;
-      values[field] = normalized;
-      updateSet[field] = normalized;
-    };
-
-    textFields.forEach(assignNullable);
-
-    if (user.lastSignedIn !== undefined) {
-      values.lastSignedIn = user.lastSignedIn;
-      updateSet.lastSignedIn = user.lastSignedIn;
-    }
-    if (user.role !== undefined) {
-      values.role = user.role;
-      updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
-      values.role = 'admin';
-      updateSet.role = 'admin';
-    }
-
-    if (!values.lastSignedIn) {
-      values.lastSignedIn = new Date();
-    }
-
-    if (Object.keys(updateSet).length === 0) {
-      updateSet.lastSignedIn = new Date();
-    }
-
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
-      set: updateSet,
-    });
-  } catch (error) {
-    console.error("[Database] Failed to upsert user:", error);
-    throw error;
-  }
+  if (!db) return null;
+  const result = await db
+    .select()
+    .from(users)
+    .where(eq(users.supabaseId, supabaseId))
+    .limit(1);
+  return result[0] ?? null;
 }
 
-export async function getUserByOpenId(openId: string) {
+export async function getUserByEmail(email: string) {
   const db = await getDb();
-  if (!db) {
-    console.warn("[Database] Cannot get user: database not available");
-    return undefined;
+  if (!db) return undefined;
+  const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+/**
+ * Provision or link a user row after Supabase Auth sign-in.
+ * Called by auth.syncUser tRPC mutation on every SIGNED_IN event.
+ *
+ * Logic:
+ *   1. Row exists with matching supabaseId → update lastSignedIn, return (fast path).
+ *   2. Row exists with matching email → link by setting supabaseId (account linking safety net).
+ *   3. Neither → insert new users row.
+ */
+export async function syncUser(params: {
+  supabaseId: string;
+  name: string | null;
+  email: string | null;
+}): Promise<User> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  // 1. Fast path: row already linked
+  const existing = await db
+    .select()
+    .from(users)
+    .where(eq(users.supabaseId, params.supabaseId))
+    .limit(1);
+
+  if (existing.length > 0) {
+    await db
+      .update(users)
+      .set({ lastSignedIn: new Date() })
+      .where(eq(users.supabaseId, params.supabaseId));
+    return existing[0];
   }
 
-  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
+  // 2. Email match: link existing account
+  if (params.email) {
+    const byEmail = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, params.email))
+      .limit(1);
 
-  return result.length > 0 ? result[0] : undefined;
+    if (byEmail.length > 0) {
+      await db
+        .update(users)
+        .set({ supabaseId: params.supabaseId, lastSignedIn: new Date() })
+        .where(eq(users.id, byEmail[0].id));
+      return { ...byEmail[0], supabaseId: params.supabaseId };
+    }
+  }
+
+  // 3. New user: insert
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const role: "user" | "admin" =
+    adminEmail && params.email === adminEmail ? "admin" : "user";
+
+  const inserted = await db
+    .insert(users)
+    .values({
+      supabaseId: params.supabaseId,
+      name: params.name,
+      email: params.email,
+      role,
+      lastSignedIn: new Date(),
+    })
+    .returning();
+
+  return inserted[0];
 }
 
 // Course queries
@@ -168,14 +188,9 @@ export async function getCourseById(id: number): Promise<Course | undefined> {
 export async function createCourse(course: InsertCourse): Promise<Course> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
-  const result = await db.insert(courses).values(course);
-  const insertedId = Number(result[0].insertId);
-  
-  const newCourse = await getCourseById(insertedId);
-  if (!newCourse) throw new Error("Failed to retrieve created course");
-  
-  return newCourse;
+
+  const result = await db.insert(courses).values(course).returning();
+  return result[0];
 }
 
 export async function updateCourse(id: number, course: Partial<InsertCourse>): Promise<Course | undefined> {
@@ -198,13 +213,8 @@ export async function createPurchase(purchase: InsertPurchase): Promise<Purchase
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.insert(purchases).values(purchase);
-  const insertedId = Number(result[0].insertId);
-  
-  const newPurchase = await db.select().from(purchases).where(eq(purchases.id, insertedId)).limit(1);
-  if (!newPurchase[0]) throw new Error("Failed to retrieve created purchase");
-  
-  return newPurchase[0];
+  const result = await db.insert(purchases).values(purchase).returning();
+  return result[0];
 }
 
 export async function getUserPurchases(userId: number): Promise<Purchase[]> {
@@ -262,7 +272,7 @@ export async function setSetting(key: string, value: string): Promise<void> {
   await db
     .insert(siteSettings)
     .values({ key, value })
-    .onDuplicateKeyUpdate({ set: { value } });
+    .onConflictDoUpdate({ target: siteSettings.key, set: { value } });
 }
 
 // Chat message queries
@@ -270,13 +280,8 @@ export async function createChatMessage(message: InsertChatMessage): Promise<Cha
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.insert(chatMessages).values(message);
-  const insertedId = Number(result[0].insertId);
-  
-  const newMessage = await db.select().from(chatMessages).where(eq(chatMessages.id, insertedId)).limit(1);
-  if (!newMessage[0]) throw new Error("Failed to retrieve created message");
-  
-  return newMessage[0];
+  const result = await db.insert(chatMessages).values(message).returning();
+  return result[0];
 }
 
 export async function getChatHistory(userId: number | null, limit: number = 50): Promise<ChatMessage[]> {
@@ -297,13 +302,8 @@ export async function createAvailabilitySlot(slot: InsertAvailabilitySlot): Prom
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.insert(availabilitySlots).values(slot);
-  const insertedId = Number(result[0].insertId);
-  
-  const newSlot = await db.select().from(availabilitySlots).where(eq(availabilitySlots.id, insertedId)).limit(1);
-  if (!newSlot[0]) throw new Error("Failed to retrieve created slot");
-  
-  return newSlot[0];
+  const result = await db.insert(availabilitySlots).values(slot).returning();
+  return result[0];
 }
 
 export async function getAvailableSlots(startDate?: Date, endDate?: Date): Promise<AvailabilitySlot[]> {
@@ -364,13 +364,8 @@ export async function createBooking(booking: InsertBooking): Promise<Booking> {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.insert(bookings).values(booking);
-  const insertedId = Number(result[0].insertId);
-  
-  const newBooking = await db.select().from(bookings).where(eq(bookings.id, insertedId)).limit(1);
-  if (!newBooking[0]) throw new Error("Failed to retrieve created booking");
-  
-  return newBooking[0];
+  const result = await db.insert(bookings).values(booking).returning();
+  return result[0];
 }
 
 export async function getUserBookings(userId: number): Promise<Booking[]> {
@@ -458,13 +453,8 @@ export async function createTestimonial(testimonial: InsertTestimonial): Promise
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   
-  const result = await db.insert(testimonials).values(testimonial);
-  const insertedId = Number(result[0].insertId);
-  
-  const newTestimonial = await db.select().from(testimonials).where(eq(testimonials.id, insertedId)).limit(1);
-  if (!newTestimonial[0]) throw new Error("Failed to retrieve created testimonial");
-  
-  return newTestimonial[0];
+  const result = await db.insert(testimonials).values(testimonial).returning();
+  return result[0];
 }
 
 export async function getApprovedTestimonials(): Promise<Testimonial[]> {
@@ -560,10 +550,9 @@ export async function getAllUsers(): Promise<(typeof users.$inferSelect & { enro
   const result = await db
     .select({
       id: users.id,
-      openId: users.openId,
+      supabaseId: users.supabaseId,
       name: users.name,
       email: users.email,
-      loginMethod: users.loginMethod,
       role: users.role,
       hasSeenWelcome: users.hasSeenWelcome,
       lastViewedByAdmin: users.lastViewedByAdmin,
@@ -571,8 +560,8 @@ export async function getAllUsers(): Promise<(typeof users.$inferSelect & { enro
       updatedAt: users.updatedAt,
       lastSignedIn: users.lastSignedIn,
       enrollmentCount: sql<number>`(
-        SELECT COUNT(*) 
-        FROM ${userCourseEnrollments} 
+        SELECT COUNT(*)
+        FROM ${userCourseEnrollments}
         WHERE ${userCourseEnrollments.userId} = ${users.id}
       )`,
     })
@@ -1186,26 +1175,19 @@ export async function createUserManually(
     throw new Error("User with this email already exists");
   }
 
-  // Generate unique openId for manual user creation
-  const openId = `manual_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  // Generate a placeholder supabaseId — admin-created users must link via syncUser on first login
+  const { randomUUID } = await import("node:crypto");
+  const placeholderSupabaseId = randomUUID();
 
   const result = await db.insert(users).values({
-    openId,
+    supabaseId: placeholderSupabaseId,
     name: data.name,
     email: data.email,
     role: data.role,
-    loginMethod: 'manual',
     hasSeenWelcome: true,
-  });
+  }).returning();
 
-  // Query the newly created user
-  const [user] = await db
-    .select()
-    .from(users)
-    .where(eq(users.openId, openId))
-    .limit(1);
-
-  return user;
+  return result[0];
 }
 
 /**
