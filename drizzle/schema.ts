@@ -1,24 +1,37 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, boolean, unique, index } from "drizzle-orm/mysql-core";
+import {
+  pgTable,
+  serial,
+  text,
+  varchar,
+  boolean,
+  timestamp,
+  numeric,
+  integer,
+  uuid,
+  unique,
+  index,
+} from "drizzle-orm/pg-core";
 
 /**
  * Core user table backing auth flow.
+ * supabaseId links to auth.users(id) in Supabase — UUID assigned by Supabase Auth.
+ * All other tables reference users.id (integer serial PK) — unchanged.
  */
-export const users = mysqlTable("users", {
-  id: int("id").autoincrement().primaryKey(),
-  openId: varchar("openId", { length: 64 }).notNull().unique(),
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  supabaseId: uuid("supabaseId").unique().notNull(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
-  loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  role: text("role").$type<"user" | "admin">().default("user").notNull(),
   hasSeenWelcome: boolean("hasSeenWelcome").default(false).notNull(),
   lastViewedByAdmin: timestamp("lastViewedByAdmin"),
   // Membership fields
-  membershipStatus: mysqlEnum("membershipStatus", ["free", "monthly", "annual"]).default("free").notNull(),
+  membershipStatus: text("membershipStatus").$type<"free" | "monthly" | "annual">().default("free").notNull(),
   membershipStartDate: timestamp("membershipStartDate"),
   membershipEndDate: timestamp("membershipEndDate"),
   stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
 });
 
@@ -28,24 +41,24 @@ export type InsertUser = typeof users.$inferInsert;
 /**
  * Courses table - stores all dance courses (free and paid)
  */
-export const courses = mysqlTable("courses", {
-  id: int("id").autoincrement().primaryKey(),
+export const courses = pgTable("courses", {
+  id: serial("id").primaryKey(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description").notNull(),
-  price: decimal("price", { precision: 10, scale: 2 }).notNull(), // 0 for free courses
-  originalPrice: decimal("originalPrice", { precision: 10, scale: 2 }), // For showing discounts
-  imageUrl: text("imageUrl"), // S3 URL for course image
-  imageKey: text("imageKey"), // S3 key for course image
-  imageCropZoom: decimal("imageCropZoom", { precision: 5, scale: 2 }).default("1.00"), // Zoom level for thumbnail crop (1.00 = 100%)
-  imageCropOffsetX: decimal("imageCropOffsetX", { precision: 5, scale: 2 }).default("0.00"), // Horizontal offset as percentage (-100 to 100)
-  imageCropOffsetY: decimal("imageCropOffsetY", { precision: 5, scale: 2 }).default("0.00"), // Vertical offset as percentage (-100 to 100)
-  previewVideoUrl: text("previewVideoUrl"), // S3 URL for course preview video
-  previewVideoKey: text("previewVideoKey"), // S3 key for course preview video
+  price: numeric("price", { precision: 10, scale: 2 }).notNull(),
+  originalPrice: numeric("originalPrice", { precision: 10, scale: 2 }),
+  imageUrl: text("imageUrl"),
+  imageKey: text("imageKey"),
+  imageCropZoom: numeric("imageCropZoom", { precision: 5, scale: 2 }).default("1.00"),
+  imageCropOffsetX: numeric("imageCropOffsetX", { precision: 5, scale: 2 }).default("0.00"),
+  imageCropOffsetY: numeric("imageCropOffsetY", { precision: 5, scale: 2 }).default("0.00"),
+  previewVideoUrl: text("previewVideoUrl"),
+  previewVideoKey: text("previewVideoKey"),
   isFree: boolean("isFree").default(false).notNull(),
-  isPublished: boolean("isPublished").default(true).notNull(), // Admin can unpublish courses
-  isTopPick: boolean("isTopPick").default(false).notNull(), // Admin can mark courses as top picks
+  isPublished: boolean("isPublished").default(true).notNull(),
+  isTopPick: boolean("isTopPick").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
 });
 
 export type Course = typeof courses.$inferSelect;
@@ -54,16 +67,16 @@ export type InsertCourse = typeof courses.$inferInsert;
 /**
  * Purchases table - tracks which users have purchased which courses
  */
-export const purchases = mysqlTable("purchases", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  courseId: int("courseId").notNull(),
-  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  stripePaymentId: varchar("stripePaymentId", { length: 255 }), // Stripe payment intent ID
-  status: mysqlEnum("status", ["pending", "completed", "failed"]).default("pending").notNull(),
+export const purchases = pgTable("purchases", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  courseId: integer("courseId").notNull(),
+  amount: numeric("amount", { precision: 10, scale: 2 }).notNull(),
+  stripePaymentId: varchar("stripePaymentId", { length: 255 }),
+  status: text("status").$type<"pending" | "completed" | "failed">().default("pending").notNull(),
   purchasedAt: timestamp("purchasedAt").defaultNow().notNull(),
-  isCompleted: boolean("isCompleted").default(false).notNull(), // Course completion tracking
-  completedAt: timestamp("completedAt"), // When the course was completed
+  isCompleted: boolean("isCompleted").default(false).notNull(),
+  completedAt: timestamp("completedAt"),
 });
 
 export type Purchase = typeof purchases.$inferSelect;
@@ -72,11 +85,11 @@ export type InsertPurchase = typeof purchases.$inferInsert;
 /**
  * Site settings table - stores global site configuration
  */
-export const siteSettings = mysqlTable("siteSettings", {
-  id: int("id").autoincrement().primaryKey(),
+export const siteSettings = pgTable("siteSettings", {
+  id: serial("id").primaryKey(),
   key: varchar("key", { length: 100 }).notNull().unique(),
   value: text("value"),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
 });
 
 export type SiteSetting = typeof siteSettings.$inferSelect;
@@ -85,10 +98,10 @@ export type InsertSiteSetting = typeof siteSettings.$inferInsert;
 /**
  * Chat messages table - stores AI chat support history
  */
-export const chatMessages = mysqlTable("chatMessages", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId"), // Null for anonymous users
-  role: mysqlEnum("role", ["user", "assistant"]).notNull(),
+export const chatMessages = pgTable("chatMessages", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId"),
+  role: text("role").$type<"user" | "assistant">().notNull(),
   content: text("content").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
@@ -99,29 +112,24 @@ export type InsertChatMessage = typeof chatMessages.$inferInsert;
 /**
  * Availability slots table - stores instructor's available time slots
  */
-export const availabilitySlots = mysqlTable("availabilitySlots", {
-  id: int("id").autoincrement().primaryKey(),
+export const availabilitySlots = pgTable("availabilitySlots", {
+  id: serial("id").primaryKey(),
   startTime: timestamp("startTime").notNull(),
   endTime: timestamp("endTime").notNull(),
-  eventType: mysqlEnum("eventType", ["online", "in-person"]).default("online").notNull(),
-  location: text("location"), // Physical address for in-person events
-  sessionLink: text("sessionLink"), // Google Meet link for online sessions (hidden until enrolled)
-  
-  // Google Meet Integration (deprecated - use Zoom instead)
-  meetLink: text("meetLink"), // Google Meet link (e.g., "https://meet.google.com/xxx-xxxx-xxx")
-  
-  // Zoom Web SDK Integration
-  zoomMeetingId: varchar("zoomMeetingId", { length: 50 }), // Zoom meeting ID (numeric, stored as string)
-  
+  eventType: text("eventType").$type<"online" | "in-person">().default("online").notNull(),
+  location: text("location"),
+  sessionLink: text("sessionLink"),
+  meetLink: text("meetLink"),
+  zoomMeetingId: varchar("zoomMeetingId", { length: 50 }),
   isFree: boolean("isFree").default(true).notNull(),
-  price: varchar("price", { length: 20 }), // Price in EUR (e.g., "50.00")
+  price: varchar("price", { length: 20 }),
   title: varchar("title", { length: 200 }).default("One-on-One Dance Session").notNull(),
   description: text("description"),
-  sessionType: mysqlEnum("sessionType", ["private", "group"]).default("private").notNull(),
-  capacity: int("capacity").default(1).notNull(), // Max participants (1 for private, >1 for group)
-  currentBookings: int("currentBookings").default(0).notNull(), // Number of current bookings
-  isBooked: boolean("isBooked").default(false).notNull(), // For private sessions only
-  status: mysqlEnum("status", ["draft", "published"]).default("published").notNull(), // Admin can draft sessions before publishing
+  sessionType: text("sessionType").$type<"private" | "group">().default("private").notNull(),
+  capacity: integer("capacity").default(1).notNull(),
+  currentBookings: integer("currentBookings").default(0).notNull(),
+  isBooked: boolean("isBooked").default(false).notNull(),
+  status: text("status").$type<"draft" | "published">().default("published").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -131,18 +139,18 @@ export type InsertAvailabilitySlot = typeof availabilitySlots.$inferInsert;
 /**
  * Bookings table - stores user session bookings
  */
-export const bookings = mysqlTable("bookings", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  slotId: int("slotId").notNull(),
-  sessionType: varchar("sessionType", { length: 100 }).notNull(), // e.g., "One-on-One Dance Session"
-  meetLink: text("meetLink"), // Google Meet link for the session
-  status: mysqlEnum("status", ["pending", "confirmed", "cancelled"]).default("confirmed").notNull(),
-  notes: text("notes"), // User notes for the session
+export const bookings = pgTable("bookings", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  slotId: integer("slotId").notNull(),
+  sessionType: varchar("sessionType", { length: 100 }).notNull(),
+  meetLink: text("meetLink"),
+  status: text("status").$type<"pending" | "confirmed" | "cancelled">().default("confirmed").notNull(),
+  notes: text("notes"),
   paymentRequired: boolean("paymentRequired").default(false).notNull(),
-  paymentStatus: mysqlEnum("paymentStatus", ["pending", "completed", "failed", "not_required"]).default("not_required").notNull(),
+  paymentStatus: text("paymentStatus").$type<"pending" | "completed" | "failed" | "not_required">().default("not_required").notNull(),
   stripePaymentIntentId: varchar("stripePaymentIntentId", { length: 255 }),
-  amountPaid: varchar("amountPaid", { length: 20 }), // Amount in EUR
+  amountPaid: varchar("amountPaid", { length: 20 }),
   bookedAt: timestamp("bookedAt").defaultNow().notNull(),
 });
 
@@ -152,31 +160,31 @@ export type InsertBooking = typeof bookings.$inferInsert;
 /**
  * Testimonials table - stores user feedback and reviews
  */
-export const testimonials = mysqlTable("testimonials", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
+export const testimonials = pgTable("testimonials", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
   userName: varchar("userName", { length: 255 }).notNull(),
   userEmail: varchar("userEmail", { length: 320 }),
-  rating: int("rating").notNull(), // 1-5 stars
+  rating: integer("rating").notNull(),
   review: text("review").notNull(),
   photoUrl: text("photoUrl"),
   videoUrl: text("videoUrl"),
-  type: mysqlEnum("type", ["session", "course"]).notNull(), // session or course feedback
-  relatedId: int("relatedId"), // booking ID or course ID
-  status: mysqlEnum("status", ["pending", "approved", "rejected"]).default("pending").notNull(),
+  type: text("type").$type<"session" | "course">().notNull(),
+  relatedId: integer("relatedId"),
+  status: text("status").$type<"pending" | "approved" | "rejected">().default("pending").notNull(),
   isFeatured: boolean("isFeatured").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
 });
 
 export type Testimonial = typeof testimonials.$inferSelect;
 export type InsertTestimonial = typeof testimonials.$inferInsert;
 
 /**
- * Website popup settings - for email collection or announcements
+ * Website popup settings
  */
-export const popupSettings = mysqlTable("popup_settings", {
-  id: int("id").autoincrement().primaryKey(),
+export const popupSettings = pgTable("popup_settings", {
+  id: serial("id").primaryKey(),
   enabled: boolean("enabled").default(false).notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   message: text("message").notNull(),
@@ -187,7 +195,7 @@ export const popupSettings = mysqlTable("popup_settings", {
   backgroundColor: varchar("backgroundColor", { length: 50 }).default("#ffffff"),
   textColor: varchar("textColor", { length: 50 }).default("#000000"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
 });
 
 export type PopupSettings = typeof popupSettings.$inferSelect;
@@ -196,12 +204,12 @@ export type InsertPopupSettings = typeof popupSettings.$inferInsert;
 /**
  * Popup interactions - track which users have seen/dismissed the popup
  */
-export const popupInteractions = mysqlTable("popup_interactions", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId"),
-  popupId: int("popupId").notNull(),
-  email: varchar("email", { length: 320 }), // If user submitted email
-  action: mysqlEnum("action", ["dismissed", "email_submitted"]).notNull(),
+export const popupInteractions = pgTable("popup_interactions", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId"),
+  popupId: integer("popupId").notNull(),
+  email: varchar("email", { length: 320 }),
+  action: text("action").$type<"dismissed" | "email_submitted">().notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -211,15 +219,15 @@ export type InsertPopupInteraction = typeof popupInteractions.$inferInsert;
 /**
  * Section headings - customizable headings for homepage sections
  */
-export const sectionHeadings = mysqlTable("section_headings", {
-  id: int("id").autoincrement().primaryKey(),
-  section: varchar("section", { length: 100 }).notNull().unique(), // e.g., "courses", "testimonials", "about"
+export const sectionHeadings = pgTable("section_headings", {
+  id: serial("id").primaryKey(),
+  section: varchar("section", { length: 100 }).notNull().unique(),
   heading: varchar("heading", { length: 255 }).notNull(),
   subheading: text("subheading"),
-  displayOrder: int("displayOrder").default(0).notNull(),
+  displayOrder: integer("displayOrder").default(0).notNull(),
   isVisible: boolean("isVisible").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
 });
 
 export type SectionHeading = typeof sectionHeadings.$inferSelect;
@@ -228,17 +236,17 @@ export type InsertSectionHeading = typeof sectionHeadings.$inferInsert;
 /**
  * Page analytics table - tracks page views and visitor sessions
  */
-export const pageAnalytics = mysqlTable("page_analytics", {
-  id: int("id").autoincrement().primaryKey(),
-  sessionId: varchar("session_id", { length: 255 }).notNull(), // Unique session identifier
-  visitorId: varchar("visitor_id", { length: 255 }).notNull(), // Unique visitor identifier (persists across sessions)
-  pagePath: varchar("page_path", { length: 500 }).notNull(), // URL path visited
-  referrer: text("referrer"), // Where visitor came from
-  userAgent: text("user_agent"), // Browser/device info
-  entryTime: timestamp("entry_time").defaultNow().notNull(), // When visitor entered page
-  exitTime: timestamp("exit_time"), // When visitor left page (null if still on page)
-  duration: int("duration"), // Time spent on page in seconds
-  isBounce: boolean("is_bounce").default(false), // True if visitor left without visiting another page
+export const pageAnalytics = pgTable("page_analytics", {
+  id: serial("id").primaryKey(),
+  sessionId: varchar("session_id", { length: 255 }).notNull(),
+  visitorId: varchar("visitor_id", { length: 255 }).notNull(),
+  pagePath: varchar("page_path", { length: 500 }).notNull(),
+  referrer: text("referrer"),
+  userAgent: text("user_agent"),
+  entryTime: timestamp("entry_time").defaultNow().notNull(),
+  exitTime: timestamp("exit_time"),
+  duration: integer("duration"),
+  isBounce: boolean("is_bounce").default(false),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -246,24 +254,20 @@ export type PageAnalytics = typeof pageAnalytics.$inferSelect;
 export type InsertPageAnalytics = typeof pageAnalytics.$inferInsert;
 
 /**
- * User course enrollments - tracks which users are enrolled in which courses
- * Separate from purchases to allow manual enrollment by admins
+ * User course enrollments
  */
-export const userCourseEnrollments = mysqlTable("user_course_enrollments", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  courseId: int("courseId").notNull(),
+export const userCourseEnrollments = pgTable("user_course_enrollments", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  courseId: integer("courseId").notNull(),
   enrolledAt: timestamp("enrolledAt").defaultNow().notNull(),
-  enrolledBy: int("enrolledBy"), // Admin user ID who enrolled them (null if self-enrolled via purchase)
-  status: mysqlEnum("status", ["active", "completed", "cancelled"]).default("active").notNull(),
+  enrolledBy: integer("enrolledBy"),
+  status: text("status").$type<"active" | "completed" | "cancelled">().default("active").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => ({
-  // Unique constraint to prevent duplicate enrollments
   uniqueEnrollment: unique().on(table.userId, table.courseId),
-  // Index for fast user → courses lookup
   userIdIdx: index("userId_idx").on(table.userId),
-  // Index for fast course → users lookup
   courseIdIdx: index("courseId_idx").on(table.courseId),
 }));
 
@@ -273,17 +277,17 @@ export type InsertUserCourseEnrollment = typeof userCourseEnrollments.$inferInse
 /**
  * Course modules - organize lessons into modules/sections
  */
-export const courseModules = mysqlTable("course_modules", {
-  id: int("id").autoincrement().primaryKey(),
-  courseId: int("courseId").notNull(),
+export const courseModules = pgTable("course_modules", {
+  id: serial("id").primaryKey(),
+  courseId: integer("courseId").notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
-  videoUrl: text("videoUrl"), // S3 URL for module video
-  videoKey: text("videoKey"), // S3 key for module video
-  order: int("order").notNull().default(0), // For ordering modules within a course
+  videoUrl: text("videoUrl"),
+  videoKey: text("videoKey"),
+  order: integer("order").notNull().default(0),
   isPublished: boolean("isPublished").default(true).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => ({
   courseIdIdx: index("module_courseId_idx").on(table.courseId),
   orderIdx: index("module_order_idx").on(table.courseId, table.order),
@@ -295,21 +299,21 @@ export type InsertCourseModule = typeof courseModules.$inferInsert;
 /**
  * Course lessons - individual lessons within modules
  */
-export const courseLessons = mysqlTable("course_lessons", {
-  id: int("id").autoincrement().primaryKey(),
-  moduleId: int("moduleId").notNull(),
-  courseId: int("courseId").notNull(), // Denormalized for easier queries
+export const courseLessons = pgTable("course_lessons", {
+  id: serial("id").primaryKey(),
+  moduleId: integer("moduleId").notNull(),
+  courseId: integer("courseId").notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
-  videoUrl: text("videoUrl"), // S3 URL or external video URL
-  videoKey: text("videoKey"), // S3 key if stored in S3
-  duration: int("duration"), // Duration in minutes
-  content: text("content"), // Rich text content (markdown or HTML)
-  order: int("order").notNull().default(0), // For ordering lessons within a module
+  videoUrl: text("videoUrl"),
+  videoKey: text("videoKey"),
+  duration: integer("duration"),
+  content: text("content"),
+  order: integer("order").notNull().default(0),
   isPublished: boolean("isPublished").default(true).notNull(),
-  isFree: boolean("isFree").default(false).notNull(), // Some lessons can be free preview
+  isFree: boolean("isFree").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => ({
   moduleIdIdx: index("lesson_moduleId_idx").on(table.moduleId),
   courseIdIdx: index("lesson_courseId_idx").on(table.courseId),
@@ -322,17 +326,17 @@ export type InsertCourseLesson = typeof courseLessons.$inferInsert;
 /**
  * User lesson progress - tracks which lessons users have completed
  */
-export const userLessonProgress = mysqlTable("user_lesson_progress", {
-  id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
-  lessonId: int("lessonId").notNull(),
-  courseId: int("courseId").notNull(), // Denormalized for easier queries
+export const userLessonProgress = pgTable("user_lesson_progress", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  lessonId: integer("lessonId").notNull(),
+  courseId: integer("courseId").notNull(),
   isCompleted: boolean("isCompleted").default(false).notNull(),
   lastWatchedAt: timestamp("lastWatchedAt"),
-  watchedDuration: int("watchedDuration").default(0), // Seconds watched
+  watchedDuration: integer("watchedDuration").default(0),
   completedAt: timestamp("completedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => ({
   uniqueProgress: unique().on(table.userId, table.lessonId),
   userIdIdx: index("progress_userId_idx").on(table.userId),
@@ -346,22 +350,20 @@ export type InsertUserLessonProgress = typeof userLessonProgress.$inferInsert;
 /**
  * Visual settings - stores visual customizations for the website
  */
-export const visualSettings = mysqlTable("visual_settings", {
-  id: int("id").autoincrement().primaryKey(),
-  // Hero background customization
+export const visualSettings = pgTable("visual_settings", {
+  id: serial("id").primaryKey(),
   heroBackgroundUrl: text("heroBackgroundUrl"),
   heroBackgroundKey: text("heroBackgroundKey"),
-  heroBackgroundZoom: decimal("heroBackgroundZoom", { precision: 5, scale: 2 }).default("1.00"),
-  heroBackgroundOffsetX: decimal("heroBackgroundOffsetX", { precision: 10, scale: 2 }).default("0.00"),
-  heroBackgroundOffsetY: decimal("heroBackgroundOffsetY", { precision: 10, scale: 2 }).default("0.00"),
-  // Logo customization
+  heroBackgroundZoom: numeric("heroBackgroundZoom", { precision: 5, scale: 2 }).default("1.00"),
+  heroBackgroundOffsetX: numeric("heroBackgroundOffsetX", { precision: 10, scale: 2 }).default("0.00"),
+  heroBackgroundOffsetY: numeric("heroBackgroundOffsetY", { precision: 10, scale: 2 }).default("0.00"),
   logoUrl: text("logoUrl"),
   logoKey: text("logoKey"),
-  logoZoom: decimal("logoZoom", { precision: 5, scale: 2 }).default("1.00"),
-  logoOffsetX: decimal("logoOffsetX", { precision: 10, scale: 2 }).default("0.00"),
-  logoOffsetY: decimal("logoOffsetY", { precision: 10, scale: 2 }).default("0.00"),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  updatedBy: int("updatedBy"), // User ID of admin who made the change
+  logoZoom: numeric("logoZoom", { precision: 5, scale: 2 }).default("1.00"),
+  logoOffsetX: numeric("logoOffsetX", { precision: 10, scale: 2 }).default("0.00"),
+  logoOffsetY: numeric("logoOffsetY", { precision: 10, scale: 2 }).default("0.00"),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
+  updatedBy: integer("updatedBy"),
 });
 
 export type VisualSettings = typeof visualSettings.$inferSelect;
@@ -370,10 +372,10 @@ export type InsertVisualSettings = typeof visualSettings.$inferInsert;
 /**
  * Messages table - stores internal platform messages from admin to users
  */
-export const messages = mysqlTable("messages", {
-  id: int("id").autoincrement().primaryKey(),
-  fromUserId: int("fromUserId").notNull(), // Admin who sent the message
-  toUserId: int("toUserId").notNull(), // User who receives the message
+export const messages = pgTable("messages", {
+  id: serial("id").primaryKey(),
+  fromUserId: integer("fromUserId").notNull(),
+  toUserId: integer("toUserId").notNull(),
   subject: varchar("subject", { length: 255 }).notNull(),
   body: text("body").notNull(),
   isRead: boolean("isRead").default(false).notNull(),
@@ -387,25 +389,24 @@ export const messages = mysqlTable("messages", {
 export type Message = typeof messages.$inferSelect;
 export type InsertMessage = typeof messages.$inferInsert;
 
-
 /**
- * Discount codes table - stores all discount codes for subscriptions and courses
+ * Discount codes table
  */
-export const discountCodes = mysqlTable("discountCodes", {
-  id: int("id").autoincrement().primaryKey(),
+export const discountCodes = pgTable("discountCodes", {
+  id: serial("id").primaryKey(),
   code: varchar("code", { length: 50 }).notNull().unique(),
   description: text("description"),
-  discountType: mysqlEnum("discountType", ["percentage", "fixed"]).notNull(), // percentage (0-100) or fixed amount
-  discountValue: decimal("discountValue", { precision: 10, scale: 2 }).notNull(), // e.g., 20 for 20% or $20 off
-  validFrom: timestamp("validFrom").notNull(), // When the code becomes valid
-  validTo: timestamp("validTo").notNull(), // When the code expires
-  maxUses: int("maxUses"), // null = unlimited
-  currentUses: int("currentUses").default(0).notNull(), // How many times used
+  discountType: text("discountType").$type<"percentage" | "fixed">().notNull(),
+  discountValue: numeric("discountValue", { precision: 10, scale: 2 }).notNull(),
+  validFrom: timestamp("validFrom").notNull(),
+  validTo: timestamp("validTo").notNull(),
+  maxUses: integer("maxUses"),
+  currentUses: integer("currentUses").default(0).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
-  applicableTo: mysqlEnum("applicableTo", ["all", "subscriptions", "courses"]).default("all").notNull(), // What this code applies to
-  createdBy: int("createdBy").notNull(), // Admin who created it
+  applicableTo: text("applicableTo").$type<"all" | "subscriptions" | "courses">().default("all").notNull(),
+  createdBy: integer("createdBy").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => ({
   codeIdx: index("discountCodes_code_idx").on(table.code),
   createdByIdx: index("discountCodes_createdBy_idx").on(table.createdBy),
@@ -415,18 +416,18 @@ export type DiscountCode = typeof discountCodes.$inferSelect;
 export type InsertDiscountCode = typeof discountCodes.$inferInsert;
 
 /**
- * Discount usage tracking - tracks which users used which discount codes
+ * Discount usage tracking
  */
-export const discountUsage = mysqlTable("discountUsage", {
-  id: int("id").autoincrement().primaryKey(),
-  discountCodeId: int("discountCodeId").notNull().references(() => discountCodes.id),
-  userId: int("userId").notNull().references(() => users.id),
+export const discountUsage = pgTable("discountUsage", {
+  id: serial("id").primaryKey(),
+  discountCodeId: integer("discountCodeId").notNull().references(() => discountCodes.id),
+  userId: integer("userId").notNull().references(() => users.id),
   usedAt: timestamp("usedAt").defaultNow().notNull(),
-  discountAmount: decimal("discountAmount", { precision: 10, scale: 2 }).notNull(), // Amount discounted
-  originalAmount: decimal("originalAmount", { precision: 10, scale: 2 }).notNull(), // Original price before discount
-  finalAmount: decimal("finalAmount", { precision: 10, scale: 2 }).notNull(), // Final price after discount
-  transactionType: mysqlEnum("transactionType", ["subscription", "course"]).notNull(),
-  transactionId: varchar("transactionId", { length: 255 }), // Stripe subscription/payment ID or course purchase ID
+  discountAmount: numeric("discountAmount", { precision: 10, scale: 2 }).notNull(),
+  originalAmount: numeric("originalAmount", { precision: 10, scale: 2 }).notNull(),
+  finalAmount: numeric("finalAmount", { precision: 10, scale: 2 }).notNull(),
+  transactionType: text("transactionType").$type<"subscription" | "course">().notNull(),
+  transactionId: varchar("transactionId", { length: 255 }),
 }, (table) => ({
   discountCodeIdIdx: index("discountUsage_discountCodeId_idx").on(table.discountCodeId),
   userIdIdx: index("discountUsage_userId_idx").on(table.userId),
