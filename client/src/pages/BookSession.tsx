@@ -223,7 +223,7 @@ export default function BookSession() {
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Header */}
       <div className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="container mx-auto px-6 py-4">
+        <div className="container mx-auto px-4 sm:px-6 py-4">
           <Link href="/">
             <Button variant="ghost" size="sm" className="mb-4">
               <ArrowLeft className="mr-2 h-4 w-4" />
@@ -232,7 +232,7 @@ export default function BookSession() {
           </Link>
           
           <div className="space-y-2">
-            <h1 className="text-4xl font-light tracking-tight text-gray-900">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-tight text-gray-900">
               Book Your Dance Session
             </h1>
             <p className="text-gray-600">
@@ -242,11 +242,11 @@ export default function BookSession() {
         </div>
       </div>
 
-      <div className="container mx-auto px-6 py-8">
+      <div className="container mx-auto px-4 sm:px-6 py-8">
         {/* Filter Bar */}
         <div className="mb-8">
-          <div className="bg-white/90 backdrop-blur-md rounded-full shadow-sm hover:shadow-md transition-shadow px-6 py-4 border border-gray-200">
-            <div className="flex items-center justify-between gap-6">
+          <div className="bg-white/90 backdrop-blur-md rounded-2xl lg:rounded-full shadow-sm hover:shadow-md transition-shadow px-4 py-3 lg:px-6 lg:py-4 border border-gray-200">
+            <div className="flex flex-wrap items-center justify-between gap-3 lg:gap-6">
               {/* Session Count */}
               <div className="text-sm font-medium text-gray-700">
                 🎯 {filteredSlots.length} sessions
@@ -358,9 +358,9 @@ export default function BookSession() {
         </div>
 
         {/* Main Content: Calendar + Sessions */}
-        <div className="flex gap-8 items-start">
+        <div className="flex flex-col lg:flex-row gap-4 lg:gap-8 items-start">
           {/* Compact Calendar Sidebar */}
-          <div className="w-80 flex-shrink-0 sticky top-[200px]">
+          <div className="w-full lg:w-80 lg:flex-shrink-0 lg:sticky lg:top-[200px]">
             <Card className="shadow-sm">
               <CardContent className="p-4">
                 {/* Month Navigation */}

@@ -111,7 +111,7 @@ export default function Courses() {
                       <img 
                         src={course.imageUrl} 
                         alt={course.title} 
-                        className="w-full h-48 object-cover rounded-t-lg"
+                        className="w-full h-36 sm:h-48 object-cover rounded-t-lg"
                       />
                       {course.isTopPick && (
                         <div className="absolute top-4 left-4 z-10">
@@ -135,7 +135,7 @@ export default function Courses() {
                       )}
                     </>
                   ) : (
-                    <div className="w-full h-48 bg-gradient-to-br from-pink-100 to-purple-100 rounded-t-lg flex items-center justify-center">
+                    <div className="w-full h-36 sm:h-48 bg-gradient-to-br from-pink-100 to-purple-100 rounded-t-lg flex items-center justify-center">
                       <span className="text-6xl">💃</span>
                     </div>
                   )}

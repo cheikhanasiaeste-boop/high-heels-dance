@@ -76,7 +76,7 @@ export function UpcomingSessionsWidget() {
   return (
     <div 
       ref={widgetRef}
-      className="fixed right-6 z-40 animate-slide-in-right transition-all duration-200"
+      className="fixed right-3 sm:right-6 z-40 animate-slide-in-right transition-all duration-200"
       style={{ top: `${widgetTop}px` }}
       onMouseEnter={() => {
         setIsHovered(true);
@@ -115,7 +115,7 @@ export function UpcomingSessionsWidget() {
       <div 
         className={`
           absolute top-full right-0 mt-2
-          w-80 max-h-[65vh] 
+          w-72 sm:w-80 max-w-[calc(100vw-2rem)] max-h-[65vh] 
           bg-white rounded-xl shadow-2xl border border-gray-200 
           overflow-hidden
           transition-all duration-300 ease-out

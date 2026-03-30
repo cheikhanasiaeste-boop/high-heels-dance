@@ -255,8 +255,8 @@ export default function Home() {
 
       {/* ── Header / Navigation ───────────────────────────────────────────── */}
       <header className="border-b border-stone-200/60 sticky top-0 z-50 backdrop-blur-xl bg-white/90 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-        <div className="container py-3.5 flex justify-between items-center">
-          <h1 className="text-2xl font-semibold text-[#831843] tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>High Heels Dance</h1>
+        <div className="container px-4 py-3.5 flex justify-between items-center">
+          <h1 className="text-xl sm:text-2xl font-semibold text-[#831843] tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>High Heels Dance</h1>
 
           <MobileNav onSignInClick={() => setShowAuthModal(true)} />
 
@@ -307,7 +307,7 @@ export default function Home() {
       </header>
 
       {/* ── Hero Section ──────────────────────────────────────────────────── */}
-      <section className="relative py-16 md:py-28 overflow-hidden min-h-[540px] md:min-h-[680px] flex items-center bg-[#701A75]">
+      <section className="relative py-10 md:py-20 overflow-hidden min-h-[540px] md:min-h-[680px] flex items-center bg-[#701A75]">
         {/* Background — video for .mp4/.webm, direct img for everything else */}
         <div className="absolute inset-0 z-0 overflow-hidden">
           {!prefersReducedMotion && isVideoUrl(backgroundUrl) ? (
@@ -406,13 +406,13 @@ export default function Home() {
           {/* CTA buttons */}
           <div className="flex flex-col sm:flex-row justify-center gap-3 md:gap-4 animate-fade-up-delay-3">
             <Link href="/book-session">
-              <span className="inline-flex items-center gap-2 px-8 md:px-10 py-3.5 md:py-4 text-sm md:text-base font-semibold text-white bg-[#C026D3] hover:bg-[#A21CAF] rounded-full shadow-lg hover:shadow-xl hover:shadow-[#C026D3]/25 transition-all duration-300 hover:-translate-y-0.5 tracking-wide cursor-pointer">
+              <span className="inline-flex items-center gap-2 px-6 sm:px-8 md:px-10 py-3 sm:py-3.5 md:py-4 text-sm md:text-base font-semibold text-white bg-[#C026D3] hover:bg-[#A21CAF] rounded-full shadow-lg hover:shadow-xl hover:shadow-[#C026D3]/25 transition-all duration-300 hover:-translate-y-0.5 tracking-wide cursor-pointer">
                 Book a Dance Session
                 <ArrowRight className="w-4 h-4" />
               </span>
             </Link>
             <Link href="/courses">
-              <span className="inline-flex items-center gap-2 px-8 md:px-10 py-3.5 md:py-4 text-sm md:text-base font-medium text-white/90 bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 hover:border-white/35 rounded-full backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 tracking-wide cursor-pointer">
+              <span className="inline-flex items-center gap-2 px-6 sm:px-8 md:px-10 py-3 sm:py-3.5 md:py-4 text-sm md:text-base font-medium text-white/90 bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 hover:border-white/35 rounded-full backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 tracking-wide cursor-pointer">
                 Explore Courses
               </span>
             </Link>
@@ -424,7 +424,7 @@ export default function Home() {
       <UpcomingSessionsWidget />
 
       {/* ── Courses Section ───────────────────────────────────────────────── */}
-      <section className="py-16 md:py-28 bg-[#FDF4FF] relative overflow-hidden">
+      <section className="py-10 md:py-20 bg-[#FDF4FF] relative overflow-hidden">
         {/* Subtle warm ambient glow */}
         <div className="absolute inset-0 opacity-[0.03] z-0">
           <div className="absolute top-20 left-10 w-[500px] h-[500px] bg-fuchsia-400 rounded-full blur-[120px]" />
@@ -497,7 +497,7 @@ export default function Home() {
 
           {filteredCourses.length > 0 ? (
             <div className="relative max-w-7xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-7 items-stretch">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-7 items-stretch">
                 {filteredCourses.slice(0, 6).map(course => (
                   <Link key={course.id} href={`/course/${course.id}`}>
                     <Card className="group overflow-hidden hover:shadow-xl hover:shadow-stone-200/60 transition-all duration-500 hover:-translate-y-1.5 border border-stone-200/60 bg-white flex flex-col h-full cursor-pointer">
@@ -627,7 +627,7 @@ export default function Home() {
       </section>
 
       {/* ── Testimonials Section ──────────────────────────────────────────── */}
-      <section className="py-16 md:py-28 bg-[#701A75] relative overflow-hidden">
+      <section className="py-10 md:py-20 bg-[#701A75] relative overflow-hidden">
         {/* Subtle ambient glows */}
         <div className="absolute inset-0 opacity-15">
           <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[#C026D3] rounded-full blur-[150px]" />
