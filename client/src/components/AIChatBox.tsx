@@ -292,8 +292,10 @@ export function AIChatBox({
                   <div className="size-8 shrink-0 mt-1 rounded-full bg-primary/10 flex items-center justify-center">
                     <Sparkles className="size-4 text-primary" />
                   </div>
-                  <div className="rounded-lg bg-muted px-4 py-2.5">
-                    <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                  <div className="rounded-lg bg-muted px-4 py-3.5 flex items-center gap-1">
+                    <span className="size-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "0ms", animationDuration: "1s" }} />
+                    <span className="size-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "150ms", animationDuration: "1s" }} />
+                    <span className="size-2 rounded-full bg-muted-foreground/60 animate-bounce" style={{ animationDelay: "300ms", animationDuration: "1s" }} />
                   </div>
                 </div>
               )}

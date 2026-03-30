@@ -139,7 +139,7 @@ export default function Home() {
   const { data: courses } = trpc.courses.list.useQuery();
   const { data: myPurchases } = trpc.purchases.myPurchases.useQuery(undefined, { enabled: isAuthenticated });
   const { data: unreadCount } = trpc.messages.unreadCount.useQuery(undefined, { enabled: isAuthenticated });
-  const { data: banner } = trpc.banner.get.useQuery();
+  const { data: banner, isLoading: bannerLoading } = trpc.banner.get.useQuery();
   const { data: textTestimonials } = trpc.testimonials.list.useQuery();
   const { data: videoTestimonials } = trpc.testimonials.videoTestimonials.useQuery();
   const { data: popupSettings } = trpc.popup.get.useQuery();
@@ -196,8 +196,8 @@ export default function Home() {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
-  // Banner: show DB value when enabled; otherwise always show fallback immediately
-  const effectiveBannerText = (banner?.enabled && banner.text) ? banner.text : FALLBACK_BANNER;
+  // Banner: wait for DB to load, then show DB value or fallback — avoids text flash
+  const effectiveBannerText = bannerLoading ? FALLBACK_BANNER : (banner?.enabled && banner.text) ? banner.text : FALLBACK_BANNER;
 
   // Popup: use DB settings when enabled; otherwise show fallback immediately
   const effectivePopupSettings = (popupSettings?.enabled) ? popupSettings : FALLBACK_POPUP;
