@@ -105,7 +105,8 @@ export function useAuth(options?: UseAuthOptions) {
   // ── Internal user profile (role, membership, etc.) from our DB ──────────
   const meQuery = trpc.auth.me.useQuery(undefined, {
     enabled: isAuthenticated && !syncUserMutation.isPending,
-    retry: false,
+    retry: 2,
+    retryDelay: 1000,
     refetchOnWindowFocus: false,
   });
 

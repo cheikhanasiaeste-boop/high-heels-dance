@@ -68,16 +68,36 @@ export async function getDb() {
 /**
  * Look up a user by their Supabase auth UUID.
  * Used in createContext on every tRPC request.
+ * Falls back to Supabase REST API if direct PostgreSQL is unavailable.
  */
 export async function getUserBySupabaseId(supabaseId: string): Promise<User | null> {
   const db = await getDb();
-  if (!db) return null;
-  const result = await db
-    .select()
-    .from(users)
-    .where(eq(users.supabaseId, supabaseId))
-    .limit(1);
-  return result[0] ?? null;
+  if (db) {
+    try {
+      const result = await db
+        .select()
+        .from(users)
+        .where(eq(users.supabaseId, supabaseId))
+        .limit(1);
+      return result[0] ?? null;
+    } catch (e) {
+      console.warn("[Database] Direct query failed, trying REST API fallback:", (e as Error).message);
+    }
+  }
+  // REST API fallback
+  try {
+    const { supabaseAdmin } = await import("./lib/supabase");
+    const { data, error } = await supabaseAdmin
+      .from("users")
+      .select("*")
+      .eq("supabaseId", supabaseId)
+      .limit(1)
+      .single();
+    if (error || !data) return null;
+    return data as User;
+  } catch {
+    return null;
+  }
 }
 
 export async function getUserByEmail(email: string) {
@@ -102,8 +122,24 @@ export async function syncUser(params: {
   email: string | null;
 }): Promise<User> {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
 
+  if (db) {
+    try {
+      return await syncUserDrizzle(db, params);
+    } catch (e) {
+      console.warn("[Database] Direct syncUser failed, trying REST API fallback:", (e as Error).message);
+    }
+  }
+
+  // REST API fallback
+  return syncUserRest(params);
+}
+
+async function syncUserDrizzle(db: NonNullable<Awaited<ReturnType<typeof getDb>>>, params: {
+  supabaseId: string;
+  name: string | null;
+  email: string | null;
+}): Promise<User> {
   // 1. Fast path: row already linked
   const existing = await db
     .select()
@@ -155,18 +191,95 @@ export async function syncUser(params: {
   return inserted[0];
 }
 
+async function syncUserRest(params: {
+  supabaseId: string;
+  name: string | null;
+  email: string | null;
+}): Promise<User> {
+  const { supabaseAdmin } = await import("./lib/supabase");
+
+  // 1. Check if user already exists by supabaseId
+  const { data: existing } = await supabaseAdmin
+    .from("users")
+    .select("*")
+    .eq("supabaseId", params.supabaseId)
+    .limit(1)
+    .single();
+
+  if (existing) {
+    await supabaseAdmin
+      .from("users")
+      .update({ lastSignedIn: new Date().toISOString() })
+      .eq("supabaseId", params.supabaseId);
+    return existing as User;
+  }
+
+  // 2. Check by email
+  if (params.email) {
+    const { data: byEmail } = await supabaseAdmin
+      .from("users")
+      .select("*")
+      .eq("email", params.email)
+      .limit(1)
+      .single();
+
+    if (byEmail) {
+      await supabaseAdmin
+        .from("users")
+        .update({ supabaseId: params.supabaseId, lastSignedIn: new Date().toISOString() })
+        .eq("id", byEmail.id);
+      return { ...byEmail, supabaseId: params.supabaseId } as User;
+    }
+  }
+
+  // 3. New user
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const role = adminEmail && params.email === adminEmail ? "admin" : "user";
+
+  const { data: inserted, error } = await supabaseAdmin
+    .from("users")
+    .insert({
+      supabaseId: params.supabaseId,
+      name: params.name,
+      email: params.email,
+      role,
+      lastSignedIn: new Date().toISOString(),
+    })
+    .select("*")
+    .single();
+
+  if (error || !inserted) throw new Error(`Failed to create user: ${error?.message}`);
+  return inserted as User;
+}
+
 // Course queries
 export async function getAllPublishedCourses(): Promise<Course[]> {
   const db = await getDb();
-  if (!db) return [];
-  
-  const result = await db
-    .select()
-    .from(courses)
-    .where(eq(courses.isPublished, true))
-    .orderBy(desc(courses.createdAt));
-  
-  return result;
+  if (db) {
+    try {
+      const result = await db
+        .select()
+        .from(courses)
+        .where(eq(courses.isPublished, true))
+        .orderBy(desc(courses.createdAt));
+      return result;
+    } catch (e) {
+      console.warn("[Database] Direct query failed, trying REST API fallback:", (e as Error).message);
+    }
+  }
+  // REST API fallback
+  try {
+    const { supabaseAdmin } = await import("./lib/supabase");
+    const { data, error } = await supabaseAdmin
+      .from("courses")
+      .select("*")
+      .eq("isPublished", true)
+      .order("createdAt", { ascending: false });
+    if (error || !data) return [];
+    return data as Course[];
+  } catch {
+    return [];
+  }
 }
 
 export async function getAllCourses(): Promise<Course[]> {
@@ -1042,26 +1155,50 @@ export async function markUserWelcomeSeen(userId: number): Promise<void> {
 // Get upcoming available slots for homepage display
 export async function getUpcomingAvailableSlots(limit: number = 6): Promise<AvailabilitySlot[]> {
   const db = await getDb();
-  if (!db) throw new Error("Database not available");
-  
-  const now = new Date();
-  
-  const result = await db.select()
-    .from(availabilitySlots)
-    .where(
-      and(
-        gte(availabilitySlots.startTime, now),
-        eq(availabilitySlots.isBooked, false)
-      )
-    )
-    .orderBy(availabilitySlots.startTime)
-    .limit(limit);
-  
-  // Calculate spots left for each slot
-  return result.map(slot => ({
-    ...slot,
-    spotsLeft: slot.capacity - slot.currentBookings,
-  })) as AvailabilitySlot[];
+
+  if (db) {
+    try {
+      const now = new Date();
+      const result = await db.select()
+        .from(availabilitySlots)
+        .where(
+          and(
+            gte(availabilitySlots.startTime, now),
+            eq(availabilitySlots.isBooked, false)
+          )
+        )
+        .orderBy(availabilitySlots.startTime)
+        .limit(limit);
+
+      return result.map(slot => ({
+        ...slot,
+        spotsLeft: slot.capacity - slot.currentBookings,
+      })) as AvailabilitySlot[];
+    } catch (e) {
+      console.warn("[Database] Direct query failed, trying REST API fallback:", (e as Error).message);
+    }
+  }
+
+  // REST API fallback
+  try {
+    const { supabaseAdmin } = await import("./lib/supabase");
+    const now = new Date().toISOString();
+    const { data, error } = await supabaseAdmin
+      .from("availabilitySlots")
+      .select("*")
+      .gte("startTime", now)
+      .eq("isBooked", false)
+      .order("startTime", { ascending: true })
+      .limit(limit);
+
+    if (error || !data) return [];
+    return (data as any[]).map(slot => ({
+      ...slot,
+      spotsLeft: slot.capacity - slot.currentBookings,
+    })) as AvailabilitySlot[];
+  } catch {
+    return [];
+  }
 }
 
 // ==================== User Management ====================
