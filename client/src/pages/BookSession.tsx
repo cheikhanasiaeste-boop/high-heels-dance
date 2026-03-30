@@ -25,7 +25,7 @@ export default function BookSession() {
   const [eventFilter, setEventFilter] = useState<"all" | "online" | "in-person">("all");
   const [sessionTypeFilter, setSessionTypeFilter] = useState<"all" | "private" | "group">("all");
   const [priceFilter, setPriceFilter] = useState<"all" | "free" | "premium">("all");
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(startOfDay(new Date()));
   const [calendarMonth, setCalendarMonth] = useState(new Date());
 
   const { data: availableSlots, isLoading: slotsLoading } = trpc.bookings.availableSlots.useQuery({
@@ -215,7 +215,7 @@ export default function BookSession() {
   const handleDateClick = (date: Date) => {
     const dateKey = format(startOfDay(date), 'yyyy-MM-dd');
     if (datesWithSessions.has(dateKey)) {
-      setSelectedDate(isSameDay(selectedDate || new Date(), date) ? null : date);
+      setSelectedDate(startOfDay(date));
     }
   };
 

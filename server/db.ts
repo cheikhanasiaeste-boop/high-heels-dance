@@ -492,7 +492,10 @@ export async function getAvailableSlots(startDate?: Date, endDate?: Date): Promi
     const { data } = await restFrom("availabilitySlots").select("*").order("startTime", { ascending: true });
     allSlots = (data ?? []) as AvailabilitySlot[];
   }
+  const now = new Date();
   return allSlots.filter(slot => {
+    // Never show past sessions
+    if (new Date(slot.startTime) < now) return false;
     if (slot.sessionType === 'group') {
       return slot.currentBookings < slot.capacity;
     } else {
