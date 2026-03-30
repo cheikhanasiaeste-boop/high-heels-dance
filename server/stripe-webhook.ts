@@ -3,11 +3,15 @@ import Stripe from 'stripe';
 import * as db from './db';
 import { generateMeetLink } from './meet';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-12-15.clover',
-});
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2025-12-15.clover' })
+  : null;
 
 export async function handleStripeWebhook(req: Request, res: Response) {
+  if (!stripe) {
+    return res.status(503).send('Payment system not configured');
+  }
+
   const sig = req.headers['stripe-signature'];
 
   if (!sig) {

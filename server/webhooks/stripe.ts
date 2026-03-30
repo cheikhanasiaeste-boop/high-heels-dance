@@ -3,16 +3,20 @@ import { Request, Response } from 'express';
 import * as db from '../db';
 import { getDb } from '../db';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-12-15.clover',
-});
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2025-12-15.clover' })
+  : null;
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 
 /**
  * Stripe webhook handler for subscription and payment events
  */
 export async function handleStripeWebhook(req: Request, res: Response) {
+  if (!stripe) {
+    return res.status(503).send('Payment system not configured');
+  }
+
   const sig = req.headers['stripe-signature'] as string;
 
   let event: Stripe.Event;
@@ -99,8 +103,8 @@ async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) 
 
   // Handle subscription
   if (plan && (plan === 'monthly' || plan === 'annual')) {
-    const subscription = await stripe.subscriptions.retrieve(session.subscription as string);
-    
+    const subscription = await stripe!.subscriptions.retrieve(session.subscription as string);
+
     // Update user membership with correct end date from subscription
     await db.setUserMembership(userId, plan as 'monthly' | 'annual', subscription.id);
 
@@ -193,7 +197,7 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
   // Record discount usage if applicable
   if (discountCode) {
     try {
-      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      const subscription = await stripe!.subscriptions.retrieve(subscriptionId);
       const userId = subscription.metadata?.user_id ? parseInt(subscription.metadata.user_id) : null;
       
       if (userId) {

@@ -14,9 +14,9 @@ import { getCourseStripePrice } from "./products";
 import { adminNotifications } from "./events";
 import { generateMeetLink } from "./meet";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-12-15.clover',
-});
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2025-12-15.clover' })
+  : null;
 
 // Admin-only procedure
 const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
@@ -271,7 +271,9 @@ export const appRouter = router({
         
         // Get origin for redirect URLs
         const origin = ctx.req.headers.origin || `${ctx.req.protocol}://${ctx.req.get('host')}`;
-        
+
+        if (!stripe) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Payment system not configured' });
+
         // Create Stripe checkout session
         const session = await stripe.checkout.sessions.create({
           payment_method_types: ['card'],
@@ -1352,8 +1354,9 @@ export const appRouter = router({
           }
         }
 
+        if (!process.env.STRIPE_SECRET_KEY) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Payment system not configured' });
         const Stripe = (await import('stripe')).default;
-        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, { apiVersion: '2025-12-15.clover' });
+        const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2025-12-15.clover' });
 
         const origin = ctx.req.headers.origin || `${ctx.req.protocol}://${ctx.req.get('host')}`;
         const priceInCents = Math.round(parseFloat(slot.price) * 100);

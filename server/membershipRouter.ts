@@ -5,9 +5,9 @@ import { MEMBERSHIP_PRODUCTS, hasActiveMembership } from "./membership-products"
 import Stripe from "stripe";
 import * as db from "./db";
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-12-15.clover',
-});
+const stripe = process.env.STRIPE_SECRET_KEY
+  ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2025-12-15.clover' })
+  : null;
 
 export const membershipRouter = router({
   /**
@@ -60,6 +60,8 @@ export const membershipRouter = router({
 
       const origin = ctx.req.headers.origin || `${ctx.req.protocol}://${ctx.req.get('host')}`;
       const product = input.plan === 'monthly' ? MEMBERSHIP_PRODUCTS.MONTHLY : MEMBERSHIP_PRODUCTS.ANNUAL;
+
+      if (!stripe) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Payment system not configured' });
 
       // Create Stripe subscription checkout session
       const session = await stripe.checkout.sessions.create({
