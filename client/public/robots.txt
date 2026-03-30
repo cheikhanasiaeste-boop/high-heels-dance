@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /auth/callback
+Disallow: /api/
+
+Sitemap: https://www.elizabeth-zolotova.com/sitemap.xml
