@@ -38,13 +38,13 @@ export function WebsitePopup({ settings, onDismiss, onEmailSubmit }: WebsitePopu
     if (settings && settings.enabled) {
       // Check if user has already seen this popup
       const seenKey = `popup_seen_${settings.id}`;
-      const hasSeen = localStorage.getItem(seenKey);
+      const hasSeen = sessionStorage.getItem(seenKey);
       
       if (!hasSeen) {
-        // Show popup after a short delay
+        // Show popup after a short delay for new visitors
         const timer = setTimeout(() => {
           setIsOpen(true);
-        }, 1000);
+        }, 1500);
         
         return () => clearTimeout(timer);
       }
@@ -54,7 +54,7 @@ export function WebsitePopup({ settings, onDismiss, onEmailSubmit }: WebsitePopu
   const handleDismiss = () => {
     if (settings) {
       setIsOpen(false);
-      localStorage.setItem(`popup_seen_${settings.id}`, 'true');
+      sessionStorage.setItem(`popup_seen_${settings.id}`, 'true');
       onDismiss(settings.id);
     }
   };
@@ -62,7 +62,7 @@ export function WebsitePopup({ settings, onDismiss, onEmailSubmit }: WebsitePopu
   const handleEmailSubmit = () => {
     if (settings && email) {
       setIsOpen(false);
-      localStorage.setItem(`popup_seen_${settings.id}`, 'true');
+      sessionStorage.setItem(`popup_seen_${settings.id}`, 'true');
       onEmailSubmit(settings.id, email);
       setEmail('');
     }

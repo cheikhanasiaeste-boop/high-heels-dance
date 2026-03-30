@@ -741,13 +741,13 @@ export default function Home() {
       {/* ── Floating Chat ─────────────────────────────────────────────────── */}
       <button
         onClick={() => setShowChat(!showChat)}
-        className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg hover:shadow-xl bg-[#C026D3] hover:bg-[#A21CAF] text-white flex items-center justify-center transition-all duration-300 hover:scale-105 z-40"
+        className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg hover:shadow-xl bg-[#C026D3] hover:bg-[#A21CAF] text-white flex items-center justify-center transition-all duration-300 hover:scale-105 z-[45]"
       >
         <MessageCircle className="h-5 w-5" />
       </button>
 
       {showChat && (
-        <div className="fixed bottom-24 right-6 w-96 max-w-[calc(100vw-3rem)] z-50">
+        <div className="fixed bottom-24 right-3 left-3 sm:left-auto sm:right-6 sm:w-96 z-50">
           <ChatWidget onClose={() => setShowChat(false)} />
         </div>
       )}

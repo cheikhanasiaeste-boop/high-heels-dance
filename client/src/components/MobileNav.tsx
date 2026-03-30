@@ -115,7 +115,7 @@ export function MobileNav({ onSignInClick }: MobileNavProps) {
 
           <Button
             variant="outline"
-            className="w-full justify-start shadow-lg border-2 border-primary hover:bg-primary hover:text-primary-foreground"
+            className="w-full justify-start shadow-lg border-2 border-primary bg-white text-primary font-semibold hover:bg-primary hover:text-white"
             size="lg"
             asChild
           >
