@@ -18,33 +18,21 @@ export function UpcomingSessionsWidget() {
   const widgetRef = useRef<HTMLDivElement>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  // Constrain widget top position to hero section bottom
+  // Constrain widget top position: never overlap the sticky header
   useEffect(() => {
     const handleScroll = () => {
-      const heroSection = document.querySelector('section.relative.py-20');
       const header = document.querySelector('header');
-      if (!heroSection || !header) return;
-      
-      const heroRect = heroSection.getBoundingClientRect();
-      const heroBottom = heroRect.bottom;
+      if (!header) return;
+
       const headerRect = header.getBoundingClientRect();
-      const whiteBarBottom = headerRect.bottom; // Bottom edge of white navigation bar
-      const minTop = whiteBarBottom + 8; // White bar bottom + 8px spacing
-      const defaultTop = 96; // Default top position
-      
-      // Calculate desired position: follow hero bottom when scrolling past it
-      let desiredTop = defaultTop;
-      if (heroBottom < defaultTop) {
-        desiredTop = heroBottom;
-      }
-      
-      // CRITICAL: Widget must NEVER go above white bar bottom boundary
-      setWidgetTop(Math.max(minTop, desiredTop));
+      const minTop = headerRect.bottom + 12; // Always below the header + spacing
+
+      setWidgetTop(minTop);
     };
-    
+
     window.addEventListener('scroll', handleScroll);
     handleScroll(); // Check initial state
-    
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   
@@ -88,7 +76,7 @@ export function UpcomingSessionsWidget() {
   return (
     <div 
       ref={widgetRef}
-      className="fixed right-6 z-50 animate-slide-in-right transition-all duration-200"
+      className="fixed right-6 z-40 animate-slide-in-right transition-all duration-200"
       style={{ top: `${widgetTop}px` }}
       onMouseEnter={() => {
         setIsHovered(true);
