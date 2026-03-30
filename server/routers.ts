@@ -1511,17 +1511,17 @@ Never be pushy. Be genuinely helpful and make people feel welcome.`;
           { role: 'user' as const, content: input.message },
         ];
         
-        // Get AI response
+        // Get AI response — never throw to client, always return a message
         let assistantMessage: string;
         try {
           const response = await invokeLLM({ messages });
           const content = response.choices[0]?.message?.content;
-          assistantMessage = typeof content === 'string'
+          assistantMessage = typeof content === 'string' && content.trim()
             ? content
-            : 'I apologize, but I am unable to respond at the moment. Please try again.';
+            : "I'd love to help! You can browse our courses or book a session directly on the website. Feel free to ask me anything about dance classes!";
         } catch (llmError: any) {
           console.error("[Chat] LLM error:", llmError.message);
-          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: llmError.message });
+          assistantMessage = "Thanks for reaching out! I'm having a little moment — but you can explore our courses or book a dance session right from the menu above. Elizabeth would love to dance with you!";
         }
         
         // Save assistant message (non-blocking)
