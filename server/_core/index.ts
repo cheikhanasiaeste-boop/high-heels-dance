@@ -38,7 +38,18 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
-  
+
+  // Redirect root domain to www in production
+  if (process.env.NODE_ENV === "production") {
+    app.use((req, res, next) => {
+      const host = req.hostname;
+      if (host === "elizabeth-zolotova.com") {
+        return res.redirect(301, `https://www.elizabeth-zolotova.com${req.originalUrl}`);
+      }
+      next();
+    });
+  }
+
   // Stripe webhook MUST be registered BEFORE express.json() middleware
   // This is required for webhook signature verification
   app.post(
