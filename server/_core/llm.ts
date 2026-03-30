@@ -75,33 +75,69 @@ function normalizeContent(content: MessageContent | MessageContent[]): string {
 }
 
 export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    throw new Error("OPENAI_API_KEY is not configured");
+    throw new Error("GEMINI_API_KEY is not configured");
   }
 
-  const messages = params.messages.map(msg => ({
-    role: msg.role,
-    content: normalizeContent(msg.content),
-  }));
+  // Build Gemini request — convert from OpenAI message format
+  let systemInstruction = "";
+  const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
 
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
+  for (const msg of params.messages) {
+    const text = normalizeContent(msg.content);
+    if (msg.role === "system") {
+      systemInstruction += text + "\n";
+    } else {
+      contents.push({
+        role: msg.role === "assistant" ? "model" : "user",
+        parts: [{ text }],
+      });
+    }
+  }
+
+  // Ensure first message is from user
+  if (contents.length === 0 || contents[0].role !== "user") {
+    contents.unshift({ role: "user", parts: [{ text: "Hello" }] });
+  }
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+  const response = await fetch(url, {
     method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "authorization": `Bearer ${apiKey}`,
-    },
+    headers: { "content-type": "application/json" },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages,
-      max_tokens: 512,
+      systemInstruction: systemInstruction.trim() ? { parts: [{ text: systemInstruction.trim() }] } : undefined,
+      contents,
+      generationConfig: {
+        maxOutputTokens: 512,
+      },
     }),
   });
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`OpenAI API error: ${response.status} ${response.statusText} – ${errorText}`);
+    throw new Error(`Gemini API error: ${response.status} ${response.statusText} – ${errorText}`);
   }
 
-  return (await response.json()) as InvokeResult;
+  const data = await response.json();
+  const textContent = data.candidates?.[0]?.content?.parts
+    ?.map((p: any) => p.text)
+    .join("") || "";
+
+  return {
+    id: `gemini-${Date.now()}`,
+    created: Math.floor(Date.now() / 1000),
+    model: "gemini-2.0-flash",
+    choices: [{
+      index: 0,
+      message: { role: "assistant", content: textContent },
+      finish_reason: data.candidates?.[0]?.finishReason || "STOP",
+    }],
+    usage: data.usageMetadata ? {
+      prompt_tokens: data.usageMetadata.promptTokenCount || 0,
+      completion_tokens: data.usageMetadata.candidatesTokenCount || 0,
+      total_tokens: data.usageMetadata.totalTokenCount || 0,
+    } : undefined,
+  };
 }
