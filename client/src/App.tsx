@@ -85,15 +85,19 @@ function App() {
   const [showWelcome, setShowWelcome] = useState(false);
   const markWelcomeMutation = trpc.auth.markWelcomeSeen.useMutation();
 
-  // Check if user should see welcome modal
+  // Show welcome modal only once per user — guard with localStorage + DB flag
   useEffect(() => {
     if (isAuthenticated && user && !user.hasSeenWelcome) {
-      setShowWelcome(true);
+      const dismissed = localStorage.getItem(`welcome_seen_${user.id}`);
+      if (!dismissed) {
+        setShowWelcome(true);
+      }
     }
   }, [isAuthenticated, user]);
 
   const handleCloseWelcome = () => {
     setShowWelcome(false);
+    if (user) localStorage.setItem(`welcome_seen_${user.id}`, "1");
     markWelcomeMutation.mutate();
   };
 
