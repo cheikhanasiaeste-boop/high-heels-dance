@@ -81,15 +81,3 @@ export async function sendSessionReminders(): Promise<{ sent: number; errors: nu
   }
 }
 
-// If running as standalone script
-if (import.meta.url === `file://${process.argv[1]}`) {
-  sendSessionReminders()
-    .then(result => {
-      console.log("Session reminders job completed:", result);
-      process.exit(0);
-    })
-    .catch(error => {
-      console.error("Session reminders job failed:", error);
-      process.exit(1);
-    });
-}
