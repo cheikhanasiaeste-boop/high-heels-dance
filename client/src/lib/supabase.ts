@@ -14,4 +14,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
  * Uses the public anon key — safe to expose.
  * Import this wherever you need auth state or Supabase queries on the client.
  */
-export const supabase = createClient(supabaseUrl ?? "", supabaseAnonKey ?? "");
+export const supabase = createClient(supabaseUrl ?? "", supabaseAnonKey ?? "", {
+  auth: {
+    flowType: "pkce",
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+  },
+});

@@ -25,17 +25,27 @@ export default function AuthCallback() {
     }
 
     if (!code) {
-      // No code — redirect to home (may already be authenticated via PKCE)
-      setLocation("/");
+      // No code — check if Supabase already picked up the session from URL hash
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
+          setLocation("/");
+        } else {
+          // No code and no session — just go home
+          setLocation("/");
+        }
+      });
       return;
     }
 
     supabase.auth
       .exchangeCodeForSession(code)
-      .then(({ error: exchangeError }) => {
+      .then(({ data, error: exchangeError }) => {
         if (exchangeError) {
           console.error("[AuthCallback] Failed to exchange code:", exchangeError.message, exchangeError);
           setError(exchangeError.message);
+        } else if (data.session) {
+          // Session established — wait briefly for localStorage to persist
+          setTimeout(() => setLocation("/"), 100);
         } else {
           setLocation("/");
         }
