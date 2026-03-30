@@ -51,7 +51,11 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.SUPABASE_DATABASE_URL) {
     try {
-      const client = postgres(process.env.SUPABASE_DATABASE_URL);
+      const client = postgres(process.env.SUPABASE_DATABASE_URL, {
+        connect_timeout: 10,
+        idle_timeout: 20,
+        max_lifetime: 60 * 30,
+      });
       _db = drizzle(client);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);

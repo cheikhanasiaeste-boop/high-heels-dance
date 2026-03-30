@@ -11,6 +11,11 @@ import { setupSSE } from "../sse";
 import { setupCronJobs } from "../jobs/setupCron";
 import { checkSupabaseHealth, ensureAdminUser } from "../lib/supabase";
 
+// Prevent unhandled promise rejections (e.g. from postgres connection errors) from crashing the server
+process.on("unhandledRejection", (reason) => {
+  console.error("[Process] Unhandled rejection (server kept alive):", reason);
+});
+
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
     const server = net.createServer();
