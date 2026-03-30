@@ -4,18 +4,20 @@ import { supabase } from "@/lib/supabase";
 
 /**
  * Handles the OAuth redirect after Google/Facebook login.
- * Supabase sends the user here with a `code` param; we exchange it for a session.
- * After exchange, onAuthStateChange fires SIGNED_IN → syncUser runs automatically.
+ *
+ * With implicit flow, Supabase redirects here with tokens in the URL hash.
+ * The Supabase client (detectSessionInUrl: true) automatically picks them up
+ * and fires onAuthStateChange → syncUser runs automatically.
+ *
+ * With PKCE flow, a `code` query param is present and must be exchanged.
  */
 export default function AuthCallback() {
   const [, setLocation] = useLocation();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Check for error in URL params
     const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
-
-    // Check for error in URL (Supabase may redirect with error params)
     const urlError = params.get("error");
     const urlErrorDesc = params.get("error_description");
     if (urlError) {
@@ -24,32 +26,51 @@ export default function AuthCallback() {
       return;
     }
 
-    if (!code) {
-      // No code — check if Supabase already picked up the session from URL hash
+    // Check for PKCE code (fallback)
+    const code = params.get("code");
+    if (code) {
+      supabase.auth
+        .exchangeCodeForSession(code)
+        .then(({ error: exchangeError }) => {
+          if (exchangeError) {
+            console.error("[AuthCallback] Code exchange failed:", exchangeError.message);
+            setError(exchangeError.message);
+          } else {
+            setTimeout(() => setLocation("/"), 100);
+          }
+        });
+      return;
+    }
+
+    // Implicit flow: tokens are in the hash fragment.
+    // detectSessionInUrl handles them automatically.
+    // Wait for the session to appear, then redirect home.
+    const checkSession = () => {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session) {
           setLocation("/");
         } else {
-          // No code and no session — just go home
-          setLocation("/");
+          // Give Supabase a moment to process the hash tokens
+          setTimeout(checkSession, 200);
         }
       });
-      return;
-    }
+    };
 
-    supabase.auth
-      .exchangeCodeForSession(code)
-      .then(({ data, error: exchangeError }) => {
-        if (exchangeError) {
-          console.error("[AuthCallback] Failed to exchange code:", exchangeError.message, exchangeError);
-          setError(exchangeError.message);
-        } else if (data.session) {
-          // Session established — wait briefly for localStorage to persist
-          setTimeout(() => setLocation("/"), 100);
-        } else {
+    // Start checking after a brief delay for hash processing
+    setTimeout(checkSession, 300);
+
+    // Safety timeout — don't spin forever
+    const timeout = setTimeout(() => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session) {
           setLocation("/");
+        } else {
+          setError("Sign-in timed out. Please try again.");
         }
       });
+    }, 8000);
+
+    return () => clearTimeout(timeout);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (error) {
