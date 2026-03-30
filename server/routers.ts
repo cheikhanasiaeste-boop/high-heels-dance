@@ -1469,14 +1469,10 @@ export const appRouter = router({
       }))
       .mutation(async ({ ctx, input }) => {
         const userId = ctx.user?.id ?? null;
-        
-        // Save user message
-        await db.createChatMessage({
-          userId,
-          role: 'user',
-          content: input.message,
-        });
-        
+
+        // Save user message (non-blocking — don't let DB failure block the chat)
+        db.createChatMessage({ userId, role: 'user', content: input.message }).catch(() => {});
+
         // Build conversation context — Elizabeth's warm, encouraging personality
         const systemPrompt = `You are Elizabeth Zolotova's friendly assistant on her dance platform. You speak with warmth, passion, and a touch of glamour — just like Elizabeth herself on her Instagram @elizabeth_zolotova.
 
@@ -1522,13 +1518,9 @@ Never be pushy. Be genuinely helpful and make people feel welcome.`;
           ? content 
           : 'I apologize, but I am unable to respond at the moment. Please try again.';
         
-        // Save assistant message
-        await db.createChatMessage({
-          userId,
-          role: 'assistant',
-          content: assistantMessage,
-        });
-        
+        // Save assistant message (non-blocking)
+        db.createChatMessage({ userId, role: 'assistant', content: assistantMessage }).catch(() => {});
+
         return { message: assistantMessage };
       }),
     
