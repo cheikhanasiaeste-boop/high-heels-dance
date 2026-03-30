@@ -802,7 +802,7 @@ function EditLessonDialog({ lesson }: { lesson: any }) {
               <div className="space-y-1">
                 <div className="h-2 w-full bg-stone-100 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-[#6B1D3A] rounded-full transition-all duration-500"
+                    className="h-full bg-[#C026D3] rounded-full transition-all duration-500"
                     style={{ width: `${uploadProgress}%` }}
                   />
                 </div>
@@ -820,7 +820,7 @@ function EditLessonDialog({ lesson }: { lesson: any }) {
                 if (file) handleBunnyUpload(file);
                 e.target.value = '';
               }}
-              className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-[#6B1D3A] file:text-white hover:file:bg-[#561730] disabled:opacity-50"
+              className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-[#C026D3] file:text-white hover:file:bg-[#A21CAF] disabled:opacity-50"
             />
           </div>
 

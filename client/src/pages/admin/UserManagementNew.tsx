@@ -77,7 +77,7 @@ function UserRow({
         </TableCell>
         <TableCell onClick={() => onToggleExpand(user.id)}>
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-[#6B1D3A] flex items-center justify-center text-white text-sm font-semibold">
+            <div className="h-8 w-8 rounded-full bg-[#C026D3] flex items-center justify-center text-white text-sm font-semibold">
               {user.name?.charAt(0).toUpperCase() || 'U'}
             </div>
             <span className="font-medium">{user.name}</span>

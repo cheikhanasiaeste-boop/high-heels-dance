@@ -248,7 +248,7 @@ export default function Home() {
 
       {/* ── Announcement Banner ───────────────────────────────────────────── */}
       {effectiveBannerText && (
-        <div className="bg-[#3D0C1C] text-amber-100/90 py-2.5 px-4 text-center text-sm tracking-[0.04em]" style={{ fontFamily: 'var(--font-body)' }}>
+        <div className="bg-gradient-to-r from-fuchsia-600 via-pink-500 to-purple-600 text-white py-2.5 px-4 text-center text-sm tracking-[0.04em]" style={{ fontFamily: 'var(--font-body)' }}>
           {effectiveBannerText}
         </div>
       )}
@@ -256,7 +256,7 @@ export default function Home() {
       {/* ── Header / Navigation ───────────────────────────────────────────── */}
       <header className="border-b border-stone-200/60 sticky top-0 z-50 backdrop-blur-xl bg-white/90 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
         <div className="container py-3.5 flex justify-between items-center">
-          <h1 className="text-2xl font-semibold text-[#3D0C1C] tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>High Heels Dance</h1>
+          <h1 className="text-2xl font-semibold text-[#831843] tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>High Heels Dance</h1>
 
           <MobileNav onSignInClick={() => setShowAuthModal(true)} />
 
@@ -264,24 +264,24 @@ export default function Home() {
             <Link href={isAuthenticated ? "/my-bookings" : "/book-session"}>
               <button className={`px-6 py-2.5 text-sm font-medium transition-all duration-300 relative group ${
                 isAuthenticated
-                  ? "text-stone-600 hover:text-[#6B1D3A] hover:bg-stone-50"
-                  : "text-white bg-[#6B1D3A] hover:bg-[#561730] shadow-md hover:shadow-lg hover:shadow-[#6B1D3A]/15 rounded-full"
+                  ? "text-stone-600 hover:text-[#C026D3] hover:bg-stone-50"
+                  : "text-white bg-[#C026D3] hover:bg-[#A21CAF] shadow-md hover:shadow-lg hover:shadow-[#C026D3]/15 rounded-full"
               }`}>
                 {isAuthenticated ? "My Sessions" : "Book a Session"}
                 {isAuthenticated && (
-                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#6B1D3A] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#C026D3] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
                 )}
               </button>
             </Link>
             <Link href={isAuthenticated ? "/my-courses" : "/courses"}>
               <button className={`px-6 py-2.5 text-sm font-medium transition-all duration-300 relative group ${
                 isAuthenticated
-                  ? "text-stone-600 hover:text-[#6B1D3A] hover:bg-stone-50"
-                  : "text-[#6B1D3A] bg-transparent border border-[#6B1D3A]/30 hover:border-[#6B1D3A]/60 hover:bg-[#6B1D3A]/5 rounded-full"
+                  ? "text-stone-600 hover:text-[#C026D3] hover:bg-stone-50"
+                  : "text-[#C026D3] bg-transparent border border-[#C026D3]/30 hover:border-[#C026D3]/60 hover:bg-[#C026D3]/5 rounded-full"
               }`}>
                 {isAuthenticated ? "My Courses" : "Browse Courses"}
                 {isAuthenticated && (
-                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#6B1D3A] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#C026D3] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
                 )}
               </button>
             </Link>
@@ -297,7 +297,7 @@ export default function Home() {
             ) : (
               <button
                 onClick={() => setShowAuthModal(true)}
-                className="px-5 py-2.5 text-sm font-medium text-stone-600 hover:text-[#6B1D3A] transition-colors"
+                className="px-5 py-2.5 text-sm font-medium text-stone-600 hover:text-[#C026D3] transition-colors"
               >
                 Sign In
               </button>
@@ -307,7 +307,7 @@ export default function Home() {
       </header>
 
       {/* ── Hero Section ──────────────────────────────────────────────────── */}
-      <section className="relative py-16 md:py-28 overflow-hidden min-h-[540px] md:min-h-[680px] flex items-center bg-[#2D0915]">
+      <section className="relative py-16 md:py-28 overflow-hidden min-h-[540px] md:min-h-[680px] flex items-center bg-[#701A75]">
         {/* Background — video for .mp4/.webm, direct img for everything else */}
         <div className="absolute inset-0 z-0 overflow-hidden">
           {!prefersReducedMotion && isVideoUrl(backgroundUrl) ? (
@@ -347,7 +347,7 @@ export default function Home() {
             />
           )}
           {/* Warm cinematic overlay — burgundy tinted, not pure black */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#2D0915]/70 via-[#2D0915]/30 to-[#2D0915]/80" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#701A75]/70 via-[#701A75]/30 to-[#701A75]/80" />
         </div>
 
         <div className="container text-center relative z-10 px-4 md:px-6 w-full">
@@ -355,7 +355,7 @@ export default function Home() {
           <div className="flex justify-center mb-6 md:mb-8 animate-fade-up">
             <div className="relative inline-block">
               {/* Warm golden glow behind profile pic */}
-              <div className="absolute -inset-2 rounded-full bg-gradient-to-br from-amber-400/40 via-rose-300/30 to-amber-400/40 blur-md" />
+              <div className="absolute -inset-2 rounded-full bg-gradient-to-br from-fuchsia-400/40 via-purple-300/30 to-fuchsia-400/40 blur-md" />
               <img
                 src={heroProfilePictureUrl || "/profile.jpg"}
                 alt="Elizabeth Zolotova"
@@ -375,9 +375,9 @@ export default function Home() {
 
           {/* Elegant gold divider */}
           <div className="flex items-center justify-center gap-4 mb-4 md:mb-5 animate-fade-up-delay-1">
-            <div className="h-px w-16 bg-gradient-to-r from-transparent to-amber-400/50" />
-            <div className="w-1.5 h-1.5 rounded-full bg-amber-400/60 shadow-[0_0_8px_rgba(196,164,110,0.4)]" />
-            <div className="h-px w-16 bg-gradient-to-l from-transparent to-amber-400/50" />
+            <div className="h-px w-16 bg-gradient-to-r from-transparent to-fuchsia-400/50" />
+            <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-400/60 shadow-[0_0_8px_rgba(196,164,110,0.4)]" />
+            <div className="h-px w-16 bg-gradient-to-l from-transparent to-fuchsia-400/50" />
           </div>
 
           {/* Tagline */}
@@ -406,7 +406,7 @@ export default function Home() {
           {/* CTA buttons */}
           <div className="flex flex-col sm:flex-row justify-center gap-3 md:gap-4 animate-fade-up-delay-3">
             <Link href="/book-session">
-              <span className="inline-flex items-center gap-2 px-8 md:px-10 py-3.5 md:py-4 text-sm md:text-base font-semibold text-white bg-[#6B1D3A] hover:bg-[#561730] rounded-full shadow-lg hover:shadow-xl hover:shadow-[#6B1D3A]/25 transition-all duration-300 hover:-translate-y-0.5 tracking-wide cursor-pointer">
+              <span className="inline-flex items-center gap-2 px-8 md:px-10 py-3.5 md:py-4 text-sm md:text-base font-semibold text-white bg-[#C026D3] hover:bg-[#A21CAF] rounded-full shadow-lg hover:shadow-xl hover:shadow-[#C026D3]/25 transition-all duration-300 hover:-translate-y-0.5 tracking-wide cursor-pointer">
                 Book a Dance Session
                 <ArrowRight className="w-4 h-4" />
               </span>
@@ -424,22 +424,22 @@ export default function Home() {
       <UpcomingSessionsWidget />
 
       {/* ── Courses Section ───────────────────────────────────────────────── */}
-      <section className="py-16 md:py-28 bg-[#FDFBF9] relative overflow-hidden">
+      <section className="py-16 md:py-28 bg-[#FDF4FF] relative overflow-hidden">
         {/* Subtle warm ambient glow */}
         <div className="absolute inset-0 opacity-[0.03] z-0">
-          <div className="absolute top-20 left-10 w-[500px] h-[500px] bg-amber-400 rounded-full blur-[120px]" />
-          <div className="absolute bottom-20 right-10 w-[400px] h-[400px] bg-rose-300 rounded-full blur-[120px]" />
+          <div className="absolute top-20 left-10 w-[500px] h-[500px] bg-fuchsia-400 rounded-full blur-[120px]" />
+          <div className="absolute bottom-20 right-10 w-[400px] h-[400px] bg-purple-300 rounded-full blur-[120px]" />
         </div>
         <div className="container relative z-10">
           <div className="text-center mb-14">
-            <p className="text-xs uppercase tracking-[0.3em] text-[#6B1D3A]/50 font-semibold mb-3" style={{ fontFamily: 'var(--font-body)' }}>Learn with passion</p>
-            <h3 className="text-3xl md:text-5xl font-semibold mb-3 md:mb-4 text-[#3D0C1C] tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="text-xs uppercase tracking-[0.3em] text-[#C026D3]/50 font-semibold mb-3" style={{ fontFamily: 'var(--font-body)' }}>Learn with passion</p>
+            <h3 className="text-3xl md:text-5xl font-semibold mb-3 md:mb-4 text-[#831843] tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
               {coursesHeading || 'Dance Courses'}
             </h3>
             <div className="flex items-center justify-center gap-3 mb-5">
-              <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#C9A96E]/40" />
-              <div className="w-1 h-1 rounded-full bg-[#C9A96E]/50" />
-              <div className="h-px w-12 bg-gradient-to-l from-transparent to-[#C9A96E]/40" />
+              <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#E879F9]/40" />
+              <div className="w-1 h-1 rounded-full bg-[#E879F9]/50" />
+              <div className="h-px w-12 bg-gradient-to-l from-transparent to-[#E879F9]/40" />
             </div>
             <p className="text-base md:text-lg text-stone-500 max-w-xl mx-auto mb-9 md:mb-11 leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
               Professionally designed courses for every level — from your very first steps to stage performance
@@ -451,7 +451,7 @@ export default function Home() {
                 onClick={() => setCourseFilter('all')}
                 className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                   courseFilter === 'all'
-                    ? 'bg-[#6B1D3A] text-white shadow-sm'
+                    ? 'bg-[#C026D3] text-white shadow-sm'
                     : 'text-stone-500 hover:text-stone-800 hover:bg-stone-50'
                 }`}
               >
@@ -481,7 +481,7 @@ export default function Home() {
                 onClick={() => setCourseFilter('premium')}
                 className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                   courseFilter === 'premium'
-                    ? 'bg-[#C9A96E] text-white shadow-sm'
+                    ? 'bg-[#E879F9] text-white shadow-sm'
                     : 'text-stone-500 hover:text-stone-800 hover:bg-stone-50'
                 }`}
               >
@@ -512,23 +512,23 @@ export default function Home() {
                             />
                             {course.isTopPick && (
                               <div className="absolute top-3 left-3 z-10">
-                                <div className="bg-[#6B1D3A] text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5 tracking-wide">
+                                <div className="bg-[#C026D3] text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5 tracking-wide">
                                   <Sparkles className="w-3 h-3" />
                                   TOP PICK
                                 </div>
                               </div>
                             )}
                             {!course.isFree && (
-                              <div className="absolute top-3 right-3 bg-[#C9A96E] text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg tracking-wide">
+                              <div className="absolute top-3 right-3 bg-[#E879F9] text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg tracking-wide">
                                 PREMIUM
                               </div>
                             )}
                           </>
                         ) : (
-                          <div className="w-full h-52 bg-gradient-to-br from-[#3D0C1C] via-[#4A1225] to-[#2D0915] rounded-t-lg flex items-center justify-center relative overflow-hidden">
+                          <div className="w-full h-52 bg-gradient-to-br from-[#831843] via-[#86198F] to-[#701A75] rounded-t-lg flex items-center justify-center relative overflow-hidden">
                             <div className="absolute inset-0 opacity-30">
-                              <div className="absolute top-0 left-1/4 w-40 h-40 bg-[#6B1D3A] rounded-full blur-3xl" />
-                              <div className="absolute bottom-0 right-1/4 w-40 h-40 bg-[#C9A96E] rounded-full blur-3xl" />
+                              <div className="absolute top-0 left-1/4 w-40 h-40 bg-[#C026D3] rounded-full blur-3xl" />
+                              <div className="absolute bottom-0 right-1/4 w-40 h-40 bg-[#E879F9] rounded-full blur-3xl" />
                             </div>
                             <span className="text-6xl relative z-10 transition-transform duration-500 group-hover:scale-110">👠</span>
                             {course.isTopPick && (
@@ -540,7 +540,7 @@ export default function Home() {
                               </div>
                             )}
                             {!course.isFree && (
-                              <div className="absolute top-3 right-3 bg-[#C9A96E]/80 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg tracking-wide">
+                              <div className="absolute top-3 right-3 bg-[#E879F9]/80 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg tracking-wide">
                                 PREMIUM
                               </div>
                             )}
@@ -550,7 +550,7 @@ export default function Home() {
 
                       <CardHeader className="pb-3 flex-grow">
                         <div className="flex justify-between items-start mb-2">
-                          <CardTitle className="text-lg font-semibold text-[#3D0C1C] group-hover:text-[#6B1D3A] transition-colors" style={{ fontFamily: 'var(--font-display)' }}>
+                          <CardTitle className="text-lg font-semibold text-[#831843] group-hover:text-[#C026D3] transition-colors" style={{ fontFamily: 'var(--font-display)' }}>
                             {course.title}
                           </CardTitle>
                           {course.isFree && (
@@ -572,7 +572,7 @@ export default function Home() {
                             </span>
                           ) : (
                             <>
-                              <span className="text-3xl font-bold text-[#3D0C1C]" style={{ fontFamily: 'var(--font-display)' }}>
+                              <span className="text-3xl font-bold text-[#831843]" style={{ fontFamily: 'var(--font-display)' }}>
                                 €{course.price}
                               </span>
                               {course.originalPrice && Number(course.originalPrice) > Number(course.price) && (
@@ -586,7 +586,7 @@ export default function Home() {
                       </CardContent>
 
                       <CardFooter className="mt-auto">
-                        <div className="w-full text-sm py-3.5 bg-[#6B1D3A] hover:bg-[#561730] shadow-sm hover:shadow-md transition-all duration-300 group-hover:shadow-[#6B1D3A]/15 rounded-md flex items-center justify-center text-white font-medium tracking-wide gap-2">
+                        <div className="w-full text-sm py-3.5 bg-[#C026D3] hover:bg-[#A21CAF] shadow-sm hover:shadow-md transition-all duration-300 group-hover:shadow-[#C026D3]/15 rounded-md flex items-center justify-center text-white font-medium tracking-wide gap-2">
                           <span>Enroll Now</span>
                           <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
                         </div>
@@ -627,22 +627,22 @@ export default function Home() {
       </section>
 
       {/* ── Testimonials Section ──────────────────────────────────────────── */}
-      <section className="py-16 md:py-28 bg-[#2D0915] relative overflow-hidden">
+      <section className="py-16 md:py-28 bg-[#701A75] relative overflow-hidden">
         {/* Subtle ambient glows */}
         <div className="absolute inset-0 opacity-15">
-          <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[#6B1D3A] rounded-full blur-[150px]" />
-          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-[#C9A96E] rounded-full blur-[150px]" />
+          <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[#C026D3] rounded-full blur-[150px]" />
+          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-[#E879F9] rounded-full blur-[150px]" />
         </div>
         <div className="container relative z-10">
           <div className="text-center mb-14">
-            <p className="text-xs uppercase tracking-[0.3em] text-[#C9A96E]/60 font-semibold mb-3" style={{ fontFamily: 'var(--font-body)' }}>Their words</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-[#E879F9]/60 font-semibold mb-3" style={{ fontFamily: 'var(--font-body)' }}>Their words</p>
             <h3 className="text-3xl md:text-5xl font-semibold mb-3 text-white/95 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
               {testimonialsHeading || 'Student Success Stories'}
             </h3>
             <div className="flex items-center justify-center gap-4 mb-5">
-              <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#C9A96E]/30" />
-              <div className="w-1 h-1 rounded-full bg-[#C9A96E]/40" />
-              <div className="h-px w-12 bg-gradient-to-l from-transparent to-[#C9A96E]/30" />
+              <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#E879F9]/30" />
+              <div className="w-1 h-1 rounded-full bg-[#E879F9]/40" />
+              <div className="h-px w-12 bg-gradient-to-l from-transparent to-[#E879F9]/30" />
             </div>
             <p className="text-base md:text-lg text-white/40 max-w-xl mx-auto" style={{ fontFamily: 'var(--font-body)' }}>
               Hear from our students about their transformation
@@ -664,7 +664,7 @@ export default function Home() {
                       className="h-full cursor-pointer hover:shadow-xl transition-all duration-300 group bg-white/[0.06] backdrop-blur-sm border-white/[0.08] hover:bg-white/[0.10] hover:border-white/[0.12]"
                       onClick={() => setSelectedVideo(testimonial)}
                     >
-                      <div className="relative aspect-video bg-gradient-to-br from-[#3D0C1C] to-[#2D0915] overflow-hidden">
+                      <div className="relative aspect-video bg-gradient-to-br from-[#831843] to-[#701A75] overflow-hidden">
                         <video
                           data-src={(testimonial as any).videoUrl}
                           data-lazy="true"
@@ -674,21 +674,21 @@ export default function Home() {
                         />
                         <div className="absolute inset-0 bg-black/25 group-hover:bg-black/35 transition-colors flex items-center justify-center">
                           <div className="bg-white/90 rounded-full p-3.5 group-hover:scale-110 transition-transform shadow-lg">
-                            <Play className="h-7 w-7 text-[#6B1D3A] fill-[#6B1D3A]" />
+                            <Play className="h-7 w-7 text-[#C026D3] fill-[#C026D3]" />
                           </div>
                         </div>
                       </div>
                       <CardHeader>
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-[#6B1D3A]/40 flex items-center justify-center font-semibold text-white/70 text-sm">
+                            <div className="w-9 h-9 rounded-full bg-[#C026D3]/40 flex items-center justify-center font-semibold text-white/70 text-sm">
                               {testimonial.userName.charAt(0).toUpperCase()}
                             </div>
                             <div>
                               <CardTitle className="text-sm text-white/85">{testimonial.userName}</CardTitle>
                               <div className="flex gap-0.5 mt-1">
                                 {Array.from({ length: testimonial.rating }).map((_, i) => (
-                                  <Star key={i} className="h-3 w-3 fill-[#C9A96E] text-[#C9A96E]" />
+                                  <Star key={i} className="h-3 w-3 fill-[#E879F9] text-[#E879F9]" />
                                 ))}
                               </div>
                             </div>
@@ -704,14 +704,14 @@ export default function Home() {
                     <Card className="h-full bg-white/[0.06] backdrop-blur-sm border-white/[0.08] hover:bg-white/[0.10] hover:border-white/[0.12] transition-all duration-300">
                       <CardHeader>
                         <div className="flex items-center gap-3 mb-2">
-                          <div className="w-11 h-11 rounded-full bg-[#6B1D3A]/30 flex items-center justify-center font-semibold text-white/60 text-base">
+                          <div className="w-11 h-11 rounded-full bg-[#C026D3]/30 flex items-center justify-center font-semibold text-white/60 text-base">
                             {testimonial.userName.charAt(0).toUpperCase()}
                           </div>
                           <div className="flex-1">
                             <CardTitle className="text-sm text-white/85">{testimonial.userName}</CardTitle>
                             <div className="flex gap-0.5 mt-1">
                               {Array.from({ length: testimonial.rating }).map((_, i) => (
-                                <Star key={i} className="h-3.5 w-3.5 fill-[#C9A96E] text-[#C9A96E]" />
+                                <Star key={i} className="h-3.5 w-3.5 fill-[#E879F9] text-[#E879F9]" />
                               ))}
                             </div>
                           </div>
@@ -732,7 +732,7 @@ export default function Home() {
       </section>
 
       {/* ── Footer ────────────────────────────────────────────────────────── */}
-      <footer className="border-t border-stone-200/50 py-10 bg-[#FDFBF9]">
+      <footer className="border-t border-stone-200/50 py-10 bg-[#FDF4FF]">
         <div className="container text-center">
           <p className="text-sm text-stone-400 tracking-wide" style={{ fontFamily: 'var(--font-body)' }}>&copy; 2026 High Heels Dance — Elizabeth Zolotova. All rights reserved.</p>
         </div>
@@ -741,7 +741,7 @@ export default function Home() {
       {/* ── Floating Chat ─────────────────────────────────────────────────── */}
       <button
         onClick={() => setShowChat(!showChat)}
-        className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg hover:shadow-xl bg-[#6B1D3A] hover:bg-[#561730] text-white flex items-center justify-center transition-all duration-300 hover:scale-105 z-40"
+        className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg hover:shadow-xl bg-[#C026D3] hover:bg-[#A21CAF] text-white flex items-center justify-center transition-all duration-300 hover:scale-105 z-40"
       >
         <MessageCircle className="h-5 w-5" />
       </button>

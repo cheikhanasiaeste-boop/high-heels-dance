@@ -46,39 +46,39 @@
   --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
 
-  --primary: oklch(0.35 0.12 360); /* Deep burgundy */
-  --primary-foreground: oklch(0.97 0.01 60);
-  --sidebar-primary: oklch(0.35 0.12 360);
-  --sidebar-primary-foreground: oklch(0.97 0.01 60);
-  --chart-1: oklch(0.72 0.08 55); /* Champagne */
-  --chart-2: oklch(0.50 0.10 355); /* Rose */
-  --chart-3: oklch(0.35 0.12 360); /* Burgundy */
-  --chart-4: oklch(0.65 0.06 40); /* Warm sand */
-  --chart-5: oklch(0.45 0.08 10); /* Deep rose */
+  --primary: oklch(0.55 0.22 330); /* Vibrant fuchsia-pink */
+  --primary-foreground: oklch(0.98 0.01 320);
+  --sidebar-primary: oklch(0.55 0.22 330);
+  --sidebar-primary-foreground: oklch(0.98 0.01 320);
+  --chart-1: oklch(0.72 0.15 330); /* Light pink */
+  --chart-2: oklch(0.55 0.22 330); /* Fuchsia */
+  --chart-3: oklch(0.50 0.20 310); /* Purple */
+  --chart-4: oklch(0.65 0.18 340); /* Rose */
+  --chart-5: oklch(0.45 0.18 300); /* Deep purple */
   --radius: 0.625rem;
-  --background: oklch(0.985 0.005 60); /* Warm cream */
-  --foreground: oklch(0.18 0.02 350); /* Near-black with warmth */
+  --background: oklch(0.98 0.01 320); /* Very light pink/white */
+  --foreground: oklch(0.25 0.02 320); /* Dark purple-gray */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.02 350);
+  --card-foreground: oklch(0.25 0.02 320);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.02 350);
-  --secondary: oklch(0.93 0.02 50); /* Soft champagne */
-  --secondary-foreground: oklch(0.25 0.04 350);
-  --muted: oklch(0.96 0.01 55); /* Light warm cream */
-  --muted-foreground: oklch(0.45 0.02 350);
-  --accent: oklch(0.75 0.09 65); /* Warm gold */
-  --accent-foreground: oklch(0.18 0.02 350);
+  --popover-foreground: oklch(0.25 0.02 320);
+  --secondary: oklch(0.93 0.04 320); /* Soft lavender-pink */
+  --secondary-foreground: oklch(0.30 0.06 320);
+  --muted: oklch(0.95 0.02 320); /* Light lavender */
+  --muted-foreground: oklch(0.45 0.02 320);
+  --accent: oklch(0.85 0.08 310); /* Light pink accent */
+  --accent-foreground: oklch(0.25 0.02 320);
   --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.92 0.01 55); /* Soft warm border */
-  --input: oklch(0.92 0.01 55);
-  --ring: oklch(0.35 0.12 360); /* Burgundy focus ring */
-  --sidebar: oklch(0.99 0.005 55);
-  --sidebar-foreground: oklch(0.18 0.02 350);
-  --sidebar-accent: oklch(0.96 0.01 55);
-  --sidebar-accent-foreground: oklch(0.18 0.02 350);
-  --sidebar-border: oklch(0.92 0.01 55);
-  --sidebar-ring: oklch(0.35 0.12 360);
+  --border: oklch(0.9 0.02 320); /* Light pink border */
+  --input: oklch(0.9 0.02 320);
+  --ring: oklch(0.55 0.22 330); /* Fuchsia focus ring */
+  --sidebar: oklch(0.98 0.01 320);
+  --sidebar-foreground: oklch(0.25 0.02 320);
+  --sidebar-accent: oklch(0.95 0.02 320);
+  --sidebar-accent-foreground: oklch(0.25 0.02 320);
+  --sidebar-border: oklch(0.9 0.02 320);
+  --sidebar-ring: oklch(0.55 0.22 330);
 }
 
 .dark {

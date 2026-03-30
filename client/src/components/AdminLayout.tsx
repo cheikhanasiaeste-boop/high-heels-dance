@@ -51,7 +51,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <ArrowLeft className="h-4 w-4" />
             Back to Home
           </Link>
-          <h1 className="text-2xl font-bold mt-4 text-[#3D0C1C]" style={{ fontFamily: 'var(--font-display)' }}>
+          <h1 className="text-2xl font-bold mt-4 text-[#831843]" style={{ fontFamily: 'var(--font-display)' }}>
             Admin Panel
           </h1>
         </div>
