@@ -74,38 +74,6 @@ function normalizeContent(content: MessageContent | MessageContent[]): string {
   return "";
 }
 
-async function callGemini(apiKey: string, systemInstruction: string, contents: Array<{ role: string; parts: Array<{ text: string }> }>): Promise<Response> {
-  const models = ["gemini-2.0-flash", "gemini-1.5-flash"];
-
-  for (const model of models) {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        systemInstruction: systemInstruction ? { parts: [{ text: systemInstruction }] } : undefined,
-        contents,
-        generationConfig: { maxOutputTokens: 512 },
-      }),
-    });
-
-    if (response.ok) return response;
-
-    // If rate limited, retry with backoff then try next model
-    if (response.status === 429) {
-      console.warn(`[LLM] ${model} rate limited, trying next...`);
-      await new Promise(r => setTimeout(r, 2000));
-      continue;
-    }
-
-    // Other errors — throw immediately
-    const errorText = await response.text();
-    throw new Error(`Gemini API error: ${response.status} – ${errorText}`);
-  }
-
-  throw new Error("All Gemini models rate limited");
-}
-
 export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -132,15 +100,22 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     contents.unshift({ role: "user", parts: [{ text: "Hello" }] });
   }
 
-  // Try with retry and model fallback
-  let response: Response;
-  try {
-    response = await callGemini(apiKey, systemInstruction.trim(), contents);
-  } catch (e: any) {
-    // If all models fail, retry once after 3 seconds
-    console.warn("[LLM] First attempt failed, retrying in 3s:", e.message);
-    await new Promise(r => setTimeout(r, 3000));
-    response = await callGemini(apiKey, systemInstruction.trim(), contents);
+  // Single fast call — no retries, fail fast so fallback message shows quickly
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      systemInstruction: systemInstruction.trim() ? { parts: [{ text: systemInstruction.trim() }] } : undefined,
+      contents,
+      generationConfig: { maxOutputTokens: 256 },
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error(`[LLM] Gemini error ${response.status}:`, errorText.slice(0, 200));
+    throw new Error(`Gemini ${response.status}`);
   }
 
   const data = await response.json();

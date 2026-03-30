@@ -196,8 +196,8 @@ export default function Home() {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
-  // Banner: wait for DB to load, then show DB value or fallback — avoids text flash
-  const effectiveBannerText = bannerLoading ? FALLBACK_BANNER : (banner?.enabled && banner.text) ? banner.text : FALLBACK_BANNER;
+  // Banner: show DB value when loaded, nothing while loading — prevents text flash
+  const effectiveBannerText = bannerLoading ? null : (banner?.enabled && banner.text) ? banner.text : FALLBACK_BANNER;
 
   // Popup: use DB settings when enabled; otherwise show fallback immediately
   const effectivePopupSettings = (popupSettings?.enabled) ? popupSettings : FALLBACK_POPUP;
