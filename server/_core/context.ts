@@ -32,6 +32,9 @@ export async function createContext(
     } = await supabaseAdmin.auth.getUser(token);
 
     if (error || !supabaseUser) {
+      if (error) {
+        console.warn("[Auth context] Token verification failed:", error.message, `(code: ${(error as any).code || "unknown"})`);
+      }
       return { ...base, supabaseUid: null, user: null };
     }
 
@@ -42,8 +45,9 @@ export async function createContext(
       supabaseUid: supabaseUser.id,
       user, // may be null on first login before syncUser runs
     };
-  } catch {
+  } catch (err) {
     // Never throw — auth failure = unauthenticated, not a 500
+    console.error("[Auth context] Unexpected error during token verification:", err);
     return { ...base, supabaseUid: null, user: null };
   }
 }

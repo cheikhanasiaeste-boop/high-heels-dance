@@ -30,7 +30,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ChevronDown, ChevronRight, Trash2, Plus, X, AlertTriangle, Mail } from "lucide-react";
+import { ChevronDown, ChevronRight, Trash2, Plus, X, AlertTriangle, Mail, ShieldCheck } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { MessageComposeModal } from "@/components/MessageComposeModal";
@@ -53,6 +53,7 @@ function UserRow({
   onRemoveCourse,
   allCourses,
   onMembershipManage,
+  onRoleChange,
 }: any) {
   const { data: userCourses, isLoading: coursesLoading } = trpc.admin.courseAssignment.getUserCourses.useQuery(
     { userId: user.id },
@@ -76,7 +77,7 @@ function UserRow({
         </TableCell>
         <TableCell onClick={() => onToggleExpand(user.id)}>
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-pink-500 to-purple-500 flex items-center justify-center text-white text-sm font-semibold">
+            <div className="h-8 w-8 rounded-full bg-[#6B1D3A] flex items-center justify-center text-white text-sm font-semibold">
               {user.name?.charAt(0).toUpperCase() || 'U'}
             </div>
             <span className="font-medium">{user.name}</span>
@@ -102,6 +103,12 @@ function UserRow({
         <TableCell onClick={() => onToggleExpand(user.id)}>
           <Badge variant="outline">{user.courseCount || 0}</Badge>
         </TableCell>
+        <TableCell onClick={() => onToggleExpand(user.id)} className="text-xs text-muted-foreground whitespace-nowrap">
+          {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '-'}
+        </TableCell>
+        <TableCell onClick={() => onToggleExpand(user.id)} className="text-xs text-muted-foreground whitespace-nowrap">
+          {user.lastSignedIn ? new Date(user.lastSignedIn).toLocaleDateString() : '-'}
+        </TableCell>
         <TableCell>
           <div className="flex items-center gap-2">
             <Button
@@ -118,6 +125,14 @@ function UserRow({
               title="Send message"
             >
               <Mail className="w-4 h-4 text-primary" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onRoleChange(user.id, user.name, user.role)}
+              title="Change role"
+            >
+              <ShieldCheck className="w-4 h-4 text-amber-600" />
             </Button>
             <Button
               variant="ghost"
@@ -140,7 +155,7 @@ function UserRow({
 
       {isExpanded && (
         <TableRow>
-          <TableCell colSpan={9} className="bg-accent/20">
+          <TableCell colSpan={11} className="bg-accent/20">
             <div className="p-4 space-y-4">
               <div className="font-medium">Enrolled Courses:</div>
               
@@ -240,6 +255,8 @@ export default function UserManagementNew() {
   const [showMembershipDialog, setShowMembershipDialog] = useState(false);
   const [membershipUserId, setMembershipUserId] = useState<number | null>(null);
   const [membershipStatus, setMembershipStatus] = useState<string>('free');
+  const [showRoleDialog, setShowRoleDialog] = useState(false);
+  const [roleChangeTarget, setRoleChangeTarget] = useState<{ id: number; name: string; currentRole: string } | null>(null);
   const [userToDelete, setUserToDelete] = useState<{ id: number; name: string; courseCount: number } | null>(null);
   const [courseToRemove, setCourseToRemove] = useState<{ userId: number; courseId: number; courseName: string } | null>(null);
   const [messageRecipient, setMessageRecipient] = useState<{ id: number; name: string; email: string } | null>(null);
@@ -342,7 +359,31 @@ export default function UserManagementNew() {
     },
   });
 
+  const updateRoleMutation = trpc.admin.users.updateRole.useMutation({
+    onSuccess: () => {
+      utils.admin.users.listPaginated.invalidate();
+      setShowRoleDialog(false);
+      setRoleChangeTarget(null);
+      toast.success("User role updated successfully");
+    },
+    onError: (error) => {
+      toast.error("Error updating role", { description: error.message });
+    },
+  });
+
   // Handlers
+  const handleRoleChange = (userId: number, userName: string, currentRole: string) => {
+    setRoleChangeTarget({ id: userId, name: userName, currentRole });
+    setShowRoleDialog(true);
+  };
+
+  const confirmRoleChange = () => {
+    if (roleChangeTarget) {
+      const newRole = roleChangeTarget.currentRole === 'admin' ? 'user' : 'admin';
+      updateRoleMutation.mutate({ userId: roleChangeTarget.id, role: newRole as 'admin' | 'user' });
+    }
+  };
+
   const handleCreateUser = () => {
     if (!newUserName.trim() || !newUserEmail.trim()) {
       toast.error("Please fill in all fields");
@@ -584,7 +625,9 @@ export default function UserManagementNew() {
                       <TableHead>Start Date</TableHead>
                       <TableHead>End Date</TableHead>
                       <TableHead>Courses</TableHead>
-                      <TableHead className="w-24">Actions</TableHead>
+                      <TableHead>Signed Up</TableHead>
+                      <TableHead>Last Active</TableHead>
+                      <TableHead className="w-32">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -600,6 +643,7 @@ export default function UserManagementNew() {
                         onMessage={handleMessage}
                         onAssignCourse={handleAssignCourse}
                         onMembershipManage={handleMembershipManage}
+                        onRoleChange={handleRoleChange}
                         onRemoveCourse={handleRemoveCourse}
                         allCourses={allCourses}
                       />
@@ -726,6 +770,54 @@ export default function UserManagementNew() {
                 disabled={deleteUserMutation.isPending}
               >
                 {deleteUserMutation.isPending ? "Deleting..." : "Delete User"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Role Change Dialog */}
+        <Dialog open={showRoleDialog} onOpenChange={setShowRoleDialog}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Change User Role</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to change this user's role?
+              </DialogDescription>
+            </DialogHeader>
+            {roleChangeTarget && (
+              <div className="py-4">
+                <p className="font-medium mb-2">User: {roleChangeTarget.name}</p>
+                <div className="flex items-center gap-2 text-sm">
+                  <Badge variant={roleChangeTarget.currentRole === 'admin' ? 'default' : 'secondary'}>
+                    {roleChangeTarget.currentRole}
+                  </Badge>
+                  <span className="text-muted-foreground">→</span>
+                  <Badge variant={roleChangeTarget.currentRole === 'admin' ? 'secondary' : 'default'}>
+                    {roleChangeTarget.currentRole === 'admin' ? 'user' : 'admin'}
+                  </Badge>
+                </div>
+                {roleChangeTarget.currentRole === 'user' && (
+                  <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-lg mt-4">
+                    <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="font-medium text-amber-800">Warning</p>
+                      <p className="text-amber-700">
+                        Granting admin access gives this user full control over courses, users, settings, and all platform data.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowRoleDialog(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={confirmRoleChange}
+                disabled={updateRoleMutation.isPending}
+              >
+                {updateRoleMutation.isPending ? "Updating..." : "Confirm Change"}
               </Button>
             </DialogFooter>
           </DialogContent>

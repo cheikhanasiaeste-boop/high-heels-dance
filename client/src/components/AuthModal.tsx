@@ -36,6 +36,11 @@ export function AuthModal({ isOpen, onClose, prompt }: AuthModalProps) {
   const [regPassword, setRegPassword] = useState("");
   const [regPasswordConfirm, setRegPasswordConfirm] = useState("");
 
+  const showAuthError = (err: unknown, fallback: string) => {
+    const msg = err instanceof Error ? err.message : fallback;
+    toast.error(msg, { duration: 6000 });
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -43,8 +48,7 @@ export function AuthModal({ isOpen, onClose, prompt }: AuthModalProps) {
       await loginWithEmail(signInEmail, signInPassword);
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Sign in failed";
-      toast.error(msg);
+      showAuthError(err, "Sign in failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -60,12 +64,12 @@ export function AuthModal({ isOpen, onClose, prompt }: AuthModalProps) {
     try {
       await signUp(regName, regEmail, regPassword);
       toast.success(
-        "Account created! Check your email to confirm your address."
+        "Account created! Check your email to confirm your address.",
+        { duration: 8000 }
       );
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Registration failed";
-      toast.error(msg);
+      showAuthError(err, "Registration failed. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -74,9 +78,8 @@ export function AuthModal({ isOpen, onClose, prompt }: AuthModalProps) {
   const handleGoogle = async () => {
     try {
       await loginWithGoogle();
-      // Page redirects to Supabase → provider → /auth/callback; no onClose needed
     } catch (err: unknown) {
-      toast.error("Google sign-in failed. Please try again.");
+      showAuthError(err, "Google sign-in failed. Please try again.");
     }
   };
 
@@ -84,7 +87,7 @@ export function AuthModal({ isOpen, onClose, prompt }: AuthModalProps) {
     try {
       await loginWithFacebook();
     } catch (err: unknown) {
-      toast.error("Facebook sign-in failed. Please try again.");
+      showAuthError(err, "Facebook sign-in failed. Please try again.");
     }
   };
 

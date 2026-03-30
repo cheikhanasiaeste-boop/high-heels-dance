@@ -43,39 +43,42 @@
 }
 
 :root {
-  --primary: oklch(0.65 0.15 330); /* Medium pink */
-  --primary-foreground: oklch(1 0 0);
-  --sidebar-primary: oklch(0.65 0.15 330);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --chart-1: oklch(0.75 0.12 330);
-  --chart-2: oklch(0.65 0.15 330);
-  --chart-3: oklch(0.55 0.18 330);
-  --chart-4: oklch(0.7 0.15 300);
-  --chart-5: oklch(0.6 0.18 300);
-  --radius: 0.75rem;
-  --background: oklch(0.98 0.01 320); /* Very light pink/white */
-  --foreground: oklch(0.25 0.02 320); /* Dark purple-gray */
-  --card: oklch(1 0 0); /* Pure white for cards */
-  --card-foreground: oklch(0.25 0.02 320);
+  --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
+
+  --primary: oklch(0.35 0.12 360); /* Deep burgundy */
+  --primary-foreground: oklch(0.97 0.01 60);
+  --sidebar-primary: oklch(0.35 0.12 360);
+  --sidebar-primary-foreground: oklch(0.97 0.01 60);
+  --chart-1: oklch(0.72 0.08 55); /* Champagne */
+  --chart-2: oklch(0.50 0.10 355); /* Rose */
+  --chart-3: oklch(0.35 0.12 360); /* Burgundy */
+  --chart-4: oklch(0.65 0.06 40); /* Warm sand */
+  --chart-5: oklch(0.45 0.08 10); /* Deep rose */
+  --radius: 0.625rem;
+  --background: oklch(0.985 0.005 60); /* Warm cream */
+  --foreground: oklch(0.18 0.02 350); /* Near-black with warmth */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.02 350);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.25 0.02 320);
-  --secondary: oklch(0.75 0.12 300); /* Soft lavender */
-  --secondary-foreground: oklch(0.25 0.02 320);
-  --muted: oklch(0.95 0.02 320); /* Light pink-gray */
-  --muted-foreground: oklch(0.5 0.02 320);
-  --accent: oklch(0.85 0.08 310); /* Light pink accent */
-  --accent-foreground: oklch(0.25 0.02 320);
-  --destructive: oklch(0.6 0.2 25);
+  --popover-foreground: oklch(0.18 0.02 350);
+  --secondary: oklch(0.93 0.02 50); /* Soft champagne */
+  --secondary-foreground: oklch(0.25 0.04 350);
+  --muted: oklch(0.96 0.01 55); /* Light warm cream */
+  --muted-foreground: oklch(0.45 0.02 350);
+  --accent: oklch(0.75 0.09 65); /* Warm gold */
+  --accent-foreground: oklch(0.18 0.02 350);
+  --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.9 0.02 320); /* Light pink border */
-  --input: oklch(0.9 0.02 320);
-  --ring: oklch(0.65 0.15 330); /* Pink focus ring */
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.25 0.02 320);
-  --sidebar-accent: oklch(0.95 0.02 320);
-  --sidebar-accent-foreground: oklch(0.25 0.02 320);
-  --sidebar-border: oklch(0.9 0.02 320);
-  --sidebar-ring: oklch(0.65 0.15 330);
+  --border: oklch(0.92 0.01 55); /* Soft warm border */
+  --input: oklch(0.92 0.01 55);
+  --ring: oklch(0.35 0.12 360); /* Burgundy focus ring */
+  --sidebar: oklch(0.99 0.005 55);
+  --sidebar-foreground: oklch(0.18 0.02 350);
+  --sidebar-accent: oklch(0.96 0.01 55);
+  --sidebar-accent-foreground: oklch(0.18 0.02 350);
+  --sidebar-border: oklch(0.92 0.01 55);
+  --sidebar-ring: oklch(0.35 0.12 360);
 }
 
 .dark {
@@ -119,6 +122,10 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -286,10 +293,42 @@
   animation: confident-lift 12s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
 }
 
+/* Hero entrance fade-up */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.animate-fade-up-delay-1 {
+  opacity: 0;
+  animation: fade-up 0.8s 0.15s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.animate-fade-up-delay-2 {
+  opacity: 0;
+  animation: fade-up 0.8s 0.30s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.animate-fade-up-delay-3 {
+  opacity: 0;
+  animation: fade-up 0.8s 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 /* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   .animate-confident-lift {
     animation: none !important;
+  }
+  .animate-fade-up, .animate-fade-up-delay-1, .animate-fade-up-delay-2, .animate-fade-up-delay-3 {
+    animation: none !important;
+    opacity: 1 !important;
   }
   
   .animate-fade-in-stagger {

@@ -594,13 +594,56 @@ function EditModuleDialog({ module }: { module: any }) {
 }
 
 // Edit Lesson Dialog
+function BunnyVideoStatus({ lesson }: { lesson: any }) {
+  const isProcessing = lesson.videoStatus === 'uploading' || lesson.videoStatus === 'processing' || lesson.videoStatus === 'encoding';
+
+  // Poll status while processing
+  const { data: statusData } = trpc.admin.media.pollBunnyVideoStatus.useQuery(
+    { lessonId: lesson.id },
+    { enabled: isProcessing, refetchInterval: isProcessing ? 5000 : false }
+  );
+
+  if (!lesson.bunnyVideoId && !lesson.videoUrl) return null;
+
+  const status = statusData?.status || lesson.videoStatus || 'pending';
+  const progress = statusData?.encodeProgress || 0;
+  const durationSec = statusData?.durationSeconds || lesson.durationSeconds || 0;
+
+  const statusColors: Record<string, string> = {
+    ready: 'bg-emerald-100 text-emerald-700',
+    processing: 'bg-amber-100 text-amber-700',
+    encoding: 'bg-blue-100 text-blue-700',
+    uploading: 'bg-blue-100 text-blue-700',
+    failed: 'bg-red-100 text-red-700',
+    pending: 'bg-stone-100 text-stone-600',
+  };
+
+  return (
+    <div className="flex items-center gap-2 text-xs">
+      {lesson.bunnyThumbnailUrl && status === 'ready' && (
+        <img src={lesson.bunnyThumbnailUrl} alt="" className="w-16 h-9 rounded object-cover" />
+      )}
+      <span className={`px-2 py-0.5 rounded-full font-medium ${statusColors[status] || statusColors.pending}`}>
+        {status === 'encoding' || status === 'processing' ? `${status} ${progress}%` : status}
+      </span>
+      {durationSec > 0 && (
+        <span className="text-muted-foreground">
+          {Math.floor(durationSec / 60)}:{String(durationSec % 60).padStart(2, '0')}
+        </span>
+      )}
+    </div>
+  );
+}
+
 function EditLessonDialog({ lesson }: { lesson: any }) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState(lesson.title);
   const [description, setDescription] = useState(lesson.description || "");
   const [duration, setDuration] = useState(lesson.duration?.toString() || "");
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const utils = trpc.useUtils();
-  
+
   const updateMutation = trpc.admin.courseContent.updateLesson.useMutation({
     onSuccess: () => {
       utils.admin.courseContent.getLessons.invalidate();
@@ -609,20 +652,35 @@ function EditLessonDialog({ lesson }: { lesson: any }) {
     },
   });
 
+  // Legacy upload (small files / previews via Forge storage)
   const uploadMutation = trpc.admin.media.uploadLessonVideo.useMutation({
     onSuccess: () => {
       utils.admin.courseContent.getLessons.invalidate();
     },
   });
 
-  const handleUpload = async (file: File) => {
+  // Bunny.net upload (large tutorial videos)
+  const bunnyUploadMutation = trpc.admin.media.uploadLessonToBunny.useMutation({
+    onSuccess: () => {
+      utils.admin.courseContent.getLessons.invalidate();
+      toast.success("Video uploaded! Encoding in progress...");
+      setIsUploading(false);
+      setUploadProgress(0);
+    },
+    onError: (error) => {
+      toast.error("Upload failed: " + error.message);
+      setIsUploading(false);
+      setUploadProgress(0);
+    },
+  });
+
+  const handleLegacyUpload = async (file: File) => {
     return new Promise<void>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = async () => {
         try {
           const base64 = reader.result?.toString().split(',')[1];
           if (!base64) throw new Error("Failed to read file");
-          
           await uploadMutation.mutateAsync({
             lessonId: lesson.id,
             filename: file.name,
@@ -637,6 +695,44 @@ function EditLessonDialog({ lesson }: { lesson: any }) {
       reader.onerror = () => reject(new Error("Failed to read file"));
       reader.readAsDataURL(file);
     });
+  };
+
+  const handleBunnyUpload = async (file: File) => {
+    if (file.size > 4 * 1024 * 1024 * 1024) {
+      toast.error("File too large. Maximum 4GB.");
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(10); // reading file
+
+    const reader = new FileReader();
+    reader.onprogress = (e) => {
+      if (e.lengthComputable) {
+        setUploadProgress(Math.round((e.loaded / e.total) * 40) + 10); // 10-50%
+      }
+    };
+    reader.onload = async () => {
+      try {
+        const base64 = reader.result?.toString().split(',')[1];
+        if (!base64) throw new Error("Failed to read file");
+        setUploadProgress(55); // uploading to server
+        await bunnyUploadMutation.mutateAsync({
+          lessonId: lesson.id,
+          title: title || file.name.replace(/\.[^.]+$/, ''),
+          data: base64,
+        });
+        setUploadProgress(100);
+      } catch {
+        // error handled by mutation onError
+      }
+    };
+    reader.onerror = () => {
+      toast.error("Failed to read file");
+      setIsUploading(false);
+      setUploadProgress(0);
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSave = () => {
@@ -691,17 +787,53 @@ function EditLessonDialog({ lesson }: { lesson: any }) {
               type="number"
               value={duration}
               onChange={(e) => setDuration(e.target.value)}
-              placeholder="e.g., 8"
+              placeholder="Auto-detected after upload, or set manually"
             />
           </div>
+
+          {/* Bunny.net Stream upload — for full tutorial videos */}
+          <div className="border rounded-lg p-4 space-y-3">
+            <Label className="text-sm font-medium">Full Tutorial Video (Bunny.net Stream)</Label>
+            <p className="text-xs text-muted-foreground">
+              For full lessons. Supports HLS adaptive streaming, up to 4GB. Duration and thumbnail are auto-extracted.
+            </p>
+            <BunnyVideoStatus lesson={lesson} />
+            {isUploading && (
+              <div className="space-y-1">
+                <div className="h-2 w-full bg-stone-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-[#6B1D3A] rounded-full transition-all duration-500"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {uploadProgress < 50 ? "Reading file..." : uploadProgress < 95 ? "Uploading to Bunny.net..." : "Finalizing..."}
+                </p>
+              </div>
+            )}
+            <input
+              type="file"
+              accept="video/*"
+              disabled={isUploading}
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleBunnyUpload(file);
+                e.target.value = '';
+              }}
+              className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-[#6B1D3A] file:text-white hover:file:bg-[#561730] disabled:opacity-50"
+            />
+          </div>
+
+          {/* Legacy upload — for small preview clips */}
           <div>
-            <Label>Lesson Video</Label>
-            <VideoUpload 
-              onUpload={handleUpload} 
-              currentVideoUrl={lesson.videoUrl} 
-              label="Upload Lesson Video"
+            <Label>Preview / Small Video (legacy storage)</Label>
+            <VideoUpload
+              onUpload={handleLegacyUpload}
+              currentVideoUrl={lesson.videoUrl}
+              label="Upload Preview Video"
             />
           </div>
+
           <div className="flex gap-2 justify-end">
             <Button variant="outline" onClick={() => setOpen(false)}>
               Cancel

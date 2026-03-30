@@ -9,6 +9,7 @@ import { serveStatic, setupVite } from "./vite";
 import { handleStripeWebhook } from "../stripe-webhook";
 import { setupSSE } from "../sse";
 import { setupCronJobs } from "../jobs/setupCron";
+import { checkSupabaseHealth, ensureAdminUser } from "../lib/supabase";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -85,9 +86,13 @@ async function startServer() {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
 
-  server.listen(port, () => {
+  server.listen(port, async () => {
     console.log(`Server running on http://localhost:${port}/`);
-    
+
+    // Verify Supabase auth is reachable, then ensure admin account exists
+    await checkSupabaseHealth();
+    await ensureAdminUser();
+
     // Setup scheduled jobs
     setupCronJobs();
   });

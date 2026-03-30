@@ -307,6 +307,12 @@ export const courseLessons = pgTable("course_lessons", {
   description: text("description"),
   videoUrl: text("videoUrl"),
   videoKey: text("videoKey"),
+  // Bunny.net Stream fields
+  bunnyVideoId: varchar("bunnyVideoId", { length: 100 }),
+  bunnyThumbnailUrl: text("bunnyThumbnailUrl"),
+  videoStatus: text("videoStatus").$type<"pending" | "uploading" | "processing" | "encoding" | "ready" | "failed">().default("pending"),
+  durationSeconds: integer("durationSeconds"),
+  // Legacy duration in minutes (kept for backwards compatibility)
   duration: integer("duration"),
   content: text("content"),
   order: integer("order").notNull().default(0),

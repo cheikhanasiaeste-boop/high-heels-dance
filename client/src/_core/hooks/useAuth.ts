@@ -1,12 +1,57 @@
 import { supabase } from "@/lib/supabase";
 import { trpc } from "@/lib/trpc";
-import type { Session } from "@supabase/supabase-js";
+import type { AuthError, Session } from "@supabase/supabase-js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 type UseAuthOptions = {
   redirectOnUnauthenticated?: boolean;
   redirectPath?: string;
 };
+
+/**
+ * Map Supabase error codes to user-friendly messages.
+ * See: https://supabase.com/docs/guides/auth/debugging/error-codes
+ */
+function friendlyAuthError(error: AuthError): string {
+  const code = error.message?.toLowerCase() ?? "";
+  const errorCode = (error as any).code ?? (error as any).error_code ?? "";
+
+  // Supabase-specific error codes
+  switch (errorCode) {
+    case "unexpected_failure":
+      return "The authentication service is temporarily unavailable. Please try again in a few minutes.";
+    case "email_address_invalid":
+      return "Please enter a valid email address.";
+    case "invalid_credentials":
+      return "Invalid email or password. Please check your credentials and try again.";
+    case "user_already_exists":
+      return "An account with this email already exists. Try signing in instead.";
+    case "weak_password":
+      return "Password is too weak. Please use at least 8 characters with a mix of letters and numbers.";
+    case "email_not_confirmed":
+      return "Please check your email and click the confirmation link before signing in.";
+    case "over_email_send_rate_limit":
+    case "over_request_rate_limit":
+      return "Too many attempts. Please wait a few minutes before trying again.";
+    case "signup_disabled":
+      return "New account registration is currently disabled.";
+    case "user_not_found":
+      return "No account found with this email. Please create an account first.";
+    case "bad_json":
+    case "validation_failed":
+      return "Invalid request. Please check your input and try again.";
+  }
+
+  // Fallback: match on message text
+  if (code.includes("invalid login")) return "Invalid email or password.";
+  if (code.includes("email not confirmed")) return "Please confirm your email before signing in.";
+  if (code.includes("rate limit") || code.includes("too many")) return "Too many attempts. Please wait a few minutes.";
+  if (code.includes("already registered") || code.includes("already exists")) return "An account with this email already exists.";
+  if (code.includes("network") || code.includes("fetch")) return "Network error. Please check your internet connection.";
+
+  // Last resort: use the original message but clean it up
+  return error.message || "An unexpected error occurred. Please try again.";
+}
 
 export function useAuth(options?: UseAuthOptions) {
   const { redirectOnUnauthenticated = false, redirectPath = "/" } =
@@ -77,19 +122,29 @@ export function useAuth(options?: UseAuthOptions) {
         email,
         password,
       });
-      if (error) throw error;
+      if (error) {
+        console.error("[Auth] signInWithPassword failed:", error.message, error);
+        throw new Error(friendlyAuthError(error));
+      }
     },
     []
   );
 
   const signUp = useCallback(
     async (name: string, email: string, password: string) => {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: { data: { name } },
       });
-      if (error) throw error;
+      if (error) {
+        console.error("[Auth] signUp failed:", error.message, error);
+        throw new Error(friendlyAuthError(error));
+      }
+      // Supabase returns a user with identities=[] when signup is disabled or user exists with unconfirmed email
+      if (data.user && data.user.identities?.length === 0) {
+        throw new Error("An account with this email already exists. Try signing in instead.");
+      }
     },
     []
   );
@@ -101,7 +156,10 @@ export function useAuth(options?: UseAuthOptions) {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
-    if (error) throw error;
+    if (error) {
+      console.error("[Auth] Google OAuth failed:", error.message, error);
+      throw new Error(friendlyAuthError(error));
+    }
   }, []);
 
   const loginWithFacebook = useCallback(async () => {
@@ -111,7 +169,10 @@ export function useAuth(options?: UseAuthOptions) {
         redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
-    if (error) throw error;
+    if (error) {
+      console.error("[Auth] Facebook OAuth failed:", error.message, error);
+      throw new Error(friendlyAuthError(error));
+    }
   }, []);
 
   /**

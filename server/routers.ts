@@ -142,6 +142,58 @@ export const appRouter = router({
         );
       }),
     
+    // Get signed Bunny.net playback URL for a lesson video
+    getVideoPlaybackUrl: protectedProcedure
+      .input(z.object({ lessonId: z.number(), courseId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        // 1. Check course-level access
+        const course = await db.getCourseById(input.courseId);
+        if (!course) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Course not found' });
+        }
+
+        let hasAccess = false;
+        if (course.isFree) {
+          hasAccess = true;
+        } else {
+          const { canAccessContent } = await import("./membership-products");
+          const hasPurchased = await db.hasUserPurchasedCourse(ctx.user.id, input.courseId);
+          hasAccess = canAccessContent(
+            ctx.user.membershipStatus,
+            ctx.user.membershipEndDate,
+            course.isFree,
+            hasPurchased
+          );
+        }
+
+        if (!hasAccess) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'You need to purchase this course or have an active membership to watch this video.',
+          });
+        }
+
+        // 2. Get lesson and generate signed URL
+        const lesson = await db.getLessonById(input.lessonId);
+        if (!lesson) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Lesson not found' });
+        }
+
+        // If lesson has a Bunny video, return signed HLS URL
+        if (lesson.bunnyVideoId && lesson.videoStatus === 'ready') {
+          const bunny = await import('./lib/bunny');
+          const url = await bunny.getSignedPlaybackUrl(lesson.bunnyVideoId);
+          return { url, type: 'hls' as const, thumbnailUrl: lesson.bunnyThumbnailUrl };
+        }
+
+        // Fallback: direct video URL (for legacy/preview videos stored elsewhere)
+        if (lesson.videoUrl) {
+          return { url: lesson.videoUrl, type: 'direct' as const, thumbnailUrl: null };
+        }
+
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'No video available for this lesson' });
+      }),
+
     // Mark lesson as completed
     markLessonComplete: protectedProcedure
       .input(z.object({
@@ -1002,6 +1054,76 @@ export const appRouter = router({
           });
           
           return { url: result.url, key: fileKey };
+        }),
+
+      // Upload lesson video to Bunny.net Stream (for full tutorials)
+      uploadLessonToBunny: adminProcedure
+        .input(z.object({
+          lessonId: z.number(),
+          title: z.string(),
+          data: z.string(), // base64 encoded video
+        }))
+        .mutation(async ({ input }) => {
+          const bunny = await import('./lib/bunny');
+
+          // 1. Create video object in Bunny
+          const video = await bunny.createVideo(input.title);
+
+          // 2. Mark lesson as uploading
+          await db.updateCourseLesson(input.lessonId, {
+            bunnyVideoId: video.guid,
+            videoStatus: 'uploading',
+          });
+
+          // 3. Upload the file
+          const buffer = Buffer.from(input.data, 'base64');
+          await bunny.uploadVideoFile(video.guid, buffer);
+
+          // 4. Mark as processing (Bunny will encode in background)
+          const thumbnailUrl = bunny.getThumbnailUrl(video.guid);
+          await db.updateCourseLesson(input.lessonId, {
+            videoStatus: 'processing',
+            bunnyThumbnailUrl: thumbnailUrl,
+          });
+
+          return {
+            bunnyVideoId: video.guid,
+            thumbnailUrl,
+            status: 'processing',
+          };
+        }),
+
+      // Poll Bunny.net video encoding status and update lesson when ready
+      pollBunnyVideoStatus: adminProcedure
+        .input(z.object({ lessonId: z.number() }))
+        .query(async ({ input }) => {
+          const lesson = await db.getLessonById(input.lessonId);
+          if (!lesson?.bunnyVideoId) {
+            return { status: 'pending' as const, encodeProgress: 0, durationSeconds: 0 };
+          }
+
+          const bunny = await import('./lib/bunny');
+          const video = await bunny.getVideo(lesson.bunnyVideoId);
+          const status = bunny.statusLabel(video.status);
+
+          // If finished, update lesson with duration and final status
+          if (status === 'ready' && lesson.videoStatus !== 'ready') {
+            await db.updateCourseLesson(input.lessonId, {
+              videoStatus: 'ready',
+              durationSeconds: Math.round(video.length),
+              bunnyThumbnailUrl: bunny.getThumbnailUrl(lesson.bunnyVideoId),
+            });
+          }
+
+          if (status === 'failed' && lesson.videoStatus !== 'failed') {
+            await db.updateCourseLesson(input.lessonId, { videoStatus: 'failed' });
+          }
+
+          return {
+            status,
+            encodeProgress: video.encodeProgress,
+            durationSeconds: Math.round(video.length),
+          };
         }),
 
       // Upload image (for thumbnails, etc.)

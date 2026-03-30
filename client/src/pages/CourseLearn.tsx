@@ -4,13 +4,72 @@ import { useParams, useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ChevronDown, ChevronUp, Check, Home, Play, Lock, CheckCircle } from "lucide-react";
+import { ChevronDown, ChevronUp, Check, Home, Play, Lock, CheckCircle, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { CourseCompletionModal } from "@/components/CourseCompletionModal";
 import { CourseBreadcrumb } from "@/components/CourseBreadcrumb";
 import { useProgressiveAuth } from '@/hooks/useProgressiveAuth';
 import { ProgressiveAuthModal } from '@/components/ProgressiveAuthModal';
+import { HlsPlayer } from "@/components/HlsPlayer";
+
+/** Fetches a signed playback URL and renders HLS or direct video */
+function LessonVideoPlayer({
+  lesson,
+  courseId,
+  onTimeUpdate,
+  onEnded,
+}: {
+  lesson: any;
+  courseId: number;
+  onTimeUpdate?: (time: number) => void;
+  onEnded?: () => void;
+}) {
+  const hasBunnyVideo = lesson.bunnyVideoId && lesson.videoStatus === "ready";
+  const hasDirectVideo = !!lesson.videoUrl;
+
+  // Fetch signed URL from server (only for Bunny videos or direct videos that need access check)
+  const { data: playback, isLoading, error } = trpc.courses.getVideoPlaybackUrl.useQuery(
+    { lessonId: lesson.id, courseId },
+    { enabled: hasBunnyVideo || hasDirectVideo, staleTime: 10 * 60 * 1000 /* 10 min cache */ }
+  );
+
+  if (!hasBunnyVideo && !hasDirectVideo) {
+    return (
+      <div className="aspect-video bg-stone-100 rounded-lg flex items-center justify-center mb-4">
+        <p className="text-stone-400 text-sm">No video available for this lesson</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="aspect-video bg-black rounded-lg flex items-center justify-center mb-4">
+        <Loader2 className="w-8 h-8 text-white/50 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error || !playback) {
+    return (
+      <div className="aspect-video bg-stone-100 rounded-lg flex items-center justify-center mb-4">
+        <p className="text-stone-400 text-sm">{error?.message || "Could not load video"}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="aspect-video bg-black rounded-lg overflow-hidden mb-4">
+      <HlsPlayer
+        src={playback.url}
+        type={playback.type}
+        poster={playback.thumbnailUrl}
+        onTimeUpdate={onTimeUpdate}
+        onEnded={onEnded}
+      />
+    </div>
+  );
+}
 
 export default function CourseLearn() {
   const { id } = useParams<{ id: string }>();
@@ -260,26 +319,25 @@ export default function CourseLearn() {
                 <div className="mb-4">
                   <p className="text-sm text-muted-foreground mb-1">{currentLesson.moduleName}</p>
                   <h2 className="text-2xl font-bold">{currentLesson.title}</h2>
-                  {currentLesson.duration && (
+                  {(currentLesson.durationSeconds || currentLesson.duration) && (
                     <p className="text-sm text-muted-foreground mt-1">
-                      Duration: {currentLesson.duration} minutes
+                      Duration: {currentLesson.durationSeconds
+                        ? `${Math.floor(currentLesson.durationSeconds / 60)}:${String(currentLesson.durationSeconds % 60).padStart(2, '0')}`
+                        : `${currentLesson.duration} min`}
                     </p>
                   )}
                 </div>
                 
                 {/* Video Player */}
-                {currentLesson.videoUrl && (
-                  <div className="aspect-video bg-black rounded-lg overflow-hidden mb-4">
-                    <video
-                      src={currentLesson.videoUrl}
-                      controls
-                      className="w-full h-full"
-                      controlsList="nodownload"
-                    >
-                      Your browser does not support the video tag.
-                    </video>
-                  </div>
-                )}
+                <LessonVideoPlayer
+                  lesson={currentLesson}
+                  courseId={courseId}
+                  onEnded={() => {
+                    if (currentLessonId && courseId && !isLessonCompleted(currentLessonId)) {
+                      handleMarkComplete();
+                    }
+                  }}
+                />
                 
                 {/* Lesson Content */}
                 {currentLesson.content && (

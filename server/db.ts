@@ -1518,6 +1518,17 @@ export async function createCourseLesson(data: {
 }
 
 /**
+ * Get a single course lesson by ID
+ */
+export async function getLessonById(id: number): Promise<CourseLesson | null> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  const result = await db.select().from(courseLessons).where(eq(courseLessons.id, id)).limit(1);
+  return result[0] ?? null;
+}
+
+/**
  * Update a course lesson
  */
 export async function updateCourseLesson(
@@ -1527,6 +1538,10 @@ export async function updateCourseLesson(
     description?: string;
     videoUrl?: string;
     videoKey?: string;
+    bunnyVideoId?: string;
+    bunnyThumbnailUrl?: string;
+    videoStatus?: "pending" | "uploading" | "processing" | "encoding" | "ready" | "failed";
+    durationSeconds?: number;
     duration?: number;
     content?: string;
     order?: number;
@@ -1536,12 +1551,12 @@ export async function updateCourseLesson(
 ) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  
+
   await db
     .update(courseLessons)
     .set(updates)
     .where(eq(courseLessons.id, id));
-  
+
   return { success: true };
 }
 

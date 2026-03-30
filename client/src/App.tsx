@@ -38,6 +38,7 @@ import Conversations from "./pages/Conversations";
 import Membership from "./pages/Membership";
 import { SubscriptionSuccess } from "./pages/SubscriptionSuccess";
 import AuthCallback from "./pages/AuthCallback";
+import { AdminGuard } from "./components/AdminGuard";
 
 
 function Router() {
@@ -61,17 +62,17 @@ function Router() {
       <Route path="/book-session" component={BookSession} />
       <Route path="/feedback" component={Feedback} />
 
-      <Route path="/admin" component={AdminDashboard} />
-      <Route path="/admin/courses" component={AdminCourses} />
-      <Route path="/admin/courses/:id/content" component={CourseContentManager} />
-      <Route path="/admin/bookings" component={AdminBookings} />
-      <Route path="/admin/availability" component={AdminAvailability} />
-      <Route path="/admin/sessions" component={AdminSessions} />
-      <Route path="/admin/testimonials" component={AdminTestimonials} />
-      <Route path="/admin/users" component={AdminUserManagement} />
-      <Route path="/admin/user-activity" component={AdminUserActivity} />
-      <Route path="/admin/discounts" component={AdminDiscounts} />
-      <Route path="/admin/settings" component={AdminSettings} />
+      <Route path="/admin">{() => <AdminGuard><AdminDashboard /></AdminGuard>}</Route>
+      <Route path="/admin/courses">{() => <AdminGuard><AdminCourses /></AdminGuard>}</Route>
+      <Route path="/admin/courses/:id/content">{() => <AdminGuard><CourseContentManager /></AdminGuard>}</Route>
+      <Route path="/admin/bookings">{() => <AdminGuard><AdminBookings /></AdminGuard>}</Route>
+      <Route path="/admin/availability">{() => <AdminGuard><AdminAvailability /></AdminGuard>}</Route>
+      <Route path="/admin/sessions">{() => <AdminGuard><AdminSessions /></AdminGuard>}</Route>
+      <Route path="/admin/testimonials">{() => <AdminGuard><AdminTestimonials /></AdminGuard>}</Route>
+      <Route path="/admin/users">{() => <AdminGuard><AdminUserManagement /></AdminGuard>}</Route>
+      <Route path="/admin/user-activity">{() => <AdminGuard><AdminUserActivity /></AdminGuard>}</Route>
+      <Route path="/admin/discounts">{() => <AdminGuard><AdminDiscounts /></AdminGuard>}</Route>
+      <Route path="/admin/settings">{() => <AdminGuard><AdminSettings /></AdminGuard>}</Route>
       <Route path="/auth/callback" component={AuthCallback} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
