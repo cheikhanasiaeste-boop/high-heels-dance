@@ -89,8 +89,11 @@ export async function ensureAdminUser(): Promise<void> {
     }
 
     console.log(`[Supabase] ✓ Admin user created for ${adminEmail}`);
-    console.log(`[Supabase]   Temporary password: ${tempPassword}`);
-    console.log(`[Supabase]   Change it after first login via password reset.`);
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`[Supabase]   Temporary password: ${tempPassword}`);
+    } else {
+      console.log(`[Supabase]   Temporary password set (hidden in production logs). Use 'Forgot Password' to reset.`);
+    }
     console.log(`[Supabase]   Supabase Auth ID: ${createData.user.id}`);
 
     // Clean up orphan test users created during debugging

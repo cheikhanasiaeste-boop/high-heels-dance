@@ -2,6 +2,8 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
@@ -55,6 +57,38 @@ async function startServer() {
     });
   }
 
+  // ── Security Headers ──────────────────────────────────────────────
+  app.use(helmet({
+    contentSecurityPolicy: false, // CSP managed by Vite/meta tags; enabling here breaks inline scripts
+    crossOriginEmbedderPolicy: false, // breaks Zoom SDK and Bunny.net video embeds
+  }));
+
+  // ── Rate Limiting ──────────────────────────────────────────────────
+  // Global: 200 requests per minute per IP
+  app.use(rateLimit({
+    windowMs: 60 * 1000,
+    max: 200,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: "Too many requests, please try again later" },
+  }));
+
+  // Stricter limit on auth-related tRPC calls (30/min)
+  app.use("/api/trpc/auth", rateLimit({
+    windowMs: 60 * 1000,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+  }));
+
+  // Stricter limit on chat endpoint (10/min to prevent LLM cost abuse)
+  app.use("/api/trpc/chat", rateLimit({
+    windowMs: 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+  }));
+
   // Stripe webhook MUST be registered BEFORE express.json() middleware
   // This is required for webhook signature verification
   app.post(
@@ -62,10 +96,10 @@ async function startServer() {
     express.raw({ type: "application/json" }),
     handleStripeWebhook
   );
-  
-  // Configure body parser with larger size limit for file uploads (300MB for videos)
-  app.use(express.json({ limit: "300mb" }));
-  app.use(express.urlencoded({ limit: "300mb", extended: true }));
+
+  // Body parser — 50MB limit (videos use Bunny.net direct upload, not JSON body)
+  app.use(express.json({ limit: "50mb" }));
+  app.use(express.urlencoded({ limit: "50mb", extended: true }));
   // SSE endpoint for admin notifications (requires admin auth via tRPC context)
   app.get("/api/admin/notifications/stream", async (req, res) => {
     const authHeader = req.headers.authorization;

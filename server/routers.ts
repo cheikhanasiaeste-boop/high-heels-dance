@@ -36,8 +36,12 @@ export const appRouter = router({
   discount: discountRouter,
   
   auth: router({
-    /** Returns the full internal user row, or null if not authenticated. */
-    me: publicProcedure.query((opts) => opts.ctx.user),
+    /** Returns safe user profile data, or null if not authenticated. */
+    me: publicProcedure.query((opts) => {
+      if (!opts.ctx.user) return null;
+      const { supabaseId, stripeSubscriptionId, lastViewedByAdmin, ...safeUser } = opts.ctx.user;
+      return safeUser;
+    }),
 
     /** Mark that the user has seen the welcome modal. */
     markWelcomeSeen: protectedProcedure.mutation(async ({ ctx }) => {
@@ -110,10 +114,17 @@ export const appRouter = router({
         );
       }),
     
-    // Get modules with lessons for course learning page
+    // Get modules with lessons for course learning page — requires course access
     getModulesWithLessons: protectedProcedure
       .input(z.object({ courseId: z.number() }))
-      .query(async ({ input }) => {
+      .query(async ({ ctx, input }) => {
+        // Verify user has access to this course before returning full lesson data
+        const course = await db.getCourseById(input.courseId);
+        if (!course) throw new TRPCError({ code: "NOT_FOUND", message: "Course not found" });
+        if (!course.isFree) {
+          const hasAccess = await db.userHasCourseAccess(ctx.user.id, input.courseId);
+          if (!hasAccess) throw new TRPCError({ code: "FORBIDDEN", message: "You do not have access to this course" });
+        }
         return await db.getCourseModulesWithLessons(input.courseId);
       }),
 
@@ -300,6 +311,15 @@ export const appRouter = router({
         const lesson = await db.getLessonById(input.lessonId);
         if (!lesson) {
           throw new TRPCError({ code: 'NOT_FOUND', message: 'Lesson not found' });
+        }
+
+        // Verify the lesson actually belongs to the specified course (prevents IDOR bypass)
+        const modules = await db.getCourseModulesWithLessons(input.courseId);
+        const lessonBelongsToCourse = modules.some((m: any) =>
+          m.lessons?.some((l: any) => l.id === input.lessonId)
+        );
+        if (!lessonBelongsToCourse) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Lesson does not belong to this course' });
         }
 
         // Free/preview lessons and free courses skip purchase checks
@@ -900,6 +920,14 @@ export const appRouter = router({
       get: publicProcedure
         .input(z.object({ key: z.string() }))
         .query(async ({ input }) => {
+          // Only allow reading public-facing settings (hero images, display content)
+          const publicKeys = [
+            'heroBackgroundUrl', 'backgroundAnimationUrl', 'backgroundVideoUrl',
+            'heroProfilePictureUrl', 'siteName', 'siteDescription',
+          ];
+          if (!publicKeys.includes(input.key)) {
+            throw new TRPCError({ code: 'FORBIDDEN', message: 'Setting not publicly accessible' });
+          }
           return await db.getSetting(input.key);
         }),
       
@@ -1749,11 +1777,11 @@ export const appRouter = router({
   chat: router({
     send: publicProcedure
       .input(z.object({
-        message: z.string().min(1),
+        message: z.string().min(1).max(2000),
         history: z.array(z.object({
           role: z.enum(['user', 'assistant']),
-          content: z.string(),
-        })).optional(),
+          content: z.string().max(4000),
+        })).max(20).optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         const userId = ctx.user?.id ?? null;
@@ -1887,15 +1915,16 @@ Never be pushy. Be genuinely helpful and make people feel welcome.`;
 
   // Testimonials
   testimonials: router({
-    // Public: Get approved testimonials for homepage
+    // Public: Get approved testimonials for homepage (strip PII)
     list: publicProcedure.query(async () => {
-      return await db.getApprovedTestimonials();
+      const testimonials = await db.getApprovedTestimonials();
+      return testimonials.map(({ userEmail, ...safe }) => safe);
     }),
-    
-    // Public: Get approved video testimonials for gallery
+
+    // Public: Get approved video testimonials for gallery (strip PII)
     videoTestimonials: publicProcedure.query(async () => {
       const testimonials = await db.getApprovedTestimonials();
-      return testimonials.filter(t => t.videoUrl);
+      return testimonials.filter(t => t.videoUrl).map(({ userEmail, ...safe }) => safe);
     }),
 
     // Upload testimonial media (photo or video) — user-level, not admin
@@ -2020,24 +2049,32 @@ Never be pushy. Be genuinely helpful and make people feel welcome.`;
     // Protected: Upload video file
     uploadVideo: protectedProcedure
       .input(z.object({
-        filename: z.string(),
-        contentType: z.string(),
+        filename: z.string().max(200),
+        contentType: z.string().max(100),
         data: z.string(), // base64 encoded
       }))
       .mutation(async ({ input }) => {
         const { storagePut } = await import('./storage');
-        
-        // Decode base64 data
+
+        // Decode and validate size (50MB max)
         const buffer = Buffer.from(input.data, 'base64');
-        
-        // Generate unique filename
+        if (buffer.length > 50 * 1024 * 1024) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'File must be under 50MB' });
+        }
+
+        // Validate content type
+        const allowedTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'image/jpeg', 'image/png', 'image/webp'];
+        if (!allowedTypes.includes(input.contentType)) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid file type' });
+        }
+
+        // Sanitize filename — strip path traversal and special chars
+        const safeName = input.filename.replace(/[^a-zA-Z0-9._-]/g, '');
         const timestamp = Date.now();
         const randomSuffix = Math.random().toString(36).substring(7);
-        const fileKey = `testimonials/${timestamp}-${randomSuffix}-${input.filename}`;
-        
-        // Upload to S3
+        const fileKey = `testimonials/${timestamp}-${randomSuffix}-${safeName}`;
+
         const result = await storagePut(fileKey, buffer, input.contentType);
-        
         return { url: result.url, key: fileKey };
       }),
   }),
@@ -2078,9 +2115,12 @@ Never be pushy. Be genuinely helpful and make people feel welcome.`;
       .input(z.object({
         toUserId: z.number(),
         subject: z.string().min(1).max(255),
-        body: z.string().min(1),
+        body: z.string().min(1).max(10000),
       }))
       .mutation(async ({ ctx, input }) => {
+        if (input.toUserId === ctx.user.id) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Cannot message yourself' });
+        }
         return await db.createMessage({
           fromUserId: ctx.user.id,
           toUserId: input.toUserId,
