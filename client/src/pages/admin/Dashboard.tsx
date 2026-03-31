@@ -22,6 +22,7 @@ export default function AdminDashboard() {
 
   const fmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EUR' }).format(n || 0);
   const pct = (a: number, b: number) => b > 0 ? ((a / b) * 100).toFixed(1) : "0";
+  const barWidth = (a: number, b: number) => b > 0 ? Math.min((a / b) * 100, 100) : 0;
 
   if (isLoading) {
     return (
@@ -109,7 +110,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
               <div className="w-full bg-muted rounded-full h-2">
-                <div className="bg-primary rounded-full h-2" style={{ width: `${pct(s.courseRevenue, s.totalRevenue)}%` }} />
+                <div className="bg-primary rounded-full h-2" style={{ width: `${barWidth(s.courseRevenue, s.totalRevenue)}%` }} />
               </div>
 
               <div className="flex justify-between items-center">
@@ -120,42 +121,32 @@ export default function AdminDashboard() {
                 </div>
               </div>
               <div className="w-full bg-muted rounded-full h-2">
-                <div className="bg-fuchsia-500 rounded-full h-2" style={{ width: `${pct(s.sessionRevenue, s.totalRevenue)}%` }} />
+                <div className="bg-fuchsia-500 rounded-full h-2" style={{ width: `${barWidth(s.sessionRevenue, s.totalRevenue)}%` }} />
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Conversion Rates</CardTitle>
+              <CardTitle className="text-lg">Key Metrics</CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Course Purchases</span>
-                  <span className="font-bold">{pct(s.coursePurchases, s.totalUsers)}%</span>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center p-3 bg-green-50 rounded-lg">
+                  <p className="text-2xl font-bold text-green-700">{s.coursePurchases}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Course Purchases</p>
                 </div>
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div className="bg-green-500 rounded-full h-2" style={{ width: `${pct(s.coursePurchases, s.totalUsers)}%` }} />
+                <div className="text-center p-3 bg-blue-50 rounded-lg">
+                  <p className="text-2xl font-bold text-blue-700">{s.totalBookings}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Session Bookings</p>
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">{s.coursePurchases} of {s.totalUsers} users</p>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>Session Bookings</span>
-                  <span className="font-bold">{pct(s.totalBookings, s.totalUsers)}%</span>
+                <div className="text-center p-3 bg-purple-50 rounded-lg">
+                  <p className="text-2xl font-bold text-purple-700">{s.totalUsers > 0 ? (s.totalBookings / s.totalUsers).toFixed(1) : "0"}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Bookings / User</p>
                 </div>
-                <div className="w-full bg-muted rounded-full h-2">
-                  <div className="bg-blue-500 rounded-full h-2" style={{ width: `${pct(s.totalBookings, s.totalUsers)}%` }} />
-                </div>
-                <p className="text-xs text-muted-foreground mt-1">{s.totalBookings} of {s.totalUsers} users</p>
-              </div>
-
-              <div className="pt-2 border-t">
-                <div className="flex justify-between">
-                  <span className="text-sm">Avg Revenue / User</span>
-                  <span className="font-bold">{fmt(s.totalUsers > 0 ? s.totalRevenue / s.totalUsers : 0)}</span>
+                <div className="text-center p-3 bg-fuchsia-50 rounded-lg">
+                  <p className="text-2xl font-bold text-fuchsia-700">{fmt(s.totalUsers > 0 ? s.totalRevenue / s.totalUsers : 0)}</p>
+                  <p className="text-xs text-muted-foreground mt-1">Revenue / User</p>
                 </div>
               </div>
             </CardContent>
