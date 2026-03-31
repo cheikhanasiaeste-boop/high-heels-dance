@@ -31,29 +31,33 @@ export default function SessionView() {
       const now = Date.now();
       const sessionStart = new Date(booking.slot!.startTime).getTime();
       const sessionEnd = new Date(booking.slot!.endTime).getTime();
-      const fifteenMinutesBefore = sessionStart - 15 * 60 * 1000;
-      
+      const fiveMinutesBefore = sessionStart - 5 * 60 * 1000;
+
       if (now > sessionEnd) {
         setSessionState('ended');
-      } else if (now >= fifteenMinutesBefore && now <= sessionEnd) {
+      } else if (now >= fiveMinutesBefore && now <= sessionEnd) {
         setSessionState('ready');
       } else {
         setSessionState('upcoming');
-        
+
         // Calculate time until session
-        const minutesUntil = Math.floor((sessionStart - now) / 1000 / 60);
-        const hoursUntil = Math.floor(minutesUntil / 60);
-        
-        if (hoursUntil > 0) {
-          setTimeUntilStart(`${hoursUntil}h ${minutesUntil % 60}m`);
+        const totalSeconds = Math.floor((sessionStart - now) / 1000);
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        if (hours > 0) {
+          setTimeUntilStart(`${hours}h ${minutes}m ${seconds}s`);
+        } else if (minutes > 0) {
+          setTimeUntilStart(`${minutes}m ${seconds}s`);
         } else {
-          setTimeUntilStart(`${minutesUntil}m`);
+          setTimeUntilStart(`${seconds}s`);
         }
       }
     };
-    
+
     checkSessionState();
-    const interval = setInterval(checkSessionState, 30000); // Check every 30 seconds
+    const interval = setInterval(checkSessionState, 1000); // Check every second
     
     return () => clearInterval(interval);
   }, [booking]);
@@ -174,7 +178,7 @@ export default function SessionView() {
                 <Clock className="h-5 w-5 text-blue-600" />
                 <AlertDescription className="text-blue-900">
                   <div className="font-medium mb-1">Session starts in {timeUntilStart}</div>
-                  <div className="text-sm">You can join 15 minutes before the start time.</div>
+                  <div className="text-sm">You can join 5 minutes before the start time.</div>
                 </AlertDescription>
               </Alert>
             )}
@@ -198,19 +202,7 @@ export default function SessionView() {
                   Join Zoom Session
                 </Button>
                 
-                {slot.meetLink && (
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Direct Meeting Link:</p>
-                    <a
-                      href={slot.meetLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-purple-600 hover:text-purple-700 underline break-all"
-                    >
-                      {slot.meetLink}
-                    </a>
-                  </div>
-                )}
+                {/* Meeting link removed for security — use embedded SDK only */}
               </div>
             )}
             
