@@ -1,102 +1,162 @@
-# Zoom Live Session Booking & Streaming System
+# Zoom Live Session Booking & Streaming System — v2
 
 ## Context
 
-Elizabeth Zolotova needs live dance sessions via Zoom, embedded in her platform. The project already has `@zoom/meetingsdk@5.1.0` installed, a working `ZoomMeeting.tsx` component, server-side OAuth + signature generation, and a `zoom.join` tRPC endpoint. This spec upgrades the existing infrastructure with access control, auto-embed timing, chat, recording, and admin management.
+Elizabeth Zolotova needs live dance sessions via Zoom, embedded in her platform. The project has `@zoom/meetingsdk@5.1.0`, server-side OAuth + signature generation in `server/_core/zoom.ts`, and an embedded `ZoomMeeting.tsx` component. This spec upgrades the existing infrastructure with a dedicated `live_sessions` table, auto-creation, access control, auto-embed timing, chat, and cloud recording.
 
-## Architecture
+## Current Codebase Assessment
 
-**Reuse existing:**
-- `server/_core/zoom.ts` — OAuth tokens, meeting creation, SDK signature generation
-- `server/zoomRouter.ts` — secured `zoom.join` endpoint
-- `client/src/components/ZoomMeeting.tsx` — embedded Zoom SDK component
-- `client/src/pages/SessionView.tsx` — countdown + state machine
-- `drizzle/schema.ts` — `availabilitySlots.zoomMeetingId` column
+**Reuse:**
+- `server/_core/zoom.ts` — OAuth token caching, `createZoomMeeting()`, `generateZoomSDKSignature()`, `canJoinMeeting()`
+- `client/src/components/ZoomMeeting.tsx` — embedded Zoom SDK component (needs modifications)
+- `@zoom/meetingsdk@5.1.0` — already installed
 
 **Delete:**
-- `server/zoom.ts` — dead duplicate code with 2hr token expiry (security risk)
+- `server/zoom.ts` — dead duplicate with 2-hour signature expiry (security risk vs 60s in `_core/zoom.ts`)
 
 **Modify:**
-- `server/_core/zoom.ts` — add `auto_recording: "cloud"` to meeting creation
-- `server/zoomRouter.ts` — change time window from 15 min to 5 min
-- `client/src/pages/SessionView.tsx` — second-by-second countdown, auto-embed at 5 min, remove meetLink fallback
-- `client/src/components/ZoomMeeting.tsx` — auto-join on mount (no button), connection monitoring
-- Admin Sessions page — add Zoom meeting ID field to create/edit form
+- `server/_core/zoom.ts` — add `auto_recording: "cloud"` to meeting creation settings
+- `client/src/components/ZoomMeeting.tsx` — auto-join on mount, ensure chat panel visible
+- `client/src/pages/SessionView.tsx` — rewrite: 1-second countdown, auto-embed at 5 min, remove meetLink fallback
+
+**Create new:**
+- `drizzle/schema.ts` — new `live_sessions` table
+- `server/routers.ts` — new `liveSessions` tRPC router (admin CRUD, public get, join)
+- `client/src/pages/LiveSession.tsx` — new dedicated session page
+- `client/src/pages/admin/LiveSessions.tsx` — admin management page with create/edit form
+- Route: `/live-session/:id`
+
+## Database: `live_sessions` Table
+
+```
+id              SERIAL PRIMARY KEY
+title           VARCHAR(200) NOT NULL
+description     TEXT
+startTime       TIMESTAMP NOT NULL
+endTime         TIMESTAMP NOT NULL
+isFree          BOOLEAN DEFAULT true
+price           VARCHAR(20)
+capacity        INTEGER DEFAULT 100
+zoomMeetingId   VARCHAR(50)
+zoomMeetingNumber BIGINT
+status          TEXT DEFAULT 'scheduled'  -- scheduled | live | ended | cancelled
+recordingUrl    TEXT                       -- populated after session ends
+createdAt       TIMESTAMP DEFAULT NOW()
+```
+
+No RLS needed — access control handled in tRPC procedures.
 
 ## Access Rules
 
-| Session Type | Who Can View Description | Who Can Join Zoom |
+| Session Type | Description Visible To | Zoom Embed Accessible To |
 |---|---|---|
-| Free | Everyone (signed in) | Everyone (signed in) |
-| Paid | Everyone (signed in) | Users who purchased that session OR have active premium membership |
+| Free | Everyone (including non-logged-in) | Everyone (including non-logged-in) |
+| Paid | Everyone (including non-logged-in) | Signed-in users who purchased OR have premium membership |
 
-Access enforcement happens in `zoomRouter.ts` (server-side). Frontend shows/hides the Zoom embed based on the same rules but server is the authority.
+Server-side enforcement in the `join` procedure. Frontend shows/hides based on same rules.
 
-## Time-Based UI (Session Page)
+## Time-Based UI (Session Page `/live-session/:id`)
 
 | Time Relative to Start | What User Sees |
 |---|---|
-| > 5 minutes before | Session description + live countdown (updates every second) |
-| 5 min before → during session | Zoom meeting auto-embeds (no join button needed) |
-| After session ends | "Session has ended" message |
+| > 5 minutes before | Session info + beautiful countdown (every second) + "Session starts soon" |
+| 5 min before → session end | Zoom auto-embeds with chat visible. No join button. |
+| After endTime | "Session has ended" + link to recording (if available) |
 
-The countdown switches to Zoom automatically — no user action required.
+Countdown uses `setInterval(1000)` with `requestAnimationFrame` for smooth display.
 
 ## Admin Functionality
 
-In Admin → Sessions, when creating/editing an online session:
-- Existing fields: title, description, start time, end time, event type, session type, capacity, price
-- **New:** "Zoom Meeting ID" text field — admin pastes the numeric meeting ID
-- **Alternative:** "Auto-create Zoom Meeting" button — calls `createZoomMeeting()` API and stores the returned meeting ID automatically
-- All changes saved to `availabilitySlots.zoomMeetingId` in Supabase
+### Admin → Sessions page (new `LiveSessions` admin tab)
+
+**Create/Edit form:**
+- Title, description, start datetime, end datetime
+- "Free session" toggle (default: true)
+- Price field (shown when not free)
+- Capacity
+- **"Create Zoom Meeting" button** — primary flow:
+  - Calls `createZoomMeeting()` server-side
+  - Stores returned `meetingId` and `meetingNumber` in `live_sessions`
+  - Shows success toast with meeting ID
+- Manual Zoom Meeting ID field — fallback for pre-existing meetings
+
+**Session list:**
+- Shows all sessions with status badges (scheduled/live/ended)
+- "Recording" link appears for ended sessions (links to Zoom cloud recordings dashboard)
+
+### Recording Access
+
+- `auto_recording: "cloud"` set on meeting creation
+- Admin panel shows link: `https://zoom.us/recording` for the Zoom account
+- Future enhancement: use Zoom API to fetch recording URL and store in `recordingUrl` column
 
 ## Chat
 
-The Zoom embedded SDK includes native in-meeting chat. No custom implementation needed. Users can type messages during the meeting, and the host (Elizabeth) sees them in the Zoom interface. Chat is a built-in feature of `@zoom/meetingsdk`.
+Native Zoom embedded SDK chat — no custom implementation. The SDK's chat panel is visible by default in the embedded meeting. Users type messages, host (Elizabeth) sees and responds in real-time.
 
-## Recording
+To ensure chat is visible: initialize the Zoom SDK with chat features enabled (default behavior of `ZoomMtgEmbedded`).
 
-- Meeting creation sets `auto_recording: "cloud"` — Zoom automatically records to cloud
-- After the session, Elizabeth can download recordings from her Zoom account (zoom.us → Recordings)
-- Admin panel includes a link to the Zoom recordings dashboard for convenience
+## Security
 
-## Security Fixes
+1. **Delete `server/zoom.ts`** — duplicate code with 2hr token expiry
+2. **Remove `meetLink` fallback** in SessionView.tsx — leaks direct Zoom URL
+3. **Backend signature-only** — 60-second expiry, no join URLs exposed
+4. **Paid session check** — server verifies purchase/membership before issuing signature
 
-1. **Delete `server/zoom.ts`** — duplicate code with 2-hour SDK signature expiry (vs 60 seconds in `_core/zoom.ts`)
-2. **Remove `meetLink` fallback display** in `SessionView.tsx` — currently leaks the direct Zoom URL, defeating the embedded SDK security model
-3. **Keep:** Backend-only signature generation, 60-second signature expiry, no join URL exposure
+## Files Summary
 
-## Files to Modify
-
-| File | Change |
-|---|---|
-| `server/zoom.ts` | DELETE |
-| `server/_core/zoom.ts` | Add `auto_recording: "cloud"` to meeting settings |
-| `server/zoomRouter.ts` | Change 15 min → 5 min window, add paid session access check |
-| `client/src/pages/SessionView.tsx` | 1-second countdown, auto-embed at 5 min, remove URL fallback |
-| `client/src/components/ZoomMeeting.tsx` | Auto-join on mount, add connection quality listener |
-| `client/src/pages/admin/AdminSessions.tsx` | Add Zoom Meeting ID field to session form |
+| Action | File | What |
+|---|---|---|
+| DELETE | `server/zoom.ts` | Dead duplicate, security risk |
+| MODIFY | `server/_core/zoom.ts` | Add `auto_recording: "cloud"` |
+| MODIFY | `drizzle/schema.ts` | Add `live_sessions` table |
+| CREATE | `server/liveSessionRouter.ts` | tRPC CRUD + join + recording endpoints |
+| CREATE | `client/src/pages/LiveSession.tsx` | Public session page with countdown + auto-embed |
+| CREATE | `client/src/pages/admin/LiveSessions.tsx` | Admin create/edit/list sessions |
+| MODIFY | `client/src/components/ZoomMeeting.tsx` | Auto-join on mount, chat visible |
+| MODIFY | `client/src/pages/SessionView.tsx` | Fix countdown, remove URL leak |
+| MODIFY | `client/src/App.tsx` | Add `/live-session/:id` route |
+| MODIFY | `client/src/components/AdminLayout.tsx` | Add "Live Sessions" nav item |
 
 ## Testing Checklist
 
-1. Admin creates a free online session with Zoom meeting ID → appears in session list
-2. Signed-in user opens session page > 5 min before → sees countdown updating every second
-3. At exactly 5 min before start → Zoom embed appears automatically
-4. Non-signed-in user → cannot access session page (redirect to sign-in)
-5. Paid session: user without purchase → sees description but no Zoom embed
-6. Paid session: user with purchase → gets Zoom embed at 5-min mark
-7. Chat works in embedded meeting
-8. Recording starts automatically when host joins
-9. After session ends → "Session ended" message replaces Zoom
-10. `server/zoom.ts` is deleted, no imports reference it
+### Admin Flow
+1. Admin creates free session with "Create Zoom Meeting" → meeting ID auto-populated
+2. Admin creates paid session with price → saved correctly
+3. Admin edits session title/time → changes reflected
+4. Admin sees session list with status badges
+5. Ended session shows recording link
 
-## Zoom Credential Setup
+### Free Session Flow
+6. Non-logged-in user visits `/live-session/:id` → sees description + countdown
+7. At 5-min mark → Zoom embed appears automatically
+8. User can use in-meeting chat
+9. After session ends → "Session ended" message
 
-User needs to:
+### Paid Session Flow
+10. Non-logged-in user → sees description, no Zoom embed, "Sign in to access" prompt
+11. Signed-in user without purchase → sees description, "Purchase required" message
+12. Signed-in user with purchase → gets Zoom embed at 5-min mark
+13. Premium member → gets Zoom embed regardless of purchase
+
+### Timing & Edge Cases
+14. Countdown updates every second accurately
+15. Page opened exactly at 5-min mark → embed loads immediately
+16. Late joiner (session already started) → embed loads immediately
+17. Session cancelled → shows "Session cancelled" state
+18. Invalid session ID → 404 page
+
+### Mobile
+19. Session page responsive on iPhone
+20. Zoom embed works on mobile browsers
+21. Chat accessible on mobile
+
+## Zoom Credential Setup (User Action Required)
+
 1. Go to https://marketplace.zoom.us/ → Develop → Build App
-2. Choose Server-to-Server OAuth
+2. Choose **Server-to-Server OAuth**
 3. App name: "High Heels Dance Platform"
 4. Copy: Account ID, Client ID, Client Secret
 5. Scopes: `meeting:write:admin`, `meeting:read:admin`
 6. Activate the app
-7. Set env vars on Render: `ZOOM_ACCOUNT_ID`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`
+7. Set on Render: `ZOOM_ACCOUNT_ID`, `ZOOM_CLIENT_ID`, `ZOOM_CLIENT_SECRET`
