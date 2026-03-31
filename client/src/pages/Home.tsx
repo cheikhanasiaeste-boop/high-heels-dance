@@ -304,53 +304,47 @@ export default function Home() {
 
       {/* ── Hero Section ──────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden min-h-[100vh] flex flex-col bg-[#0d0010]">
-        {/* Background — video for .mp4/.webm, direct img for everything else */}
+        {/* Background — static image fallback loads instantly, video upgrades on desktop */}
         <div className="absolute inset-0 z-0 overflow-hidden">
-          {!prefersReducedMotion && isVideoUrl(backgroundUrl) ? (
+          {/* Always render the image first for instant paint (especially mobile) */}
+          <img
+            src="/hero-bg.webp"
+            alt=""
+            loading="eager"
+            decoding="async"
+            className="absolute inset-0 w-full h-full object-cover opacity-40"
+          />
+          {/* On desktop with video URL, layer video on top after it loads */}
+          {!prefersReducedMotion && isVideoUrl(backgroundUrl) && (
             <video
               key={backgroundUrl}
               autoPlay
               loop
               muted
               playsInline
-              preload="auto"
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ filter: 'brightness(0.35) saturate(1.2)' }}
-              ref={(el) => {
-                if (el) {
-                  el.playbackRate = 1.2;
-                  el.addEventListener('play', () => { el.playbackRate = 1.2; }, { once: false });
-                }
-              }}
+              preload="metadata"
+              poster="/hero-bg.webp"
+              className="absolute inset-0 w-full h-full object-cover opacity-40 hidden md:block"
               onError={(e) => {
-                const video = e.currentTarget;
-                video.style.display = 'none';
-                const fallbackImg = document.createElement('img');
-                fallbackImg.src = '/hero-bg.webp';
-                fallbackImg.alt = '';
-                fallbackImg.className = video.className;
-                fallbackImg.style.cssText = 'filter: brightness(0.35) saturate(1.2)';
-                video.parentElement?.insertBefore(fallbackImg, video);
+                (e.currentTarget as HTMLVideoElement).style.display = 'none';
               }}
             >
               <source src={backgroundUrl} />
             </video>
-          ) : (
+          )}
+          {/* If admin set a custom image (not video), use it */}
+          {backgroundUrl !== '/hero-bg.webp' && !isVideoUrl(backgroundUrl) && (
             <img
               src={backgroundUrl}
               alt=""
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ filter: 'brightness(0.35) saturate(1.2)' }}
+              className="absolute inset-0 w-full h-full object-cover opacity-40"
               onError={(e) => {
-                const img = e.currentTarget;
-                if (img.src !== window.location.origin + '/hero-bg.webp') {
-                  img.src = '/hero-bg.webp';
-                }
+                (e.currentTarget as HTMLImageElement).style.display = 'none';
               }}
             />
           )}
-          {/* Darker gradient overlay for deep cinematic feel */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0d0010]/60 via-transparent to-[#0d0010]" />
+          {/* Gradient overlay — uses opacity instead of CSS filter for GPU performance */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0d0010]/50 via-[#0d0010]/20 to-[#0d0010]" />
         </div>
 
         {/* Hero content — pushed down to leave room for transparent nav */}
