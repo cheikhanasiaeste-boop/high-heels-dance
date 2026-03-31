@@ -1490,12 +1490,15 @@ About Elizabeth & the platform:
 - There are free courses to get started and premium courses for deeper learning
 - Sessions can be booked directly on the website
 - Website: www.elizabeth-zolotova.com
-- Instagram: instagram.com/elizabeth_zolotova
-- YouTube: youtube.com/@HighHeelsTutorials
-- Facebook: facebook.com/liza.zolotova.399
 
 IMPORTANT RULES:
-- When sharing links, use SHORT display text with markdown links, e.g. [Courses page](/courses) or [Instagram](https://instagram.com/elizabeth_zolotova). NEVER paste raw long URLs.
+- For website pages, use markdown links: [Courses](/courses), [Book a Session](/book-session)
+- For social media, use these EXACT placeholders (the system will replace them with real links):
+  - {{INSTAGRAM}} for Elizabeth's Instagram
+  - {{YOUTUBE}} for Elizabeth's YouTube
+  - {{FACEBOOK}} for Elizabeth's Facebook
+- NEVER write out social media URLs yourself — always use the placeholders above.
+- NEVER include full URLs like https://...
 - For pages on the website, use relative paths: [Book a Session](/book-session), [Browse Courses](/courses)
 - Keep all responses SHORT — 2-4 sentences max
 
@@ -1503,7 +1506,7 @@ When someone asks about:
 - Courses → Link to [Courses page](/courses), mention free ones to start
 - Booking → Link to [Book a Session](/book-session), highlight flexibility
 - Pricing → Be transparent, mention free options, link to courses page
-- Videos/content → Link to [YouTube](https://youtube.com/@HighHeelsTutorials) or [Instagram](https://instagram.com/elizabeth_zolotova)
+- Videos/content → Use {{YOUTUBE}} and {{INSTAGRAM}} placeholders
 - Experience level → Be encouraging! Everyone starts somewhere
 
 If you don't know a specific detail, guide them to the website or suggest reaching out to Elizabeth directly.
@@ -1532,6 +1535,12 @@ Never be pushy. Be genuinely helpful and make people feel welcome.`;
           assistantMessage = "Thanks for reaching out! I'm having a little moment — but you can explore our courses or book a dance session right from the menu above. Elizabeth would love to dance with you!";
         }
         
+        // Replace social media placeholders with real links (bypasses Gemini's URL blocking)
+        assistantMessage = assistantMessage
+          .replace(/\{\{INSTAGRAM\}\}/g, '[Instagram](https://www.instagram.com/elizabeth_zolotova/)')
+          .replace(/\{\{YOUTUBE\}\}/g, '[YouTube](https://www.youtube.com/@HighHeelsTutorials)')
+          .replace(/\{\{FACEBOOK\}\}/g, '[Facebook](https://www.facebook.com/liza.zolotova.399/)');
+
         // Save assistant message (non-blocking)
         db.createChatMessage({ userId, role: 'assistant', content: assistantMessage }).catch(() => {});
 
