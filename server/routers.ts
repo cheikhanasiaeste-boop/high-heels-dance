@@ -123,6 +123,12 @@ export const appRouter = router({
       .query(async ({ ctx, input }) => {
         return await db.getUserCourseProgress(ctx.user.id, input.courseId);
       }),
+
+    getLessonProgress: protectedProcedure
+      .input(z.object({ lessonId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        return await db.getLessonProgress(ctx.user.id, input.lessonId);
+      }),
     
     // Check if user has access (alias for hasAccess)
     checkAccess: protectedProcedure

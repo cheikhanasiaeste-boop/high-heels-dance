@@ -1956,6 +1956,21 @@ export async function getCourseModulesWithLessons(courseId: number) {
 /**
  * Get user's progress for a specific course
  */
+export async function getLessonProgress(userId: number, lessonId: number): Promise<UserLessonProgress | null> {
+  const db = await getDb();
+  if (db) {
+    try {
+      const [row] = await db.select().from(userLessonProgress)
+        .where(and(eq(userLessonProgress.userId, userId), eq(userLessonProgress.lessonId, lessonId)))
+        .limit(1);
+      return row ?? null;
+    } catch (e) { console.warn("[DB Fallback] getLessonProgress:", (e as Error).message); }
+  }
+  const { data } = await restFrom("userLessonProgress").select("*")
+    .eq("userId", userId).eq("lessonId", lessonId).limit(1).single();
+  return (data as UserLessonProgress) ?? null;
+}
+
 export async function getUserCourseProgress(userId: number, courseId: number) {
   const db = await getDb();
   if (db) {

@@ -8,6 +8,8 @@ interface HlsPlayerProps {
   type: "hls" | "direct";
   /** Poster/thumbnail image */
   poster?: string | null;
+  /** Resume playback from this time (seconds) */
+  initialTime?: number;
   /** Callback with current playback time in seconds */
   onTimeUpdate?: (currentTime: number) => void;
   /** Callback when video ends */
@@ -19,19 +21,38 @@ export function HlsPlayer({
   src,
   type,
   poster,
+  initialTime,
   onTimeUpdate,
   onEnded,
   className = "",
 }: HlsPlayerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+  const seekedRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Resume from saved position once metadata is loaded
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !initialTime || initialTime <= 0) return;
+    seekedRef.current = false;
+
+    const handleCanPlay = () => {
+      if (!seekedRef.current && initialTime > 0) {
+        video.currentTime = initialTime;
+        seekedRef.current = true;
+      }
+    };
+    video.addEventListener("canplay", handleCanPlay);
+    return () => video.removeEventListener("canplay", handleCanPlay);
+  }, [initialTime, src]);
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video || !src) return;
 
     setError(null);
+    seekedRef.current = false;
 
     // Direct MP4 — just set src
     if (type === "direct") {

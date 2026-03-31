@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { ChevronDown, ChevronUp, Check, Home, Play, Lock, CheckCircle, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import { CourseCompletionModal } from "@/components/CourseCompletionModal";
 import { CourseBreadcrumb } from "@/components/CourseBreadcrumb";
@@ -17,11 +17,13 @@ import { HlsPlayer } from "@/components/HlsPlayer";
 function LessonVideoPlayer({
   lesson,
   courseId,
+  initialTime,
   onTimeUpdate,
   onEnded,
 }: {
   lesson: any;
   courseId: number;
+  initialTime?: number;
   onTimeUpdate?: (time: number) => void;
   onEnded?: () => void;
 }) {
@@ -64,6 +66,7 @@ function LessonVideoPlayer({
         src={playback.url}
         type={playback.type}
         poster={playback.thumbnailUrl}
+        initialTime={initialTime}
         onTimeUpdate={onTimeUpdate}
         onEnded={onEnded}
       />
@@ -209,6 +212,33 @@ export default function CourseLearn() {
     if (!currentLessonId || !courseId) return;
     markCompleteMutation.mutate({ lessonId: currentLessonId, courseId });
   };
+
+  // ── Progress persistence: save every 10s, resume on load ──
+  const { data: lessonProgress } = trpc.courses.getLessonProgress.useQuery(
+    { lessonId: currentLessonId! },
+    { enabled: isAuthenticated && !!currentLessonId }
+  );
+
+  const saveProgressMutation = trpc.courses.updateLessonProgress.useMutation();
+  const lastSavedRef = useRef(0);
+
+  const handleTimeUpdate = useCallback((currentTime: number) => {
+    if (!currentLessonId || !courseId) return;
+    const now = Date.now();
+    // Save at most every 10 seconds
+    if (now - lastSavedRef.current < 10_000) return;
+    lastSavedRef.current = now;
+    saveProgressMutation.mutate({
+      lessonId: currentLessonId,
+      courseId,
+      watchedDuration: Math.round(currentTime),
+    });
+  }, [currentLessonId, courseId, saveProgressMutation]);
+
+  // Reset debounce timer when lesson changes
+  useEffect(() => {
+    lastSavedRef.current = 0;
+  }, [currentLessonId]);
   
   // Redirect to course detail page if not authenticated and modal is closed
   // MUST be before any conditional returns to maintain hooks order
@@ -332,6 +362,8 @@ export default function CourseLearn() {
                 <LessonVideoPlayer
                   lesson={currentLesson}
                   courseId={courseId}
+                  initialTime={lessonProgress?.watchedDuration ?? undefined}
+                  onTimeUpdate={handleTimeUpdate}
                   onEnded={() => {
                     if (currentLessonId && courseId && !isLessonCompleted(currentLessonId)) {
                       handleMarkComplete();

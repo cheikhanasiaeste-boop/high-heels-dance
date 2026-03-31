@@ -1,9 +1,39 @@
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { trpc } from "@/lib/trpc";
 import { ArrowLeft, BookOpen } from "lucide-react";
 import { Link } from "wouter";
+
+function CourseProgressBar({ courseId }: { courseId: number }) {
+  const { data: modules } = trpc.courses.getModulesWithLessons.useQuery(
+    { courseId },
+    { staleTime: 60_000 }
+  );
+  const { data: progress } = trpc.courses.getUserProgress.useQuery(
+    { courseId },
+    { staleTime: 60_000 }
+  );
+
+  if (!modules || !progress) return null;
+
+  const totalLessons = modules.reduce((acc, m: any) => acc + (m.lessons?.length || 0), 0);
+  if (totalLessons === 0) return null;
+
+  const completed = progress.filter((p: any) => p.isCompleted).length;
+  const pct = Math.round((completed / totalLessons) * 100);
+
+  return (
+    <div className="px-6 pb-3 space-y-1">
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>{completed}/{totalLessons} lessons</span>
+        <span className="font-medium">{pct}%</span>
+      </div>
+      <Progress value={pct} className="h-1.5" />
+    </div>
+  );
+}
 
 export default function MyCourses() {
   const { user, isAuthenticated, loading } = useAuth();
@@ -89,6 +119,7 @@ export default function MyCourses() {
                   <CardTitle className="text-xl">{course.title}</CardTitle>
                   <CardDescription className="line-clamp-2">{course.description}</CardDescription>
                 </CardHeader>
+                <CourseProgressBar courseId={course.id} />
                 <CardFooter className="mt-auto">
                   <Link href={`/course/${course.id}`} className="w-full">
                     <Button className="w-full">
