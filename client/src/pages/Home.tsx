@@ -261,30 +261,26 @@ export default function Home() {
           <MobileNav onSignInClick={() => setShowAuthModal(true)} />
 
           <div className="hidden lg:flex items-center gap-2">
-            <Link href={isAuthenticated ? "/my-bookings" : "/book-session"}>
-              <button className={`px-6 py-2.5 text-sm font-medium transition-all duration-300 relative group ${
-                isAuthenticated
-                  ? "text-stone-600 hover:text-[#C026D3] hover:bg-stone-50"
-                  : "text-white bg-[#C026D3] hover:bg-[#A21CAF] shadow-md hover:shadow-lg hover:shadow-[#C026D3]/15 rounded-full"
-              }`}>
-                {isAuthenticated ? "My Sessions" : "Book a Session"}
-                {isAuthenticated && (
-                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#C026D3] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
-                )}
-              </button>
-            </Link>
-            <Link href={isAuthenticated ? "/my-courses" : "/courses"}>
-              <button className={`px-6 py-2.5 text-sm font-medium transition-all duration-300 relative group ${
-                isAuthenticated
-                  ? "text-stone-600 hover:text-[#C026D3] hover:bg-stone-50"
-                  : "text-[#C026D3] bg-transparent border border-[#C026D3]/30 hover:border-[#C026D3]/60 hover:bg-[#C026D3]/5 rounded-full"
-              }`}>
-                {isAuthenticated ? "My Courses" : "Browse Courses"}
-                {isAuthenticated && (
-                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#C026D3] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
-                )}
-              </button>
-            </Link>
+            {isAuthenticated ? (
+              <Link href="/dashboard">
+                <button className="px-6 py-2.5 text-sm font-medium text-white bg-[#C026D3] hover:bg-[#A21CAF] shadow-md hover:shadow-lg hover:shadow-[#C026D3]/15 rounded-full transition-all duration-300">
+                  My Dashboard
+                </button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/book-session">
+                  <button className="px-6 py-2.5 text-sm font-medium text-white bg-[#C026D3] hover:bg-[#A21CAF] shadow-md hover:shadow-lg hover:shadow-[#C026D3]/15 rounded-full transition-all duration-300">
+                    Book a Session
+                  </button>
+                </Link>
+                <Link href="/courses">
+                  <button className="px-6 py-2.5 text-sm font-medium text-[#C026D3] bg-transparent border border-[#C026D3]/30 hover:border-[#C026D3]/60 hover:bg-[#C026D3]/5 rounded-full transition-all duration-300">
+                    Browse Courses
+                  </button>
+                </Link>
+              </>
+            )}
             {isAuthenticated ? (
               <>
                 {user?.role === 'admin' && (

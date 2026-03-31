@@ -107,32 +107,36 @@ export function MobileNav({ onSignInClick }: MobileNavProps) {
           )}
 
           {/* Navigation Links */}
-          <Button variant="default" className="w-full justify-start" size="lg" asChild>
-            <Link href={isAuthenticated ? "/my-bookings" : "/book-session"} onClick={closeMenu}>
-              {isAuthenticated ? "My Sessions" : "Book a Session"}
-            </Link>
-          </Button>
-
-          <Button
-            variant="outline"
-            className="w-full justify-start shadow-lg border-2 border-primary bg-white text-primary font-semibold hover:bg-primary hover:text-white"
-            size="lg"
-            asChild
-          >
-            <Link href={isAuthenticated ? "/my-courses" : "/courses"} onClick={closeMenu}>
-              {isAuthenticated ? "My Courses" : "Browse Courses"}
-            </Link>
-          </Button>
+          {isAuthenticated ? (
+            <Button variant="default" className="w-full justify-start" size="lg" asChild>
+              <Link href="/dashboard" onClick={closeMenu}>
+                My Dashboard
+              </Link>
+            </Button>
+          ) : (
+            <>
+              <Button variant="default" className="w-full justify-start" size="lg" asChild>
+                <Link href="/book-session" onClick={closeMenu}>
+                  Book a Session
+                </Link>
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start shadow-lg border-2 border-primary bg-white text-primary font-semibold hover:bg-primary hover:text-white"
+                size="lg"
+                asChild
+              >
+                <Link href="/courses" onClick={closeMenu}>
+                  Browse Courses
+                </Link>
+              </Button>
+            </>
+          )}
 
           {isAuthenticated ? (
             <>
               {/* User Menu Items */}
               <div className="pt-3 border-t space-y-2">
-                <Button variant="ghost" className="w-full justify-start" size="lg" asChild>
-                  <Link href="/dashboard" onClick={closeMenu}>
-                    My Dashboard
-                  </Link>
-                </Button>
                 <Button variant="ghost" className="w-full justify-start relative" size="lg" asChild>
                   <Link href="/my-messages" onClick={closeMenu}>
                     My Messages
