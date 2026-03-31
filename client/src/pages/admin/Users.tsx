@@ -51,6 +51,26 @@ export default function AdminUsers() {
     },
   });
 
+  const deleteMutation = trpc.admin.users.delete.useMutation({
+    onSuccess: () => {
+      toast.success("User deleted");
+      utils.admin.users.list.invalidate();
+    },
+    onError: (error) => {
+      toast.error(error.message || "Failed to delete user");
+    },
+  });
+
+  const handleDelete = (userId: number, userName: string) => {
+    if (userId === user?.id) {
+      toast.error("You cannot delete your own account");
+      return;
+    }
+    if (confirm(`Are you sure you want to delete ${userName}? This cannot be undone.`)) {
+      deleteMutation.mutate({ userId });
+    }
+  };
+
   const handleUserClick = (userId: number, lastViewedByAdmin: Date | null) => {
     if (!lastViewedByAdmin) {
       markViewedMutation.mutate({ userId });
@@ -226,6 +246,18 @@ export default function AdminUsers() {
                           <SelectItem value="admin">Admin</SelectItem>
                         </SelectContent>
                       </Select>
+
+                      {u.id !== user?.id && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          onClick={(e) => { e.stopPropagation(); handleDelete(u.id, u.name || 'this user'); }}
+                          disabled={deleteMutation.isPending}
+                        >
+                          Delete
+                        </Button>
+                      )}
                     </div>
                   </div>
                 ))

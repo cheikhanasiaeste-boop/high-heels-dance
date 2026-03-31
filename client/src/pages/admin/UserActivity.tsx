@@ -13,6 +13,8 @@ type TimePeriod = 'today' | 'week' | 'month' | 'all';
 export default function AdminUserActivity() {
   const { user, isAuthenticated } = useAuth();
   const [timePeriod, setTimePeriod] = useState<TimePeriod>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<'all' | 'bookings' | 'courses'>('all');
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['bookings-paid', 'bookings-free', 'courses-paid', 'courses-free']));
   
   const { data: purchases = [] } = trpc.admin.purchases.list.useQuery(
@@ -51,11 +53,16 @@ export default function AdminUserActivity() {
       return isWithinInterval(activityDate, dateRange);
     };
 
-    const filteredPurchases = purchases.filter(p => filterByDate(p.createdAt.toString()));
-    const filteredBookings = bookings.filter(b => filterByDate(b.createdAt.toString()));
+    const q = searchQuery.toLowerCase();
+    const matchesSearch = (item: any) => !q ||
+      (item.userName || '').toLowerCase().includes(q) ||
+      (item.userEmail || '').toLowerCase().includes(q);
+
+    const filteredPurchases = purchases.filter(p => filterByDate(p.createdAt.toString()) && matchesSearch(p));
+    const filteredBookings = bookings.filter(b => filterByDate(b.createdAt.toString()) && matchesSearch(b));
 
     return { purchases: filteredPurchases, bookings: filteredBookings };
-  }, [purchases, bookings, timePeriod]);
+  }, [purchases, bookings, timePeriod, searchQuery]);
 
   // Group activities hierarchically: Type → Payment Status → Date sorted
   const groupedActivities = useMemo(() => {
@@ -238,41 +245,42 @@ export default function AdminUserActivity() {
           <p className="text-muted-foreground mt-2">Recent user purchases, bookings, and course completions</p>
         </div>
 
-        {/* Time Period Filters */}
+        {/* Filters */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Time Period</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                variant={timePeriod === 'today' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setTimePeriod('today')}
-              >
-                Today
-              </Button>
-              <Button
-                variant={timePeriod === 'week' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setTimePeriod('week')}
-              >
-                This Week
-              </Button>
-              <Button
-                variant={timePeriod === 'month' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setTimePeriod('month')}
-              >
-                This Month
-              </Button>
-              <Button
-                variant={timePeriod === 'all' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setTimePeriod('all')}
-              >
-                All Time
-              </Button>
+          <CardContent className="pt-6 space-y-4">
+            {/* Search */}
+            <input
+              type="text"
+              placeholder="Search by user name or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg text-sm bg-background"
+            />
+
+            <div className="flex flex-wrap gap-4">
+              {/* Time Period */}
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-2">Time Period</p>
+                <div className="flex flex-wrap gap-1">
+                  {(['today', 'week', 'month', 'all'] as TimePeriod[]).map(p => (
+                    <Button key={p} variant={timePeriod === p ? 'default' : 'outline'} size="sm" onClick={() => setTimePeriod(p)}>
+                      {p === 'today' ? 'Today' : p === 'week' ? 'This Week' : p === 'month' ? 'This Month' : 'All Time'}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Type Filter */}
+              <div>
+                <p className="text-xs font-medium text-muted-foreground mb-2">Activity Type</p>
+                <div className="flex flex-wrap gap-1">
+                  {(['all', 'bookings', 'courses'] as const).map(t => (
+                    <Button key={t} variant={typeFilter === t ? 'default' : 'outline'} size="sm" onClick={() => setTypeFilter(t)}>
+                      {t === 'all' ? 'All' : t === 'bookings' ? 'Bookings' : 'Courses'}
+                    </Button>
+                  ))}
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

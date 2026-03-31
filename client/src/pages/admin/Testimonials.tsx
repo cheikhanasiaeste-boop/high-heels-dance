@@ -255,36 +255,25 @@ export default function AdminTestimonials() {
                 <CardContent>
                   <p className="text-sm whitespace-pre-wrap">{testimonial.review}</p>
                   
-                  {/* Media Display */}
-                  {(testimonial.photoUrl || testimonial.videoUrl) && (
-                    <div className="mt-4 space-y-2">
-                      <p className="text-xs font-medium text-muted-foreground">Attached Media:</p>
-                      <div className="flex gap-2">
-                        {testimonial.photoUrl && (
-                          <a
-                            href={testimonial.photoUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 px-3 py-2 border rounded-md hover:bg-accent transition-colors"
-                          >
-                            <ImageIcon className="w-4 h-4" />
-                            <span className="text-sm">View Photo</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        )}
-                        {testimonial.videoUrl && (
-                          <a
-                            href={testimonial.videoUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 px-3 py-2 border rounded-md hover:bg-accent transition-colors"
-                          >
-                            <Video className="w-4 h-4" />
-                            <span className="text-sm">View Video</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        )}
-                      </div>
+                  {/* Embedded Media */}
+                  {testimonial.photoUrl && (
+                    <div className="mt-3">
+                      <img
+                        src={testimonial.photoUrl}
+                        alt="Testimonial photo"
+                        className="w-full max-h-64 object-cover rounded-lg border"
+                        onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                      />
+                    </div>
+                  )}
+                  {testimonial.videoUrl && (
+                    <div className="mt-3">
+                      <video
+                        src={testimonial.videoUrl}
+                        controls
+                        preload="metadata"
+                        className="w-full max-h-64 rounded-lg border bg-black"
+                      />
                     </div>
                   )}
                   <div className="flex items-center gap-2 mt-2">
