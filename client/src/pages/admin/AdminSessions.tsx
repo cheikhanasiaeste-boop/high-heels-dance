@@ -584,7 +584,7 @@ export default function AdminSessions() {
                   {session._type === 'live' && session.zoomMeetingId && (
                     <Button variant="outline" size="sm" asChild>
                       <a
-                        href={`https://zoom.us/j/${session.zoomMeetingId.replace(/[^0-9]/g, '')}`}
+                        href={`https://zoom.us/j/${session.zoomMeetingId.replace(/[^0-9]/g, '')}${session.zoomPassword ? '?pwd=' + session.zoomPassword : ''}`}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -653,7 +653,7 @@ export default function AdminSessions() {
                 {/* Zoom ID - clickable link */}
                 {session._type === 'live' && session.zoomMeetingId && (
                   <a
-                    href={`https://zoom.us/j/${session.zoomMeetingId.replace(/[^0-9]/g, '')}`}
+                    href={`https://zoom.us/j/${session.zoomMeetingId.replace(/[^0-9]/g, '')}${session.zoomPassword ? '?pwd=' + session.zoomPassword : ''}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium"

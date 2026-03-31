@@ -89,7 +89,7 @@ function LiveZoomEmbed({ sessionId }: { sessionId: number }) {
           sdkKey: creds.sdkKey,
           signature: creds.signature,
           meetingNumber: String(creds.meetingNumber),
-          password: "",
+          password: creds.password || "",
           userName: creds.userName,
           userEmail: creds.userEmail,
         });

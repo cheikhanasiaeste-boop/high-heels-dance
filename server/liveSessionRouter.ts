@@ -65,6 +65,7 @@ export const liveSessionRouter = router({
 
       return {
         meetingNumber,
+        password: (session as any).zoomPassword || "",
         sdkKey: process.env.ZOOM_CLIENT_ID!,
         signature,
         userName: ctx.user.name || ctx.user.email || "Participant",
@@ -111,9 +112,10 @@ export const liveSessionRouter = router({
       await db.updateLiveSession(session.id, {
         zoomMeetingId: zoom.meetingId,
         zoomMeetingNumber: zoom.meetingNumber.toString(),
+        zoomPassword: zoom.password,
       });
 
-      return { meetingId: zoom.meetingId, meetingNumber: zoom.meetingNumber };
+      return { meetingId: zoom.meetingId, meetingNumber: zoom.meetingNumber, password: zoom.password };
     }),
 
   // Admin: update session

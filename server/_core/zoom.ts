@@ -72,7 +72,7 @@ export async function createZoomMeeting(
   title: string,
   startTime: string,
   duration: number
-): Promise<{ meetingId: string; meetingNumber: number }> {
+): Promise<{ meetingId: string; meetingNumber: number; password: string }> {
   const accessToken = await getZoomAccessToken();
 
   const response = await fetch("https://api.zoom.us/v2/users/me/meetings", {
@@ -106,11 +106,10 @@ export async function createZoomMeeting(
 
   const data = await response.json();
 
-  // Return only meeting_id and meeting_number
-  // NEVER return join_url - it must not be exposed
   return {
     meetingId: data.id.toString(),
-    meetingNumber: data.id, // Numeric meeting ID for SDK
+    meetingNumber: data.id,
+    password: data.password || data.encrypted_password || "",
   };
 }
 

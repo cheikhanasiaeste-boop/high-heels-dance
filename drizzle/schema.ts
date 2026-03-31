@@ -457,6 +457,7 @@ export const liveSessions = pgTable("live_sessions", {
   capacity: integer("capacity").default(100).notNull(),
   zoomMeetingId: varchar("zoomMeetingId", { length: 50 }),
   zoomMeetingNumber: varchar("zoomMeetingNumber", { length: 50 }),
+  zoomPassword: varchar("zoomPassword", { length: 50 }),
   status: text("status").$type<"scheduled" | "live" | "ended" | "cancelled">().default("scheduled").notNull(),
   recordingUrl: text("recordingUrl"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
