@@ -1233,7 +1233,7 @@ export async function trackPageView(data: {
       return result;
     } catch (e) { console.warn("[DB Fallback] trackPageView:", (e as Error).message); }
   }
-  const { data: result } = await restFrom("pageAnalytics").insert({ ...insertData, entryTime: insertData.entryTime.toISOString() } as any).select("*").single();
+  const { data: result } = await restFrom("page_analytics").insert({ ...insertData, entryTime: insertData.entryTime.toISOString() } as any).select("*").single();
   return result;
 }
 
@@ -1253,14 +1253,14 @@ export async function updatePageExit(sessionId: string, pagePath: string) {
     } catch (e) { console.warn("[DB Fallback] updatePageExit:", (e as Error).message); }
   }
   // REST fallback
-  const { data: entries } = await restFrom("pageAnalytics").select("*")
+  const { data: entries } = await restFrom("page_analytics").select("*")
     .eq("sessionId", sessionId).eq("pagePath", pagePath).is("exitTime", null)
     .order("entryTime", { ascending: false }).limit(1);
   const entry = (entries ?? [])[0];
   if (!entry) return null;
   const exitTime = new Date();
   const duration = Math.floor((exitTime.getTime() - new Date(entry.entryTime).getTime()) / 1000);
-  await restFrom("pageAnalytics").update({ exitTime: exitTime.toISOString(), duration } as any).eq("id", entry.id);
+  await restFrom("page_analytics").update({ exitTime: exitTime.toISOString(), duration } as any).eq("id", entry.id);
   return { duration };
 }
 
@@ -1273,7 +1273,7 @@ export async function markBounce(sessionId: string) {
       return;
     } catch (e) { console.warn("[DB Fallback] markBounce:", (e as Error).message); }
   }
-  await restFrom("pageAnalytics").update({ isBounce: true } as any).eq("sessionId", sessionId);
+  await restFrom("page_analytics").update({ isBounce: true } as any).eq("sessionId", sessionId);
 }
 
 export async function getAnalytics(startDate: Date, endDate: Date) {
@@ -1289,7 +1289,7 @@ export async function getAnalytics(startDate: Date, endDate: Date) {
     } catch (e) { console.warn("[DB Fallback] getAnalytics:", (e as Error).message); }
   }
   if (!analyticsData) {
-    const { data: restData } = await restFrom("pageAnalytics").select("*")
+    const { data: restData } = await restFrom("page_analytics").select("*")
       .gte("entryTime", startDate.toISOString()).lte("entryTime", endDate.toISOString());
     analyticsData = (restData ?? []) as any[];
   }

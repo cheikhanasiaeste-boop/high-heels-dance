@@ -22,14 +22,14 @@ export default function AdminDashboard() {
   const { user, isAuthenticated } = useAuth();
   const [analyticsPeriod, setAnalyticsPeriod] = useState<'24h' | '7d' | '30d'>('7d');
   
-  const { data: stats } = trpc.admin.dashboard.stats.useQuery(
+  const { data: stats, isLoading: statsLoading } = trpc.admin.dashboard.stats.useQuery(
     undefined,
-    { enabled: isAuthenticated && user?.role === 'admin' }
+    { enabled: isAuthenticated && user?.role === 'admin', retry: 1 }
   );
-  
-  const { data: revenue } = trpc.admin.dashboard.revenue.useQuery(
+
+  const { data: revenue, isLoading: revenueLoading } = trpc.admin.dashboard.revenue.useQuery(
     undefined,
-    { enabled: isAuthenticated && user?.role === 'admin' }
+    { enabled: isAuthenticated && user?.role === 'admin', retry: 1 }
   );
   
   // Calculate date range based on selected period
@@ -53,12 +53,12 @@ export default function AdminDashboard() {
   };
   
   const dateRange = getDateRange(analyticsPeriod);
-  const { data: analytics } = trpc.admin.dashboard.analytics.useQuery(
+  const { data: analytics, isLoading: analyticsLoading } = trpc.admin.dashboard.analytics.useQuery(
     dateRange,
-    { enabled: isAuthenticated && user?.role === 'admin' }
+    { enabled: isAuthenticated && user?.role === 'admin', retry: 1 }
   );
 
-  if (!stats || !revenue) {
+  if (statsLoading || revenueLoading) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center h-96">
@@ -67,6 +67,10 @@ export default function AdminDashboard() {
       </AdminLayout>
     );
   }
+
+  // Use defaults if queries failed
+  const safeStats = stats || { totalUsers: 0, totalCourses: 0, totalRevenue: 0, courseRevenue: 0, sessionRevenue: 0, totalBookings: 0, freeBookings: 0, paidBookings: 0, newUsersToday: 0, newUsersThisWeek: 0 };
+  const safeRevenue = revenue || { today: 0, yesterday: 0, week: 0, lastWeek: 0, month: 0, lastMonth: 0 };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -111,7 +115,7 @@ export default function AdminDashboard() {
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalUsers}</div>
+              <div className="text-2xl font-bold">{safeStats.totalUsers}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 Registered students
               </p>
@@ -124,9 +128,9 @@ export default function AdminDashboard() {
               <BookOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalCourses}</div>
+              <div className="text-2xl font-bold">{safeStats.totalCourses}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                {stats.paidCourses} premium, {stats.freeCourses} free
+                {safeStats.paidCourses} premium, {safeStats.freeCourses} free
               </p>
             </CardContent>
           </Card>
@@ -137,9 +141,9 @@ export default function AdminDashboard() {
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{stats.totalBookings}</div>
+              <div className="text-2xl font-bold">{safeStats.totalBookings}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                {stats.confirmedBookings} confirmed
+                {safeStats.confirmedBookings} confirmed
               </p>
             </CardContent>
           </Card>
@@ -160,7 +164,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">Course Sales</p>
-                    <p className="text-sm text-muted-foreground">{stats.coursePurchases} purchases</p>
+                    <p className="text-sm text-muted-foreground">{safeStats.coursePurchases} purchases</p>
                   </div>
                   <div className="text-right">
                     <p className="font-bold">{formatCurrency(stats.courseRevenue)}</p>
@@ -172,7 +176,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">Session Bookings</p>
-                    <p className="text-sm text-muted-foreground">{stats.paidBookings} paid sessions</p>
+                    <p className="text-sm text-muted-foreground">{safeStats.paidBookings} paid sessions</p>
                   </div>
                   <div className="text-right">
                     <p className="font-bold">{formatCurrency(stats.sessionRevenue)}</p>
@@ -191,9 +195,9 @@ export default function AdminDashboard() {
               <CardDescription>Top selling courses</CardDescription>
             </CardHeader>
             <CardContent>
-              {stats.popularCourses && stats.popularCourses.length > 0 ? (
+              {safeStats.popularCourses && stats.popularCourses.length > 0 ? (
                 <div className="space-y-4">
-                  {stats.popularCourses.slice(0, 3).map((course: any, index: number) => (
+                  {safeStats.popularCourses.slice(0, 3).map((course: any, index: number) => (
                     <div key={course.id} className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold">
@@ -226,7 +230,7 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Course Conversion Rate</p>
                 <p className="text-2xl font-bold mt-1">
-                  {stats.totalUsers > 0 
+                  {safeStats.totalUsers > 0 
                     ? ((stats.coursePurchases / stats.totalUsers) * 100).toFixed(1)
                     : 0}%
                 </p>
@@ -237,7 +241,7 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Booking Rate</p>
                 <p className="text-2xl font-bold mt-1">
-                  {stats.totalUsers > 0 
+                  {safeStats.totalUsers > 0 
                     ? ((stats.totalBookings / stats.totalUsers) * 100).toFixed(1)
                     : 0}%
                 </p>
@@ -340,9 +344,13 @@ export default function AdminDashboard() {
                   </div>
                 </div>
               </div>
-            ) : (
+            ) : analyticsLoading ? (
               <div className="flex items-center justify-center h-32">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-32 text-muted-foreground">
+                <p className="text-sm">No analytics data yet. Data will appear as visitors browse the site.</p>
               </div>
             )}
           </CardContent>
