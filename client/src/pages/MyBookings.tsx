@@ -53,15 +53,15 @@ export default function MyBookings() {
   const getStateBadgeClass = (state: string) => {
     switch (state) {
       case 'live':
-        return 'bg-green-100 text-green-700 border-green-200 animate-pulse';
+        return 'bg-green-500/15 text-green-400 border-green-500/30 animate-pulse';
       case 'upcoming':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
+        return 'bg-blue-500/15 text-blue-400 border-blue-500/30';
       case 'completed':
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return 'bg-white/10 text-white/70 border-white/10';
       case 'cancelled':
-        return 'bg-red-100 text-red-700 border-red-200';
+        return 'bg-red-500/15 text-red-400 border-red-500/30';
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return 'bg-white/10 text-white/70 border-white/10';
     }
   };
   
@@ -101,9 +101,9 @@ export default function MyBookings() {
   }, [bookings, dateFilter, customStartDate, customEndDate]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#0d0010]">
       {/* Header */}
-      <header className="border-b bg-white sticky top-0 z-50">
+      <header className="border-b border-white/10 bg-[#141118] sticky top-0 z-50">
         <div className="container py-4 flex items-center gap-4">
           <Link href="/">
             <Button variant="ghost" size="sm">
@@ -111,7 +111,7 @@ export default function MyBookings() {
               Back to Home
             </Button>
           </Link>
-          <h1 className="text-2xl font-bold text-gray-900">My Sessions</h1>
+          <h1 className="text-2xl font-bold text-white">My Sessions</h1>
         </div>
       </header>
 
@@ -149,7 +149,7 @@ export default function MyBookings() {
                 
                 {/* Custom Date Range Inputs */}
                 {dateFilter === 'custom' && (
-                  <div className="space-y-3 pt-2 border-t">
+                  <div className="space-y-3 pt-2 border-t border-white/10">
                     <div className="space-y-2">
                       <Label htmlFor="start-date" className="text-sm">
                         Start Date
@@ -176,8 +176,8 @@ export default function MyBookings() {
                 )}
                 
                 {/* Filter Summary */}
-                <div className="pt-3 border-t">
-                  <p className="text-sm text-gray-600">
+                <div className="pt-3 border-t border-white/10">
+                  <p className="text-sm text-white/70">
                     Showing <span className="font-semibold text-purple-600">{filteredBookings.length}</span> of <span className="font-semibold">{bookings?.length || 0}</span> sessions
                   </p>
                 </div>
@@ -190,8 +190,8 @@ export default function MyBookings() {
             <Card>
           <CardHeader>
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Calendar className="w-6 h-6 text-purple-600" />
+              <div className="p-3 bg-purple-500/15 rounded-lg">
+                <Calendar className="w-6 h-6 text-purple-400" />
               </div>
               <div>
                 <CardTitle>Upcoming Sessions</CardTitle>
@@ -204,7 +204,7 @@ export default function MyBookings() {
           <CardContent>
             {isLoading ? (
               <div className="text-center py-12">
-                <p className="text-gray-600">Loading your bookings...</p>
+                <p className="text-white/70">Loading your bookings...</p>
               </div>
             ) : filteredBookings && filteredBookings.length > 0 ? (
               <div className="space-y-4">
@@ -238,7 +238,7 @@ export default function MyBookings() {
                         </CardHeader>
                         <CardContent className="space-y-3">
                           {/* Date & Time */}
-                          <div className="flex items-center gap-2 text-sm text-gray-700">
+                          <div className="flex items-center gap-2 text-sm text-white/70">
                             <Clock className="w-4 h-4 text-purple-600" />
                             <span className="font-medium">
                               {new Date(booking.slot!.startTime).toLocaleDateString('en-US', {
@@ -257,12 +257,12 @@ export default function MyBookings() {
 
                           {/* Session Type */}
                           {booking.slot?.eventType === 'online' ? (
-                            <div className="flex items-center gap-2 text-sm text-gray-700">
+                            <div className="flex items-center gap-2 text-sm text-white/70">
                               <Video className="w-4 h-4 text-purple-600" />
                               <span className="font-medium">🌐 Online Session</span>
                             </div>
                           ) : (
-                            <div className="flex items-center gap-2 text-sm text-gray-700">
+                            <div className="flex items-center gap-2 text-sm text-white/70">
                               <MapPin className="w-4 h-4 text-purple-600" />
                               <span className="font-medium">📍 {booking.slot?.location || 'In-person Session'}</span>
                             </div>
@@ -270,8 +270,8 @@ export default function MyBookings() {
 
                           {/* Description */}
                           {booking.slot?.description && (
-                            <div className="pt-2 border-t border-gray-100">
-                              <p className="text-sm text-gray-600 leading-relaxed line-clamp-2">
+                            <div className="pt-2 border-t border-white/10">
+                              <p className="text-sm text-white/70 leading-relaxed line-clamp-2">
                                 {booking.slot.description}
                               </p>
                             </div>
@@ -295,13 +295,13 @@ export default function MyBookings() {
               </div>
             ) : bookings && bookings.length > 0 ? (
               <div className="text-center py-12">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-                  <Calendar className="w-8 h-8 text-gray-400" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 rounded-full mb-4">
+                  <Calendar className="w-8 h-8 text-white/50" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-white mb-2">
                   No sessions match your filter
                 </h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-white/70 mb-4">
                   Try adjusting your date filter to see more sessions.
                 </p>
                 <Button variant="outline" onClick={() => setDateFilter('all')}>
@@ -310,13 +310,13 @@ export default function MyBookings() {
               </div>
             ) : (
               <div className="text-center py-12">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-                  <Calendar className="w-8 h-8 text-gray-400" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-white/10 rounded-full mb-4">
+                  <Calendar className="w-8 h-8 text-white/50" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-white mb-2">
                   No bookings yet
                 </h3>
-                <p className="text-gray-600 mb-6">
+                <p className="text-white/70 mb-6">
                   Book your first dance session to get started on your journey!
                 </p>
                 <Link href="/book-session">

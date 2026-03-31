@@ -220,9 +220,9 @@ export default function BookSession() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
+    <div className="min-h-screen bg-gradient-to-b from-[#0d0010] to-[#141118]">
       {/* Header */}
-      <div className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b border-white/10 bg-[#0d0010]/80 backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 sm:px-6 py-4">
           <Link href="/">
             <Button variant="ghost" size="sm" className="mb-4">
@@ -232,10 +232,10 @@ export default function BookSession() {
           </Link>
           
           <div className="space-y-2">
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-tight text-gray-900">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-light tracking-tight text-white">
               Book Your Dance Session
             </h1>
-            <p className="text-gray-600">
+            <p className="text-white/60">
               Private 1-on-1 or group classes • Online & in-person
             </p>
           </div>
@@ -245,10 +245,10 @@ export default function BookSession() {
       <div className="container mx-auto px-4 sm:px-6 py-8">
         {/* Filter Bar */}
         <div className="mb-8">
-          <div className="bg-white/90 backdrop-blur-md rounded-2xl lg:rounded-full shadow-sm hover:shadow-md transition-shadow px-4 py-3 lg:px-6 lg:py-4 border border-gray-200">
+          <div className="bg-[#141118]/90 backdrop-blur-md rounded-2xl lg:rounded-full shadow-sm hover:shadow-md transition-shadow px-4 py-3 lg:px-6 lg:py-4 border border-white/10">
             <div className="flex flex-wrap items-center justify-between gap-3 lg:gap-6">
               {/* Session Count */}
-              <div className="text-sm font-medium text-gray-700">
+              <div className="text-sm font-medium text-white/70">
                 🎯 {filteredSlots.length} sessions
                 {selectedDate && (
                   <Button
@@ -292,7 +292,7 @@ export default function BookSession() {
                   </Button>
                 </div>
 
-                <div className="h-6 w-px bg-gray-300" />
+                <div className="h-6 w-px bg-white/20" />
 
                 {/* Session Type */}
                 <div className="flex items-center gap-1.5">
@@ -322,7 +322,7 @@ export default function BookSession() {
                   </Button>
                 </div>
 
-                <div className="h-6 w-px bg-gray-300" />
+                <div className="h-6 w-px bg-white/20" />
 
                 {/* Price */}
                 <div className="flex items-center gap-1.5">
@@ -389,7 +389,7 @@ export default function BookSession() {
                 {/* Weekday Headers */}
                 <div className="grid grid-cols-7 gap-1 mb-2">
                   {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
-                    <div key={i} className="text-center text-xs font-medium text-gray-500 py-1">
+                    <div key={i} className="text-center text-xs font-medium text-white/50 py-1">
                       {day}
                     </div>
                   ))}
@@ -416,11 +416,11 @@ export default function BookSession() {
                         disabled={!hasSession}
                         className={`
                           aspect-square rounded-lg text-xs font-medium transition-all relative flex flex-col items-center justify-center gap-0.5
-                          ${!isCurrentMonth ? 'text-gray-300' : ''}
+                          ${!isCurrentMonth ? 'text-white/20' : ''}
                           ${hasSession ? 'cursor-pointer hover:bg-primary/10' : 'cursor-not-allowed opacity-40'}
                           ${isSelected ? 'bg-primary text-white hover:bg-primary' : ''}
                           ${isToday && !isSelected ? 'ring-2 ring-primary ring-inset' : ''}
-                          ${!isSelected && hasSession && isCurrentMonth ? 'text-gray-900' : ''}
+                          ${!isSelected && hasSession && isCurrentMonth ? 'text-white' : ''}
                         `}
                       >
                         <span>{format(day, 'd')}</span>
@@ -442,12 +442,12 @@ export default function BookSession() {
           {/* Timeline View */}
           <div className="flex-1 min-w-0">
             {slotsLoading ? (
-              <div className="text-center py-12 text-gray-500">Loading sessions...</div>
+              <div className="text-center py-12 text-white/50">Loading sessions...</div>
             ) : groupedSlots.length === 0 ? (
               <div className="text-center py-16 space-y-4">
                 <div className="text-6xl">📅</div>
-                <h3 className="text-xl font-medium text-gray-900">No sessions available</h3>
-                <p className="text-gray-600">
+                <h3 className="text-xl font-medium text-white">No sessions available</h3>
+                <p className="text-white/60">
                   {selectedDate 
                     ? "No sessions on this date. Try selecting another date or clearing the filter."
                     : "Try adjusting your filters above"}
@@ -459,11 +459,11 @@ export default function BookSession() {
                   <div key={dateKey} className="space-y-6">
                     {/* Date Header */}
                     <div className="flex items-center gap-4">
-                      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
-                      <h2 className="text-xl font-semibold text-gray-900">
+                      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                      <h2 className="text-xl font-semibold text-white">
                         {formatDate(String(slots[0].startTime))}
                       </h2>
-                      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-gray-300 to-transparent" />
+                      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                     </div>
 
                     {/* Sessions for this date */}
@@ -474,17 +474,17 @@ export default function BookSession() {
                         return (
                           <Card 
                             key={slot.id} 
-                            className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-gray-200"
+                            className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-white/10"
                           >
                             <CardContent className="p-6 space-y-4">
                               {/* Time */}
-                              <div className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+                              <div className="flex items-center gap-2 text-lg font-semibold text-white">
                                 <Clock className="h-5 w-5 text-primary" />
                                 {format(new Date(slot.startTime), "h:mm a")}
                               </div>
 
                               {/* Title */}
-                              <h3 className="font-medium text-gray-900 line-clamp-2">
+                              <h3 className="font-medium text-white line-clamp-2">
                                 {slot.title}
                               </h3>
 
@@ -501,7 +501,7 @@ export default function BookSession() {
                                     €{slot.price}
                                   </Badge>
                                 ) : (
-                                  <Badge variant="secondary" className="text-xs text-green-700 bg-green-50">
+                                  <Badge variant="secondary" className="text-xs text-green-400 bg-green-900/40">
                                     Free
                                   </Badge>
                                 )}
@@ -545,8 +545,8 @@ export default function BookSession() {
             <DialogDescription className="space-y-2 mt-4">
               {selectedSlot && (
                 <>
-                  <div className="font-medium text-gray-900">{selectedSlot.title}</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="font-medium text-white">{selectedSlot.title}</div>
+                  <div className="text-sm text-white/60">
                     {format(new Date(selectedSlot.startTime), "EEEE, MMMM d 'at' h:mm a")}
                   </div>
                   <div className="flex gap-2 flex-wrap">
@@ -555,7 +555,7 @@ export default function BookSession() {
                     {selectedSlot.price && Number(selectedSlot.price) > 0 ? (
                       <Badge variant="secondary">€{selectedSlot.price}</Badge>
                     ) : (
-                      <Badge variant="secondary" className="text-green-700 bg-green-50">Free</Badge>
+                      <Badge variant="secondary" className="text-green-400 bg-green-900/40">Free</Badge>
                     )}
                   </div>
                 </>

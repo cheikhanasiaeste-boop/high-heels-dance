@@ -75,7 +75,7 @@ export default function Conversations() {
     );
 
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-4 md:p-8">
+      <div className="min-h-screen bg-gradient-to-br from-[#0d0010] via-[#110a18] to-[#0d0010] p-4 md:p-8">
         <div className="max-w-2xl mx-auto">
           {/* Header */}
           <div className="flex items-center gap-4 mb-6">
@@ -87,7 +87,7 @@ export default function Conversations() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
-            <h1 className="text-2xl font-bold text-gray-900">
+            <h1 className="text-2xl font-bold text-white">
               {conversation?.displayName || "Conversation"}
             </h1>
           </div>
@@ -99,16 +99,16 @@ export default function Conversations() {
                 key={msg.id}
                 className={`p-4 rounded-lg ${
                   msg.fromUserId === user.id
-                    ? "bg-purple-100 ml-8 text-right"
-                    : "bg-white border border-gray-200 mr-8"
+                    ? "bg-purple-500/20 ml-8 text-right"
+                    : "bg-[#141118] border border-white/10 mr-8"
                 }`}
               >
-                <p className="text-sm font-semibold text-gray-600 mb-2">
+                <p className="text-sm font-semibold text-white/70 mb-2">
                   {msg.fromUserId === user.id ? "You" : conversation?.displayName}
                 </p>
-                <p className="font-semibold text-gray-900">{msg.subject}</p>
-                <p className="text-gray-700 mt-2">{msg.body}</p>
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="font-semibold text-white">{msg.subject}</p>
+                <p className="text-white/70 mt-2">{msg.body}</p>
+                <p className="text-xs text-white/50 mt-2">
                   {new Date(msg.createdAt).toLocaleString()}
                 </p>
               </div>
@@ -141,7 +141,7 @@ export default function Conversations() {
   // Show new conversation form
   if (showNewConversation) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-4 md:p-8">
+      <div className="min-h-screen bg-gradient-to-br from-[#0d0010] via-[#110a18] to-[#0d0010] p-4 md:p-8">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-4 mb-6">
             <Button
@@ -152,13 +152,13 @@ export default function Conversations() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
-            <h1 className="text-2xl font-bold text-gray-900">New Message to Elizabeth</h1>
+            <h1 className="text-2xl font-bold text-white">New Message to Elizabeth</h1>
           </div>
 
           <Card className="p-6">
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-white/70 mb-2">
                   Subject
                 </label>
                 <Input
@@ -169,7 +169,7 @@ export default function Conversations() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-semibold text-white/70 mb-2">
                   Message
                 </label>
                 <Textarea
@@ -197,7 +197,7 @@ export default function Conversations() {
 
   // Show conversations list
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 p-4 md:p-8">
+    <div className="min-h-screen bg-gradient-to-br from-[#0d0010] via-[#110a18] to-[#0d0010] p-4 md:p-8">
       <div className="max-w-2xl mx-auto">
         <Button variant="ghost" size="sm" className="mb-4" asChild>
           <Link href="/">
@@ -206,7 +206,7 @@ export default function Conversations() {
           </Link>
         </Button>
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">My Conversations</h1>
+          <h1 className="text-3xl font-bold text-white">My Conversations</h1>
           <Button
             onClick={() => setShowNewConversation(true)}
             className="bg-purple-600 hover:bg-purple-700"
@@ -218,7 +218,7 @@ export default function Conversations() {
 
         {conversationsQuery.isLoading ? (
           <div className="text-center py-12">
-            <p className="text-gray-500">Loading conversations...</p>
+            <p className="text-white/50">Loading conversations...</p>
           </div>
         ) : conversationsQuery.data && conversationsQuery.data.length > 0 ? (
           <div className="space-y-3">
@@ -230,14 +230,14 @@ export default function Conversations() {
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                    <h3 className="font-semibold text-white flex items-center gap-2">
                       <Mail className="w-4 h-4 text-purple-600" />
                       {conv.displayName}
                     </h3>
-                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+                    <p className="text-sm text-white/70 mt-1 line-clamp-2">
                       {conv.lastMessageSubject}
                     </p>
-                    <p className="text-xs text-gray-500 mt-2">
+                    <p className="text-xs text-white/50 mt-2">
                       {new Date(conv.lastMessageDate).toLocaleString()}
                     </p>
                   </div>
@@ -252,8 +252,8 @@ export default function Conversations() {
           </div>
         ) : (
           <Card className="p-12 text-center">
-            <Mail className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 mb-4">No conversations yet</p>
+            <Mail className="w-12 h-12 text-white/30 mx-auto mb-4" />
+            <p className="text-white/50 mb-4">No conversations yet</p>
             <Button
               onClick={() => setShowNewConversation(true)}
               variant="outline"

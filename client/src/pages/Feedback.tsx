@@ -137,7 +137,7 @@ export default function Feedback() {
 
   if (!type || !relatedId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-lavender-50 to-purple-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#0d0010] via-[#110a18] to-[#0d0010] flex items-center justify-center p-4">
         <Card className="max-w-md">
           <CardHeader>
             <CardTitle>Invalid Request</CardTitle>
@@ -158,7 +158,7 @@ export default function Feedback() {
 
   if (canSubmitData && !canSubmitData.canSubmit) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-lavender-50 to-purple-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#0d0010] via-[#110a18] to-[#0d0010] flex items-center justify-center p-4">
         <Card className="max-w-md">
           <CardHeader>
             <CardTitle>Already Submitted</CardTitle>
@@ -178,8 +178,8 @@ export default function Feedback() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-lavender-50 to-purple-50">
-      <header className="bg-white/80 backdrop-blur-sm border-b border-pink-100">
+    <div className="min-h-screen bg-gradient-to-br from-[#0d0010] via-[#110a18] to-[#0d0010]">
+      <header className="bg-[#0d0010]/80 backdrop-blur-sm border-b border-white/10">
         <div className="container py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/">
@@ -300,7 +300,7 @@ export default function Feedback() {
             </div>
 
             {/* Privacy Notice */}
-            <div className="bg-pink-50/50 border border-pink-100 rounded-lg p-4">
+            <div className="bg-purple-500/10 border border-white/10 rounded-lg p-4">
               <p className="text-sm text-muted-foreground">
                 <strong>Privacy Notice:</strong> Your feedback will be reviewed by our team. 
                 Approved testimonials may be featured on our homepage to help other students. 

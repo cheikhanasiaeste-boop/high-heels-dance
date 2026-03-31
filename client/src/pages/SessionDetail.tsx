@@ -56,13 +56,13 @@ export default function SessionDetail() {
       case 'live':
         return 'bg-green-100 text-green-700 border-green-200 animate-pulse';
       case 'upcoming':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
+        return 'bg-blue-500/10 text-blue-400 border-blue-500/30';
       case 'completed':
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return 'bg-white/10 text-white/70 border-white/10';
       case 'cancelled':
-        return 'bg-red-100 text-red-700 border-red-200';
+        return 'bg-red-500/10 text-red-400 border-red-500/30';
       default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
+        return 'bg-white/10 text-white/70 border-white/10';
     }
   };
 
@@ -107,7 +107,7 @@ export default function SessionDetail() {
 
   if (!bookingId) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#0d0010] flex items-center justify-center">
         <Card className="max-w-md">
           <CardContent className="pt-6 text-center">
             <p className="text-red-600">Invalid session ID</p>
@@ -122,8 +122,8 @@ export default function SessionDetail() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="border-b bg-white sticky top-0 z-50">
+      <div className="min-h-screen bg-[#0d0010]">
+        <header className="border-b border-white/10 bg-[#141118] sticky top-0 z-50">
           <div className="container py-4">
             <Link href="/my-bookings">
               <Button variant="ghost" size="sm">
@@ -134,7 +134,7 @@ export default function SessionDetail() {
           </div>
         </header>
         <div className="container py-8 flex items-center justify-center">
-          <p className="text-gray-600">Loading session details...</p>
+          <p className="text-white/70">Loading session details...</p>
         </div>
       </div>
     );
@@ -142,8 +142,8 @@ export default function SessionDetail() {
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <header className="border-b bg-white sticky top-0 z-50">
+      <div className="min-h-screen bg-[#0d0010]">
+        <header className="border-b border-white/10 bg-[#141118] sticky top-0 z-50">
           <div className="container py-4">
             <Link href="/my-bookings">
               <Button variant="ghost" size="sm">
@@ -174,9 +174,9 @@ export default function SessionDetail() {
   const isJoinable = sessionState === 'live' && isOnline && slot.meetLink;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#0d0010]">
       {/* Header */}
-      <header className="border-b bg-white sticky top-0 z-50">
+      <header className="border-b border-white/10 bg-[#141118] sticky top-0 z-50">
         <div className="container py-4">
           <Link href="/my-bookings">
             <Button variant="ghost" size="sm">
@@ -206,7 +206,7 @@ export default function SessionDetail() {
                       {booking.status}
                     </Badge>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600">
+                  <div className="flex items-center gap-2 text-white/70">
                     <Calendar className="w-4 h-4" />
                     <span className="font-medium">
                       {new Date(slot.startTime).toLocaleDateString('en-US', {
@@ -226,7 +226,7 @@ export default function SessionDetail() {
               </CardHeader>
               {slot.description && (
                 <CardContent>
-                  <p className="text-gray-700 leading-relaxed">{slot.description}</p>
+                  <p className="text-white/70 leading-relaxed">{slot.description}</p>
                 </CardContent>
               )}
             </Card>
@@ -237,12 +237,12 @@ export default function SessionDetail() {
                 {isOnline ? (
                   <div className="space-y-4">
                     {isJoinable ? (
-                      <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg p-8 text-center border-2 border-purple-200">
+                      <div className="bg-purple-500/10 rounded-lg p-8 text-center border-2 border-purple-500/30">
                         <Video className="w-16 h-16 mx-auto mb-4 text-purple-600" />
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                        <h3 className="text-xl font-semibold text-white mb-2">
                           Session is Live! 🎉
                         </h3>
-                        <p className="text-gray-600 mb-6">
+                        <p className="text-white/70 mb-6">
                           Your instructor is ready. Click below to join the session.
                         </p>
                         <Button
@@ -255,34 +255,34 @@ export default function SessionDetail() {
                         </Button>
                       </div>
                     ) : sessionState === 'upcoming' ? (
-                      <div className="bg-blue-50 rounded-lg p-8 text-center border-2 border-blue-200">
+                      <div className="bg-blue-500/10 rounded-lg p-8 text-center border-2 border-blue-500/30">
                         <Clock className="w-16 h-16 mx-auto mb-4 text-blue-600" />
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                        <h3 className="text-xl font-semibold text-white mb-2">
                           Session Starts Soon
                         </h3>
-                        <p className="text-gray-600 mb-4">
+                        <p className="text-white/70 mb-4">
                           The join button will appear 15 minutes before the session starts.
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-white/50">
                           Make sure you have a stable internet connection and your camera/microphone ready.
                         </p>
                       </div>
                     ) : sessionState === 'completed' ? (
-                      <div className="bg-gray-50 rounded-lg p-8 text-center border-2 border-gray-200">
-                        <Calendar className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      <div className="bg-[#0d0010] rounded-lg p-8 text-center border-2 border-white/10">
+                        <Calendar className="w-16 h-16 mx-auto mb-4 text-white/40" />
+                        <h3 className="text-xl font-semibold text-white mb-2">
                           Session Completed
                         </h3>
-                        <p className="text-gray-600">
+                        <p className="text-white/70">
                           This session has ended. Thank you for attending!
                         </p>
                       </div>
                     ) : sessionState === 'cancelled' ? (
-                      <div className="bg-red-50 rounded-lg p-8 text-center border-2 border-red-200">
-                        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                      <div className="bg-red-500/10 rounded-lg p-8 text-center border-2 border-red-500/30">
+                        <h3 className="text-xl font-semibold text-white mb-2">
                           Session Cancelled
                         </h3>
-                        <p className="text-gray-600">
+                        <p className="text-white/70">
                           This session has been cancelled.
                         </p>
                       </div>
@@ -290,19 +290,19 @@ export default function SessionDetail() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                       <MapPin className="w-5 h-5 text-purple-600" />
                       Session Location
                     </h3>
-                    <div className="bg-gray-100 rounded-lg p-4 mb-4">
-                      <p className="font-medium text-gray-900">{slot.location}</p>
+                    <div className="bg-[#0d0010] rounded-lg p-4 mb-4">
+                      <p className="font-medium text-white">{slot.location}</p>
                     </div>
                     {/* Placeholder for Google Maps - will be implemented with actual coordinates */}
-                    <div className="bg-gray-200 rounded-lg h-96 flex items-center justify-center">
+                    <div className="bg-[#141118] rounded-lg h-96 flex items-center justify-center">
                       <div className="text-center">
-                        <MapPin className="w-12 h-12 mx-auto mb-2 text-gray-400" />
-                        <p className="text-gray-600">Map view coming soon</p>
-                        <p className="text-sm text-gray-500 mt-2">
+                        <MapPin className="w-12 h-12 mx-auto mb-2 text-white/40" />
+                        <p className="text-white/70">Map view coming soon</p>
+                        <p className="text-sm text-white/50 mt-2">
                           Please use the address above for directions
                         </p>
                       </div>
@@ -324,7 +324,7 @@ export default function SessionDetail() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Type</p>
+                  <p className="text-sm text-white/50 mb-1">Type</p>
                   <p className="font-medium flex items-center gap-2">
                     {isOnline ? (
                       <>
@@ -340,14 +340,14 @@ export default function SessionDetail() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Duration</p>
+                  <p className="text-sm text-white/50 mb-1">Duration</p>
                   <p className="font-medium flex items-center gap-2">
                     <Clock className="w-4 h-4 text-purple-600" />
                     {getSessionDuration()} minutes
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">
+                  <p className="text-sm text-white/50 mb-1">
                     {isOnline ? 'Platform' : 'Location'}
                   </p>
                   <p className="font-medium">
@@ -355,7 +355,7 @@ export default function SessionDetail() {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500 mb-1">Session Format</p>
+                  <p className="text-sm text-white/50 mb-1">Session Format</p>
                   <p className="font-medium flex items-center gap-2">
                     <User className="w-4 h-4 text-purple-600" />
                     {slot.sessionType === 'private' ? 'Private (1-on-1)' : `Group (up to ${slot.capacity})`}

@@ -38,8 +38,8 @@ function LessonVideoPlayer({
 
   if (!hasBunnyVideo && !hasDirectVideo) {
     return (
-      <div className="aspect-video bg-stone-100 rounded-lg flex items-center justify-center mb-4">
-        <p className="text-stone-400 text-sm">No video available for this lesson</p>
+      <div className="aspect-video bg-[#0d0010] rounded-lg flex items-center justify-center mb-4">
+        <p className="text-white/40 text-sm">No video available for this lesson</p>
       </div>
     );
   }
@@ -54,8 +54,8 @@ function LessonVideoPlayer({
 
   if (error || !playback) {
     return (
-      <div className="aspect-video bg-stone-100 rounded-lg flex flex-col items-center justify-center mb-4 gap-3">
-        <p className="text-stone-500 text-sm text-center px-4">{error?.message || "Could not load video"}</p>
+      <div className="aspect-video bg-[#0d0010] rounded-lg flex flex-col items-center justify-center mb-4 gap-3">
+        <p className="text-white/50 text-sm text-center px-4">{error?.message || "Could not load video"}</p>
         <button
           onClick={() => window.location.reload()}
           className="flex items-center gap-1.5 text-sm text-[#C026D3] hover:underline"
@@ -260,7 +260,7 @@ export default function CourseLearn() {
   // Redirect if no access
   if (!courseLoading && !hasAccess && isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-lavender-50 to-purple-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0d0010] via-[#110a18] to-[#0d0010]">
         <Card className="p-8 max-w-md text-center">
           <Lock className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
           <h2 className="text-2xl font-bold mb-2">Course Access Required</h2>
@@ -317,7 +317,7 @@ export default function CourseLearn() {
   
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-pink-50 via-lavender-50 to-purple-50">
+      <div className="min-h-screen bg-gradient-to-br from-[#0d0010] via-[#110a18] to-[#0d0010]">
       <div className="flex h-screen">
         {/* Main Content Area */}
         <div className="flex-1 overflow-y-auto">
@@ -428,7 +428,7 @@ export default function CourseLearn() {
 
         {/* Right Sidebar — hidden on mobile, slide-in drawer */}
         <div className={`
-          fixed inset-y-0 right-0 z-50 w-80 bg-white border-l border-gray-200 overflow-y-auto transform transition-transform duration-300
+          fixed inset-y-0 right-0 z-50 w-80 bg-[#141118] border-l border-white/10 overflow-y-auto transform transition-transform duration-300
           lg:static lg:w-96 lg:transform-none lg:z-auto
           ${showMobileSidebar ? "translate-x-0" : "translate-x-full lg:translate-x-0"}
         `}>
@@ -472,13 +472,13 @@ export default function CourseLearn() {
                     {/* Module Header */}
                     <button
                       onClick={() => toggleModule(module.id)}
-                      className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                      className="w-full p-4 flex items-center justify-between hover:bg-[#0d0010] transition-colors"
                     >
                       <div className="flex items-center gap-3">
                         <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                           completed === total && total > 0
                             ? 'bg-purple-600 text-white'
-                            : 'bg-gray-100 text-gray-600'
+                            : 'bg-[#0d0010] text-white/60'
                         }`}>
                           {completed === total && total > 0 ? (
                             <Check className="w-5 h-5" />
@@ -503,7 +503,7 @@ export default function CourseLearn() {
                     
                     {/* Lessons List */}
                     {isExpanded && module.lessons && (
-                      <div className="bg-gray-50">
+                      <div className="bg-[#0d0010]">
                         {module.lessons.map((lesson: any) => {
                           const completed = isLessonCompleted(lesson.id);
                           const isCurrent = currentLessonId === lesson.id;
@@ -512,15 +512,15 @@ export default function CourseLearn() {
                             <button
                               key={lesson.id}
                               onClick={() => setCurrentLessonId(lesson.id)}
-                              className={`w-full p-4 pl-16 flex items-center justify-between hover:bg-gray-100 transition-colors border-t ${
-                                isCurrent ? 'bg-purple-50 border-l-4 border-l-purple-600' : ''
+                              className={`w-full p-4 pl-16 flex items-center justify-between hover:bg-[#0d0010] transition-colors border-t border-white/10 ${
+                                isCurrent ? 'bg-purple-900/30 border-l-4 border-l-purple-600' : ''
                               }`}
                             >
                               <div className="flex items-center gap-3">
                                 <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
                                   completed
                                     ? 'bg-purple-600 text-white'
-                                    : 'border-2 border-gray-300'
+                                    : 'border-2 border-white/30'
                                 }`}>
                                   {completed && <Check className="w-4 h-4" />}
                                 </div>

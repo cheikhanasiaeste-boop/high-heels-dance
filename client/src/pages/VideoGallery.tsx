@@ -14,8 +14,8 @@ export default function VideoGallery() {
   const { data: videoTestimonials, isLoading } = trpc.testimonials.videoTestimonials.useQuery();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 via-lavender-50 to-purple-50">
-      <header className="bg-white/80 backdrop-blur-sm border-b border-pink-100 sticky top-0 z-10">
+    <div className="min-h-screen bg-gradient-to-br from-[#0d0010] via-[#110a18] to-[#0d0010]">
+      <header className="bg-[#0d0010]/80 backdrop-blur-sm border-b border-white/10 sticky top-0 z-10">
         <div className="container py-4 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/">

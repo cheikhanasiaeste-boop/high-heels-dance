@@ -80,11 +80,11 @@ export default function SessionView() {
   
   if (isLoading || !booking) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#0d0010] via-[#110a18] to-[#0d0010] flex items-center justify-center p-4">
         <Card className="w-full max-w-2xl">
           <CardContent className="p-12 flex flex-col items-center justify-center">
             <Loader2 className="h-12 w-12 animate-spin text-purple-600 mb-4" />
-            <p className="text-lg text-gray-600">Loading session details...</p>
+            <p className="text-lg text-white/70">Loading session details...</p>
           </CardContent>
         </Card>
       </div>
@@ -95,7 +95,7 @@ export default function SessionView() {
   
   if (!slot) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#0d0010] via-[#110a18] to-[#0d0010] flex items-center justify-center p-4">
         <Card className="w-full max-w-2xl">
           <CardContent className="p-12">
             <Alert variant="destructive">
@@ -116,7 +116,7 @@ export default function SessionView() {
   
   return (
     <>
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#0d0010] via-[#110a18] to-[#0d0010] py-8 px-4">
       <div className="max-w-4xl mx-auto">
         <Button
           variant="ghost"
@@ -141,8 +141,8 @@ export default function SessionView() {
               <div className="flex items-start gap-3">
                 <Clock className="h-5 w-5 text-purple-600 mt-0.5" />
                 <div>
-                  <p className="font-medium text-gray-900">Session Time</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="font-medium text-white">Session Time</p>
+                  <p className="text-sm text-white/70">
                     {new Date(slot.startTime).toLocaleString('en-US', {
                       weekday: 'long',
                       year: 'numeric',
@@ -152,7 +152,7 @@ export default function SessionView() {
                       minute: '2-digit',
                     })}
                   </p>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-white/50">
                     Duration: {Math.round((new Date(slot.endTime).getTime() - new Date(slot.startTime).getTime()) / 1000 / 60)} minutes
                   </p>
                 </div>
@@ -161,12 +161,12 @@ export default function SessionView() {
               <div className="flex items-start gap-3">
                 <Video className="h-5 w-5 text-purple-600 mt-0.5" />
                 <div>
-                  <p className="font-medium text-gray-900">Session Type</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="font-medium text-white">Session Type</p>
+                  <p className="text-sm text-white/70">
                     {slot.eventType === 'online' ? 'Online via Zoom' : 'In-Person'}
                   </p>
                   {slot.eventType === 'in-person' && slot.location && (
-                    <p className="text-sm text-gray-500">{slot.location}</p>
+                    <p className="text-sm text-white/50">{slot.location}</p>
                   )}
                 </div>
               </div>
@@ -174,9 +174,9 @@ export default function SessionView() {
             
             {/* Session State UI */}
             {sessionState === 'upcoming' && (
-              <Alert className="border-blue-200 bg-blue-50">
-                <Clock className="h-5 w-5 text-blue-600" />
-                <AlertDescription className="text-blue-900">
+              <Alert className="border-blue-500/30 bg-blue-500/10">
+                <Clock className="h-5 w-5 text-blue-400" />
+                <AlertDescription className="text-blue-300">
                   <div className="font-medium mb-1">Session starts in {timeUntilStart}</div>
                   <div className="text-sm">You can join 5 minutes before the start time.</div>
                 </AlertDescription>
@@ -185,9 +185,9 @@ export default function SessionView() {
             
             {sessionState === 'ready' && slot.eventType === 'online' && (
               <div className="space-y-4">
-                <Alert className="border-green-200 bg-green-50">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  <AlertDescription className="text-green-900">
+                <Alert className="border-green-500/30 bg-green-500/10">
+                  <CheckCircle className="h-5 w-5 text-green-400" />
+                  <AlertDescription className="text-green-300">
                     <div className="font-medium">Ready to join!</div>
                     <div className="text-sm">Click the button below to enter the session.</div>
                   </AlertDescription>
@@ -224,9 +224,9 @@ export default function SessionView() {
             
             {/* Booking Details */}
             {booking.notes && (
-              <div className="pt-4 border-t">
-                <p className="font-medium text-gray-900 mb-2">Your Notes</p>
-                <p className="text-sm text-gray-600">{booking.notes}</p>
+              <div className="pt-4 border-t border-white/10">
+                <p className="font-medium text-white mb-2">Your Notes</p>
+                <p className="text-sm text-white/70">{booking.notes}</p>
               </div>
             )}
           </CardContent>

@@ -18,7 +18,7 @@ export function SubscriptionSuccess() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 to-purple-50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0d0010] via-[#110a18] to-[#0d0010]">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle>Loading...</CardTitle>
@@ -38,24 +38,24 @@ export function SubscriptionSuccess() {
         title: 'Monthly Membership',
         price: '$29.99/month',
         description: 'Full access to all courses and classes',
-        color: 'bg-blue-50 border-blue-200',
-        badgeColor: 'bg-blue-100 text-blue-800',
+        color: 'bg-blue-500/10 border-blue-500/30',
+        badgeColor: 'bg-blue-500/20 text-blue-300',
       };
     } else if (membershipType === 'annual') {
       return {
         title: 'Annual Membership',
         price: '$24.99/month (billed monthly)',
         description: 'Full access to all courses and classes with 12-month commitment',
-        color: 'bg-purple-50 border-purple-200',
-        badgeColor: 'bg-purple-100 text-purple-800',
+        color: 'bg-purple-500/10 border-purple-500/30',
+        badgeColor: 'bg-purple-500/20 text-purple-300',
       };
     }
     return {
       title: 'Free Account',
       price: 'Free',
       description: 'Access to selected free courses',
-      color: 'bg-gray-50 border-gray-200',
-      badgeColor: 'bg-gray-100 text-gray-800',
+      color: 'bg-[#0d0010] border-white/10',
+      badgeColor: 'bg-white/10 text-white/70',
     };
   };
 
@@ -65,7 +65,7 @@ export function SubscriptionSuccess() {
     : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-purple-50 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#0d0010] via-[#110a18] to-[#0d0010] py-12 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Success Header */}
         <div className={`text-center mb-8 transition-all duration-500 ${showDetails ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
@@ -75,8 +75,8 @@ export function SubscriptionSuccess() {
               <CheckCircle2 className="w-16 h-16 text-green-600 relative" />
             </div>
           </div>
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Welcome to Your Membership!</h1>
-          <p className="text-lg text-gray-600">Your subscription has been activated successfully</p>
+          <h1 className="text-4xl font-bold text-white mb-2">Welcome to Your Membership!</h1>
+          <p className="text-lg text-white/70">Your subscription has been activated successfully</p>
         </div>
 
         {/* Membership Details Card */}
@@ -99,8 +99,8 @@ export function SubscriptionSuccess() {
                 <div className="flex items-start gap-3">
                   <Calendar className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Membership Started</p>
-                    <p className="text-lg font-semibold text-gray-900">
+                    <p className="text-sm font-medium text-white/70">Membership Started</p>
+                    <p className="text-lg font-semibold text-white">
                       {startDate.toLocaleDateString('en-US', {
                         weekday: 'long',
                         year: 'numeric',
@@ -117,8 +117,8 @@ export function SubscriptionSuccess() {
                 <div className="flex items-start gap-3">
                   <Clock className="w-5 h-5 text-primary mt-1 flex-shrink-0" />
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Membership Expires</p>
-                    <p className="text-lg font-semibold text-gray-900">
+                    <p className="text-sm font-medium text-white/70">Membership Expires</p>
+                    <p className="text-lg font-semibold text-white">
                       {endDate.toLocaleDateString('en-US', {
                         weekday: 'long',
                         year: 'numeric',
@@ -127,7 +127,7 @@ export function SubscriptionSuccess() {
                       })}
                     </p>
                     {daysRemaining && daysRemaining > 0 && (
-                      <p className="text-sm text-gray-600 mt-1">
+                      <p className="text-sm text-white/70 mt-1">
                         {daysRemaining} day{daysRemaining !== 1 ? 's' : ''} remaining
                       </p>
                     )}
@@ -147,19 +147,19 @@ export function SubscriptionSuccess() {
             <ul className="space-y-3">
               <li className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
-                <span className="text-gray-700">Unlimited access to all courses and classes</span>
+                <span className="text-white/70">Unlimited access to all courses and classes</span>
               </li>
               <li className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
-                <span className="text-gray-700">Book private and group sessions</span>
+                <span className="text-white/70">Book private and group sessions</span>
               </li>
               <li className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
-                <span className="text-gray-700">Access to premium content and tutorials</span>
+                <span className="text-white/70">Access to premium content and tutorials</span>
               </li>
               <li className="flex items-center gap-3">
                 <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
-                <span className="text-gray-700">Priority support from Elizabeth</span>
+                <span className="text-white/70">Priority support from Elizabeth</span>
               </li>
             </ul>
           </CardContent>
@@ -188,7 +188,7 @@ export function SubscriptionSuccess() {
 
         {/* Help Text */}
         <div className={`text-center mt-12 transition-all duration-700 delay-300 ${showDetails ? 'opacity-100' : 'opacity-0'}`}>
-          <p className="text-gray-600 mb-2">Have questions about your membership?</p>
+          <p className="text-white/70 mb-2">Have questions about your membership?</p>
           <Button variant="link" className="text-primary hover:text-primary/80">
             Contact Support
           </Button>
