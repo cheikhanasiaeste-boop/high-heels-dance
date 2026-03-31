@@ -16,6 +16,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { VideoUpload } from "@/components/VideoUpload";
+import { BunnyVideoUploader } from "@/components/BunnyVideoUploader";
 import {
   GraduationCap,
   ShoppingCart,
@@ -635,6 +636,51 @@ function BunnyVideoStatus({ lesson }: { lesson: any }) {
   );
 }
 
+/** Thin wrapper that connects BunnyVideoUploader to the tRPC mutation */
+function BunnyVideoUploaderWidget({
+  lesson,
+  title,
+  isUploading,
+  onUploadStart,
+  onUploadDone,
+  bunnyUploadMutation,
+}: {
+  lesson: any;
+  title: string;
+  isUploading: boolean;
+  onUploadStart: () => void;
+  onUploadDone: () => void;
+  bunnyUploadMutation: any;
+}) {
+  const utils = trpc.useUtils();
+
+  const handleUpload = async (file: File, base64: string) => {
+    onUploadStart();
+    try {
+      await bunnyUploadMutation.mutateAsync({
+        lessonId: lesson.id,
+        title: title || file.name.replace(/\.[^.]+$/, ""),
+        data: base64,
+      });
+      utils.admin.courseContent.getLessons.invalidate();
+      toast.success("Video uploaded! Encoding in progress...");
+    } finally {
+      onUploadDone();
+    }
+  };
+
+  return (
+    <BunnyVideoUploader
+      onUpload={handleUpload}
+      isUploading={isUploading}
+      thumbnailUrl={lesson.bunnyThumbnailUrl}
+      durationSeconds={lesson.durationSeconds}
+      videoStatus={lesson.videoStatus}
+      errorMessage={bunnyUploadMutation.error?.message}
+    />
+  );
+}
+
 function EditLessonDialog({ lesson }: { lesson: any }) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState(lesson.title);
@@ -695,44 +741,6 @@ function EditLessonDialog({ lesson }: { lesson: any }) {
       reader.onerror = () => reject(new Error("Failed to read file"));
       reader.readAsDataURL(file);
     });
-  };
-
-  const handleBunnyUpload = async (file: File) => {
-    if (file.size > 4 * 1024 * 1024 * 1024) {
-      toast.error("File too large. Maximum 4GB.");
-      return;
-    }
-
-    setIsUploading(true);
-    setUploadProgress(10); // reading file
-
-    const reader = new FileReader();
-    reader.onprogress = (e) => {
-      if (e.lengthComputable) {
-        setUploadProgress(Math.round((e.loaded / e.total) * 40) + 10); // 10-50%
-      }
-    };
-    reader.onload = async () => {
-      try {
-        const base64 = reader.result?.toString().split(',')[1];
-        if (!base64) throw new Error("Failed to read file");
-        setUploadProgress(55); // uploading to server
-        await bunnyUploadMutation.mutateAsync({
-          lessonId: lesson.id,
-          title: title || file.name.replace(/\.[^.]+$/, ''),
-          data: base64,
-        });
-        setUploadProgress(100);
-      } catch {
-        // error handled by mutation onError
-      }
-    };
-    reader.onerror = () => {
-      toast.error("Failed to read file");
-      setIsUploading(false);
-      setUploadProgress(0);
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleSave = () => {
@@ -798,29 +806,17 @@ function EditLessonDialog({ lesson }: { lesson: any }) {
               For full lessons. Supports HLS adaptive streaming, up to 4GB. Duration and thumbnail are auto-extracted.
             </p>
             <BunnyVideoStatus lesson={lesson} />
-            {isUploading && (
-              <div className="space-y-1">
-                <div className="h-2 w-full bg-stone-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-[#C026D3] rounded-full transition-all duration-500"
-                    style={{ width: `${uploadProgress}%` }}
-                  />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {uploadProgress < 50 ? "Reading file..." : uploadProgress < 95 ? "Uploading to Bunny.net..." : "Finalizing..."}
-                </p>
-              </div>
-            )}
-            <input
-              type="file"
-              accept="video/*"
-              disabled={isUploading}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleBunnyUpload(file);
-                e.target.value = '';
+            <BunnyVideoUploaderWidget
+              lesson={lesson}
+              title={title}
+              isUploading={isUploading}
+              onUploadStart={() => { setIsUploading(true); setUploadProgress(10); }}
+              onUploadDone={() => {
+                bunnyUploadMutation.reset();
+                setIsUploading(false);
+                setUploadProgress(0);
               }}
-              className="block w-full text-sm text-muted-foreground file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-[#C026D3] file:text-white hover:file:bg-[#A21CAF] disabled:opacity-50"
+              bunnyUploadMutation={bunnyUploadMutation}
             />
           </div>
 
