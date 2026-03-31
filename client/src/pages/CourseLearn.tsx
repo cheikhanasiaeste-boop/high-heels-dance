@@ -4,7 +4,7 @@ import { useParams, useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { ChevronDown, ChevronUp, Check, Home, Play, Lock, CheckCircle, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronUp, Check, Home, Play, Lock, CheckCircle, Loader2, List, X, RefreshCw } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
 import { CourseCompletionModal } from "@/components/CourseCompletionModal";
@@ -54,8 +54,15 @@ function LessonVideoPlayer({
 
   if (error || !playback) {
     return (
-      <div className="aspect-video bg-stone-100 rounded-lg flex items-center justify-center mb-4">
-        <p className="text-stone-400 text-sm">{error?.message || "Could not load video"}</p>
+      <div className="aspect-video bg-stone-100 rounded-lg flex flex-col items-center justify-center mb-4 gap-3">
+        <p className="text-stone-500 text-sm text-center px-4">{error?.message || "Could not load video"}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="flex items-center gap-1.5 text-sm text-[#C026D3] hover:underline"
+        >
+          <RefreshCw className="h-3.5 w-3.5" />
+          Try again
+        </button>
       </div>
     );
   }
@@ -86,6 +93,7 @@ export default function CourseLearn() {
   const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set());
   const [currentLessonId, setCurrentLessonId] = useState<number | null>(null);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   
   // Prompt authentication if not authenticated
   useEffect(() => {
@@ -403,9 +411,35 @@ export default function CourseLearn() {
           </div>
         </div>
         
-        {/* Right Sidebar */}
-        <div className="w-96 bg-white border-l border-gray-200 overflow-y-auto">
+        {/* Mobile sidebar toggle */}
+        <button
+          onClick={() => setShowMobileSidebar(true)}
+          className="fixed bottom-4 right-4 z-40 lg:hidden h-12 w-12 rounded-full bg-[#C026D3] text-white shadow-lg flex items-center justify-center hover:bg-[#A21CAF] transition-colors"
+        >
+          <List className="h-5 w-5" />
+        </button>
+
+        {/* Mobile sidebar overlay */}
+        {showMobileSidebar && (
+          <div className="fixed inset-0 z-50 lg:hidden" onClick={() => setShowMobileSidebar(false)}>
+            <div className="absolute inset-0 bg-black/50" />
+          </div>
+        )}
+
+        {/* Right Sidebar — hidden on mobile, slide-in drawer */}
+        <div className={`
+          fixed inset-y-0 right-0 z-50 w-80 bg-white border-l border-gray-200 overflow-y-auto transform transition-transform duration-300
+          lg:static lg:w-96 lg:transform-none lg:z-auto
+          ${showMobileSidebar ? "translate-x-0" : "translate-x-full lg:translate-x-0"}
+        `}>
           <div className="p-6">
+            {/* Mobile close button */}
+            <button
+              onClick={() => setShowMobileSidebar(false)}
+              className="lg:hidden absolute top-3 right-3 h-8 w-8 rounded-full bg-muted flex items-center justify-center hover:bg-muted/80"
+            >
+              <X className="h-4 w-4" />
+            </button>
             {/* Course Title in Sidebar */}
             <h2 className="text-xl font-bold mb-4">{course.title}</h2>
             

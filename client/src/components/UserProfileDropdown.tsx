@@ -10,6 +10,7 @@ import {
   LogOut,
   ChevronDown,
   LayoutDashboard,
+  HelpCircle,
 } from 'lucide-react';
 import { useAuth } from '@/_core/hooks/useAuth';
 
@@ -235,6 +236,16 @@ export function UserProfileDropdown({ unreadMessagesCount = 0 }: UserProfileDrop
                 <span>Membership</span>
               </a>
             </Link>
+
+            {/* Help & Support */}
+            <a
+              href="mailto:dance.with.elizabeth.zolotova@gmail.com"
+              onClick={() => setIsOpen(false)}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors duration-150 focus:outline-none focus:bg-purple-50 focus:text-purple-700 min-h-[44px] group"
+            >
+              <HelpCircle className="w-5 h-5 text-gray-400 group-hover:text-purple-600 group-focus:text-purple-600 transition-colors" />
+              <span>Help & Support</span>
+            </a>
           </div>
 
           {/* Divider */}

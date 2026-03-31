@@ -736,9 +736,36 @@ export default function Home() {
       </section>
 
       {/* ── Footer ────────────────────────────────────────────────────────── */}
-      <footer className="border-t border-stone-200/50 py-10 bg-[#FDF4FF]">
-        <div className="container text-center">
-          <p className="text-sm text-stone-400 tracking-wide" style={{ fontFamily: 'var(--font-body)' }}>&copy; 2026 High Heels Dance — Elizabeth Zolotova. All rights reserved.</p>
+      <footer className="border-t border-stone-200/50 py-12 bg-[#FDF4FF]">
+        <div className="container px-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-8">
+            {/* Brand */}
+            <div>
+              <h3 className="text-lg font-semibold text-[#831843] mb-2" style={{ fontFamily: 'var(--font-display)' }}>High Heels Dance</h3>
+              <p className="text-sm text-stone-500">Professional dance education with Elizabeth Zolotova. Fall in love with dance.</p>
+            </div>
+            {/* Quick Links */}
+            <div>
+              <h4 className="text-sm font-semibold text-stone-700 mb-3">Quick Links</h4>
+              <div className="flex flex-col gap-2">
+                <a href="/courses" className="text-sm text-stone-500 hover:text-[#C026D3] transition-colors">Browse Courses</a>
+                <a href="/book-session" className="text-sm text-stone-500 hover:text-[#C026D3] transition-colors">Book a Session</a>
+                <a href="/membership" className="text-sm text-stone-500 hover:text-[#C026D3] transition-colors">Membership</a>
+              </div>
+            </div>
+            {/* Contact */}
+            <div>
+              <h4 className="text-sm font-semibold text-stone-700 mb-3">Connect</h4>
+              <div className="flex flex-col gap-2">
+                <a href="https://www.instagram.com/elizabeth_zolotova/" target="_blank" rel="noopener noreferrer" className="text-sm text-stone-500 hover:text-[#C026D3] transition-colors">Instagram</a>
+                <a href="https://www.youtube.com/@elizabeth_zolotova" target="_blank" rel="noopener noreferrer" className="text-sm text-stone-500 hover:text-[#C026D3] transition-colors">YouTube</a>
+                <a href="mailto:dance.with.elizabeth.zolotova@gmail.com" className="text-sm text-stone-500 hover:text-[#C026D3] transition-colors">Contact Us</a>
+              </div>
+            </div>
+          </div>
+          <div className="border-t border-stone-200/50 pt-6 text-center">
+            <p className="text-xs text-stone-400">&copy; 2026 High Heels Dance — Elizabeth Zolotova. All rights reserved.</p>
+          </div>
         </div>
       </footer>
 
