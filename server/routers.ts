@@ -1,5 +1,6 @@
 import { systemRouter } from "./_core/systemRouter";
 import { zoomRouter } from "./zoomRouter";
+import { liveSessionRouter } from "./liveSessionRouter";
 import { membershipRouter } from "./membershipRouter";
 import { membershipManagementRouter } from "./membershipManagementRouter";
 import { discountRouter } from "./discountRouter";
@@ -29,6 +30,7 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
 export const appRouter = router({
   system: systemRouter,
   zoom: zoomRouter,
+  liveSessions: liveSessionRouter,
   membership: membershipRouter,
   membershipManagement: membershipManagementRouter,
   discount: discountRouter,
