@@ -17,6 +17,7 @@ import {
   Loader2,
   Timer,
 } from "lucide-react";
+import { CertificateButton } from "@/components/CertificateButton";
 
 function fmt(seconds: number): string {
   const m = Math.floor(seconds / 60);
@@ -385,13 +386,16 @@ function CourseCard({ course }: { course: any }) {
           </div>
         )}
       </div>
-      <div className="px-4 pb-4">
+      <div className="px-4 pb-4 space-y-2">
         <Link href={`/course/${course.id}/learn`} className="block">
           <Button size="sm" className="w-full" variant={isComplete ? "outline" : "default"}>
             {isComplete ? "Review Course" : pct > 0 ? "Continue" : "Start Learning"}
             <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
           </Button>
         </Link>
+        {isComplete && (
+          <CertificateButton courseId={course.id} variant="ghost" size="sm" className="w-full text-[#C026D3]" />
+        )}
       </div>
     </Card>
   );

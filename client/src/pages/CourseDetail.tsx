@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { ProgressiveAuthModal } from "@/components/ProgressiveAuthModal";
 import { useState, useRef, useEffect } from "react";
+import { CertificateButton } from "@/components/CertificateButton";
 
 function fmt(s: number): string {
   const m = Math.floor(s / 60);
@@ -466,11 +467,14 @@ export default function CourseDetail() {
                     </div>
                   )}
 
-                  {/* Access confirmation */}
+                  {/* Access confirmation + certificate */}
                   {canAccess && (
-                    <div className="flex items-center gap-2 text-sm text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-3">
-                      <CheckCircle className="h-4 w-4 flex-shrink-0" />
-                      <span>You have full access to this course</span>
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-sm text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-3">
+                        <CheckCircle className="h-4 w-4 flex-shrink-0" />
+                        <span>You have full access to this course</span>
+                      </div>
+                      <CertificateButton courseId={courseId} variant="ghost" size="sm" className="w-full text-[#C026D3]" />
                     </div>
                   )}
 

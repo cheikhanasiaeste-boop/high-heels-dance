@@ -46,7 +46,8 @@ import {
   InsertMessage,
   liveSessions,
   LiveSession,
-  InsertLiveSession
+  InsertLiveSession,
+  Purchase,
 } from "../drizzle/schema";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -398,6 +399,20 @@ export async function hasUserPurchasedCourse(userId: number, courseId: number): 
   }
   const { data } = await restFrom("purchases").select("id").eq("userId", userId).eq("courseId", courseId).eq("status", "completed").limit(1);
   return (data ?? []).length > 0;
+}
+
+export async function getUserPurchaseForCourse(userId: number, courseId: number): Promise<Purchase | null> {
+  const db = await getDb();
+  if (db) {
+    try {
+      const [row] = await db.select().from(purchases).where(
+        and(eq(purchases.userId, userId), eq(purchases.courseId, courseId), eq(purchases.status, "completed"))
+      ).limit(1);
+      return row ?? null;
+    } catch (e) { console.warn("[DB Fallback] getUserPurchaseForCourse:", (e as Error).message); }
+  }
+  const { data } = await restFrom("purchases").select("*").eq("userId", userId).eq("courseId", courseId).eq("status", "completed").limit(1).single();
+  return (data as Purchase) ?? null;
 }
 
 export async function updatePurchaseStatus(id: number, status: "pending" | "completed" | "failed"): Promise<void> {

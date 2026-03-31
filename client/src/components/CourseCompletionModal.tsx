@@ -6,6 +6,7 @@ import { Star, Sparkles, Trophy, Upload, X, Image as ImageIcon, Video } from "lu
 import { useState, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import { CertificateButton } from "@/components/CertificateButton";
 
 interface CourseCompletionModalProps {
   isOpen: boolean;
@@ -270,6 +271,17 @@ export function CourseCompletionModal({
           >
             {submitTestimonialMutation.isPending ? "Submitting..." : "Submit Feedback"}
           </Button>
+        </div>
+
+        {/* Share achievement */}
+        <div className="pt-3 border-t text-center">
+          <p className="text-xs text-muted-foreground mb-2">Show the world what you achieved!</p>
+          <CertificateButton
+            courseId={courseId}
+            variant="outline"
+            size="default"
+            className="w-full"
+          />
         </div>
       </DialogContent>
     </Dialog>

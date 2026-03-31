@@ -77,6 +77,7 @@ export const purchases = pgTable("purchases", {
   purchasedAt: timestamp("purchasedAt").defaultNow().notNull(),
   isCompleted: boolean("isCompleted").default(false).notNull(),
   completedAt: timestamp("completedAt"),
+  certificateId: varchar("certificateId", { length: 50 }),
 });
 
 export type Purchase = typeof purchases.$inferSelect;

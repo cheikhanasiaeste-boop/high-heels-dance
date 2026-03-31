@@ -6,6 +6,7 @@ import { eq, and } from "drizzle-orm";
 import { getDb } from "./db";
 import { purchases, courses, users } from "../drizzle/schema";
 import { sendEmail, getCourseCompletionEmail } from "./_core/email";
+import { nanoid } from "nanoid";
 
 /**
  * Mark a course as completed for a user
@@ -33,13 +34,15 @@ export async function markCourseComplete(userId: number, courseId: number): Prom
     return { success: true }; // Already completed
   }
 
-  // Mark as completed
+  // Mark as completed with unique certificate ID
+  const certId = `HHD-${nanoid(10).toUpperCase()}`;
   await db
     .update(purchases)
     .set({
       isCompleted: true,
       completedAt: new Date(),
-    })
+      certificateId: certId,
+    } as any)
     .where(eq(purchases.id, purchase.id));
 
   // Get user and course details for email

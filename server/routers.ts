@@ -392,6 +392,56 @@ export const appRouter = router({
         const { isCourseCompleted } = await import("./db-course-completion");
         return await isCourseCompleted(ctx.user.id, input.courseId);
       }),
+
+    // Get certificate data for a completed course
+    getCertificateData: protectedProcedure
+      .input(z.object({ courseId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const purchase = await db.getUserPurchaseForCourse(ctx.user.id, input.courseId);
+        if (!purchase?.isCompleted || !purchase.certificateId) return null;
+
+        const course = await db.getCourseById(input.courseId);
+        const user = await db.getUserById(ctx.user.id);
+        if (!course || !user) return null;
+
+        const { getCertificateShareData } = await import("./lib/certificate");
+        return getCertificateShareData({
+          studentName: user.name || user.email || "Student",
+          courseTitle: course.title,
+          completionDate: purchase.completedAt || new Date(),
+          certificateId: purchase.certificateId,
+        });
+      }),
+
+    // Generate and return PDF certificate bytes (base64 encoded)
+    downloadCertificate: protectedProcedure
+      .input(z.object({ courseId: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const purchase = await db.getUserPurchaseForCourse(ctx.user.id, input.courseId);
+        if (!purchase?.isCompleted || !purchase.certificateId) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "No certificate available" });
+        }
+
+        const course = await db.getCourseById(input.courseId);
+        const user = await db.getUserById(ctx.user.id);
+        if (!course || !user) {
+          throw new TRPCError({ code: "NOT_FOUND", message: "Course or user not found" });
+        }
+
+        const { generateCertificatePDF } = await import("./lib/certificate");
+        const pdfBytes = await generateCertificatePDF({
+          studentName: user.name || user.email || "Student",
+          courseTitle: course.title,
+          completionDate: purchase.completedAt || new Date(),
+          certificateId: purchase.certificateId,
+        });
+
+        // Return as base64 for client-side download
+        return {
+          pdfBase64: Buffer.from(pdfBytes).toString("base64"),
+          filename: `certificate-${course.title.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase()}.pdf`,
+        };
+      }),
   }),
 
   // User purchase procedures

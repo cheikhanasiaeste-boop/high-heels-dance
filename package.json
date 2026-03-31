@@ -18,6 +18,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.693.0",
     "@aws-sdk/s3-request-presigner": "^3.693.0",
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
@@ -62,6 +63,7 @@
     "embla-carousel-autoplay": "^8.6.0",
     "embla-carousel-react": "^8.6.0",
     "express": "^4.21.2",
+    "ffprobe-static": "^3.1.0",
     "framer-motion": "^12.23.22",
     "hls.js": "^1.6.15",
     "input-otp": "^1.4.2",
@@ -71,6 +73,7 @@
     "nanoid": "^5.1.5",
     "next-themes": "^0.4.6",
     "node-cron": "^4.2.1",
+    "pdf-lib": "^1.17.1",
     "postgres": "^3.4.8",
     "react": "^18.3.1",
     "react-day-picker": "^9.11.1",
@@ -105,6 +108,7 @@
     "autoprefixer": "^10.4.20",
     "drizzle-kit": "^0.31.4",
     "esbuild": "^0.25.0",
+    "ffmpeg-static": "^5.3.0",
     "pnpm": "^10.15.1",
     "postcss": "^8.4.47",
     "prettier": "^3.6.2",
@@ -123,6 +127,13 @@
     },
     "overrides": {
       "tailwindcss>nanoid": "3.3.7"
-    }
+    },
+    "ignoredBuiltDependencies": [
+      "ffmpeg-static"
+    ],
+    "onlyBuiltDependencies": [
+      "@ffmpeg-installer/darwin-x64",
+      "ffmpeg-static"
+    ]
   }
 }
