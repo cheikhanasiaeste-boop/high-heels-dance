@@ -1538,15 +1538,33 @@ Never be pushy. Be genuinely helpful and make people feel welcome.`;
           assistantMessage = "Thanks for reaching out! I'm having a little moment — but you can explore our courses or book a dance session right from the menu above. Elizabeth would love to dance with you!";
         }
         
-        // Replace ALL placeholders with real links (bypasses Gemini's URL blocking)
+        // Step 1: Clean up Gemini's blocked links — it outputs [text](url) but url gets [blocked]
+        // Match patterns like: [Courses](/courses) [blocked], [text][blocked], [text](blocked), text [blocked]
+        assistantMessage = assistantMessage
+          .replace(/\[([^\]]*)\]\([^)]*\)\s*\[blocked\]/gi, '{{LINK:$1}}')  // [Text](url) [blocked]
+          .replace(/\[([^\]]*)\]\s*\[blocked\]/gi, '{{LINK:$1}}')           // [Text] [blocked]
+          .replace(/\[([^\]]*)\]\(blocked\)/gi, '{{LINK:$1}}')              // [Text](blocked)
+          .replace(/\[blocked\]/gi, '');                                      // standalone [blocked]
+
+        // Step 2: Replace our placeholders with real links
         assistantMessage = assistantMessage
           .replace(/\{\{INSTAGRAM\}\}/g, '[Instagram](https://www.instagram.com/elizabeth_zolotova/)')
           .replace(/\{\{YOUTUBE\}\}/g, '[YouTube](https://www.youtube.com/@HighHeelsTutorials)')
           .replace(/\{\{FACEBOOK\}\}/g, '[Facebook](https://www.facebook.com/liza.zolotova.399/)')
           .replace(/\{\{COURSES\}\}/g, '[Courses page](/courses)')
           .replace(/\{\{BOOK\}\}/g, '[Book a Session](/book-session)')
-          .replace(/\{\{WEBSITE\}\}/g, '[our website](https://www.elizabeth-zolotova.com)')
-          .replace(/\[blocked\]/gi, '');  // Remove any remaining [blocked] tags from Gemini
+          .replace(/\{\{WEBSITE\}\}/g, '[our website](https://www.elizabeth-zolotova.com)');
+
+        // Step 3: Convert recovered blocked links — guess the right placeholder from text
+        assistantMessage = assistantMessage.replace(/\{\{LINK:([^}]*)\}\}/gi, (_match, text: string) => {
+          const t = text.toLowerCase();
+          if (t.includes('course')) return '[Courses page](/courses)';
+          if (t.includes('book') || t.includes('session')) return '[Book a Session](/book-session)';
+          if (t.includes('instagram')) return '[Instagram](https://www.instagram.com/elizabeth_zolotova/)';
+          if (t.includes('youtube')) return '[YouTube](https://www.youtube.com/@HighHeelsTutorials)';
+          if (t.includes('facebook')) return '[Facebook](https://www.facebook.com/liza.zolotova.399/)';
+          return text; // fallback: just show the text without a link
+        });
 
         // Save assistant message (non-blocking)
         db.createChatMessage({ userId, role: 'assistant', content: assistantMessage }).catch(() => {});
