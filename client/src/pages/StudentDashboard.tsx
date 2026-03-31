@@ -89,11 +89,9 @@ export default function StudentDashboard() {
       <div className="bg-gradient-to-r from-fuchsia-600 via-pink-500 to-purple-600 text-white">
         <div className="container max-w-6xl px-4 py-8">
           <div className="flex items-center justify-between">
-            {/* Left spacer for centering */}
-            <div className="w-24" />
-            {/* Centered title */}
-            <div className="text-center">
-              <p className="text-pink-200 text-xs uppercase tracking-widest mb-1">My Studio</p>
+            {/* Left: Welcome message */}
+            <div>
+              <p className="text-pink-200 text-sm mb-0.5">Welcome back,</p>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
                 {firstName}
                 {stats.streakDays > 0 && (
@@ -104,12 +102,12 @@ export default function StudentDashboard() {
                 )}
               </h1>
             </div>
-            {/* Home button — right side */}
+            {/* Right: Home button — clearly clickable */}
             <Link href="/">
-              <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10">
-                <Home className="h-4 w-4 mr-1.5" />
+              <button className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-sm text-white text-sm font-medium transition-all border border-white/20 hover:border-white/40">
+                <Home className="h-4 w-4" />
                 Home
-              </Button>
+              </button>
             </Link>
           </div>
         </div>
