@@ -167,9 +167,17 @@ export const appRouter = router({
       );
 
       // Enrolled = purchased + free courses
-      const enrolledCourses = allCourses.filter(
-        (c: any) => c.isFree || purchasedIds.has(c.id)
-      );
+      const enrolledIds = new Set<number>();
+      const enrolledCourses = allCourses.filter((c: any) => {
+        const enrolled = c.isFree || purchasedIds.has(c.id);
+        if (enrolled) enrolledIds.add(c.id);
+        return enrolled;
+      });
+
+      // Recommended = published courses the user hasn't enrolled in
+      const recommendedCourses = allCourses
+        .filter((c: any) => !enrolledIds.has(c.id))
+        .slice(0, 4);
 
       // 2. Per-course progress
       const courseProgress = enrolledCourses.map((course: any) => {
@@ -244,6 +252,7 @@ export const appRouter = router({
       return {
         continueWatching,
         courses: courseProgress,
+        recommendedCourses,
         upcomingSessions,
         upcomingBookings,
         stats: {
