@@ -1083,7 +1083,14 @@ export const appRouter = router({
           return { url: result.url, key: fileKey };
         }),
 
-      // Upload lesson video to Bunny.net Stream (for full tutorials)
+      // Upload lesson video to Bunny.net Stream — full pipeline:
+      //   1. Create Bunny video object
+      //   2. Upload file to Bunny
+      //   3. Extract duration locally with ffprobe
+      //   4. Generate thumbnail locally with ffmpeg
+      //   5. Upload thumbnail to storage
+      //   6. Save everything to DB
+      // Bunny encoding happens in background; pollBunnyVideoStatus tracks it.
       uploadLessonToBunny: adminProcedure
         .input(z.object({
           lessonId: z.number(),
@@ -1092,31 +1099,64 @@ export const appRouter = router({
         }))
         .mutation(async ({ input }) => {
           const bunny = await import('./lib/bunny');
+          const buffer = Buffer.from(input.data, 'base64');
 
           // 1. Create video object in Bunny
           const video = await bunny.createVideo(input.title);
-
-          // 2. Mark lesson as uploading
           await db.updateCourseLesson(input.lessonId, {
             bunnyVideoId: video.guid,
             videoStatus: 'uploading',
           });
 
-          // 3. Upload the file
-          const buffer = Buffer.from(input.data, 'base64');
-          await bunny.uploadVideoFile(video.guid, buffer);
+          // 2. Upload file to Bunny
+          try {
+            await bunny.uploadVideoFile(video.guid, buffer);
+          } catch (err) {
+            await db.updateCourseLesson(input.lessonId, { videoStatus: 'failed' });
+            throw new TRPCError({
+              code: 'INTERNAL_SERVER_ERROR',
+              message: `Video upload to Bunny failed: ${(err as Error).message}`,
+            });
+          }
 
-          // 4. Mark as processing (Bunny will encode in background)
-          const thumbnailUrl = bunny.getThumbnailUrl(video.guid);
+          await db.updateCourseLesson(input.lessonId, { videoStatus: 'processing' });
+
+          // 3. Extract duration with ffprobe (local, fast)
+          let durationSeconds = 0;
+          try {
+            const { getVideoDuration } = await import('./lib/videoProcessing');
+            durationSeconds = await getVideoDuration(buffer);
+          } catch (err) {
+            console.warn("[ffprobe] Duration extraction failed, will use Bunny's value:", (err as Error).message);
+          }
+
+          // 4. Generate thumbnail with ffmpeg (local, fast)
+          let thumbnailUrl = bunny.getThumbnailUrl(video.guid); // Bunny default fallback
+          try {
+            const { generateThumbnail } = await import('./lib/videoProcessing');
+            const thumb = await generateThumbnail(buffer, 10);
+            // Upload thumbnail to storage
+            const { storagePut } = await import('./storage');
+            const thumbKey = `thumbnails/lessons/${input.lessonId}/${video.guid}.jpg`;
+            const stored = await storagePut(thumbKey, thumb.buffer, thumb.contentType);
+            thumbnailUrl = stored.url;
+          } catch (err) {
+            console.warn("[ffmpeg] Thumbnail generation failed, using Bunny default:", (err as Error).message);
+            // thumbnailUrl stays as Bunny's auto-generated one
+          }
+
+          // 5. Save metadata to DB
           await db.updateCourseLesson(input.lessonId, {
-            videoStatus: 'processing',
+            videoStatus: 'processing', // Bunny is still encoding
             bunnyThumbnailUrl: thumbnailUrl,
+            ...(durationSeconds > 0 ? { durationSeconds } : {}),
           });
 
           return {
             bunnyVideoId: video.guid,
             thumbnailUrl,
-            status: 'processing',
+            durationSeconds,
+            status: 'processing' as const,
           };
         }),
 
@@ -1135,11 +1175,15 @@ export const appRouter = router({
 
           // If finished, update lesson with duration and final status
           if (status === 'ready' && lesson.videoStatus !== 'ready') {
-            await db.updateCourseLesson(input.lessonId, {
+            const updates: Record<string, any> = {
               videoStatus: 'ready',
-              durationSeconds: Math.round(video.length),
-              bunnyThumbnailUrl: bunny.getThumbnailUrl(lesson.bunnyVideoId),
-            });
+              bunnyThumbnailUrl: lesson.bunnyThumbnailUrl || bunny.getThumbnailUrl(lesson.bunnyVideoId),
+            };
+            // Use Bunny's duration if we don't have one from ffprobe
+            if (!lesson.durationSeconds || lesson.durationSeconds === 0) {
+              updates.durationSeconds = Math.round(video.length);
+            }
+            await db.updateCourseLesson(input.lessonId, updates);
           }
 
           if (status === 'failed' && lesson.videoStatus !== 'failed') {
@@ -1149,7 +1193,7 @@ export const appRouter = router({
           return {
             status,
             encodeProgress: video.encodeProgress,
-            durationSeconds: Math.round(video.length),
+            durationSeconds: lesson.durationSeconds || Math.round(video.length),
           };
         }),
 

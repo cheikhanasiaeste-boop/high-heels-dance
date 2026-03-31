@@ -194,3 +194,40 @@ export function statusLabel(status: BunnyVideoStatus): string {
     default: return "unknown";
   }
 }
+
+/**
+ * Poll Bunny until the video is ready (status 3 or 4) or failed (5).
+ *
+ * @param videoGuid     The Bunny video GUID
+ * @param intervalMs    Polling interval (default 5 s)
+ * @param maxWaitMs     Maximum wait time before giving up (default 10 min)
+ * @param onProgress    Optional callback with current encode progress (0–100)
+ * @returns             The final BunnyVideo object when ready
+ * @throws              If encoding fails or times out
+ */
+export async function waitUntilReady(
+  videoGuid: string,
+  intervalMs = 5_000,
+  maxWaitMs = 600_000,
+  onProgress?: (progress: number, status: string) => void
+): Promise<BunnyVideo> {
+  const deadline = Date.now() + maxWaitMs;
+
+  while (Date.now() < deadline) {
+    const video = await getVideo(videoGuid);
+    const label = statusLabel(video.status);
+
+    onProgress?.(video.encodeProgress, label);
+
+    if (label === "ready") return video;
+    if (label === "failed") {
+      throw new Error(`Bunny encoding failed for video ${videoGuid}`);
+    }
+
+    await new Promise((r) => setTimeout(r, intervalMs));
+  }
+
+  throw new Error(
+    `Bunny encoding timed out after ${Math.round(maxWaitMs / 1000)}s for video ${videoGuid}`
+  );
+}
