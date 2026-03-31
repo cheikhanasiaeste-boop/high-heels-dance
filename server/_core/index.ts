@@ -39,6 +39,11 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
 
+  // Simple ping endpoint to keep Render awake
+  app.get('/ping', (_req, res) => {
+    res.status(200).send('OK');
+  });
+
   // Redirect root domain to www in production
   if (process.env.NODE_ENV === "production") {
     app.use((req, res, next) => {
