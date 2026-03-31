@@ -1862,6 +1862,29 @@ Never be pushy. Be genuinely helpful and make people feel welcome.`;
       return testimonials.filter(t => t.videoUrl);
     }),
 
+    // Upload testimonial media (photo or video) — user-level, not admin
+    uploadTestimonialMedia: protectedProcedure
+      .input(z.object({
+        fileName: z.string(),
+        fileType: z.string(),
+        fileData: z.string(), // base64
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { storagePut } = await import('./storage');
+        const buffer = Buffer.from(input.fileData, 'base64');
+
+        // Max 50MB
+        if (buffer.length > 50 * 1024 * 1024) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'File must be under 50MB' });
+        }
+
+        const timestamp = Date.now();
+        const safe = input.fileName.replace(/[^a-zA-Z0-9._-]/g, '');
+        const key = `testimonials/${ctx.user.id}/${timestamp}-${safe}`;
+        const result = await storagePut(key, buffer, input.fileType);
+        return { url: result.url };
+      }),
+
     // Protected: Submit course completion testimonial
     submitCourseTestimonial: protectedProcedure
       .input(z.object({
