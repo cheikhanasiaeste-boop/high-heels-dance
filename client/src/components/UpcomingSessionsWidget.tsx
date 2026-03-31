@@ -76,7 +76,7 @@ export function UpcomingSessionsWidget() {
   return (
     <div 
       ref={widgetRef}
-      className="fixed right-3 sm:right-6 z-40 animate-slide-in-right transition-all duration-200"
+      className="hidden sm:block fixed right-3 sm:right-6 z-40 animate-slide-in-right transition-all duration-200"
       style={{ top: `${widgetTop}px` }}
       onMouseEnter={() => {
         setIsHovered(true);

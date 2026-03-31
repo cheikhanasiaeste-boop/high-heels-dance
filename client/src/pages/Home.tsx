@@ -226,7 +226,7 @@ export default function Home() {
   }, [allTestimonials]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen overflow-x-hidden">
 
       {/* ── Auth Modal ────────────────────────────────────────────────────── */}
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
@@ -248,7 +248,7 @@ export default function Home() {
 
       {/* ── Announcement Banner ───────────────────────────────────────────── */}
       {effectiveBannerText && (
-        <div className="bg-gradient-to-r from-fuchsia-600 via-pink-500 to-purple-600 text-white py-2.5 px-4 text-center text-sm tracking-[0.04em]" style={{ fontFamily: 'var(--font-body)' }}>
+        <div className="bg-gradient-to-r from-fuchsia-600 via-pink-500 to-purple-600 text-white py-2 px-3 sm:py-2.5 sm:px-4 text-center text-xs sm:text-sm tracking-normal sm:tracking-[0.04em]" style={{ fontFamily: 'var(--font-body)' }}>
           {effectiveBannerText}
         </div>
       )}
@@ -741,7 +741,7 @@ export default function Home() {
       {/* ── Floating Chat ─────────────────────────────────────────────────── */}
       <button
         onClick={() => setShowChat(!showChat)}
-        className="fixed bottom-6 right-6 rounded-full w-14 h-14 shadow-lg hover:shadow-xl bg-[#C026D3] hover:bg-[#A21CAF] text-white flex items-center justify-center transition-all duration-300 hover:scale-105 z-[45]"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 rounded-full w-12 h-12 sm:w-14 sm:h-14 shadow-lg hover:shadow-xl bg-[#C026D3] hover:bg-[#A21CAF] text-white flex items-center justify-center transition-all duration-300 hover:scale-105 z-[45]"
       >
         <MessageCircle className="h-5 w-5" />
       </button>
