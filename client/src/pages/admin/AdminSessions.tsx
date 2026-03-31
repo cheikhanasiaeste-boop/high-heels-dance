@@ -15,7 +15,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Plus, Calendar, Users, MapPin, Link as LinkIcon, Edit, Trash2, Eye, EyeOff, UserPlus, UserMinus, Video, ExternalLink } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { useLocation } from "wouter";
 
 type SessionStatus = "draft" | "published";
 type EventType = "online" | "in-person";
@@ -93,10 +92,6 @@ function statusBadgeClass(status: string): string {
 
 export default function AdminSessions() {
   const utils = trpc.useUtils();
-  const [location] = useLocation();
-  // Determine initial tab from URL
-  const initialTab = location === "/admin/live-sessions" ? "live" : "regular";
-  const [activeMainTab, setActiveMainTab] = useState<string>(initialTab);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isEnrollmentDialogOpen, setIsEnrollmentDialogOpen] = useState(false);
@@ -403,18 +398,32 @@ export default function AdminSessions() {
     return allUsers.filter((user: any) => !enrolledIds.includes(user.id));
   };
 
-  // Filter sessions based on date filter
+  // Merge regular sessions + live sessions into one unified list, sorted by date
+  const allUnifiedSessions = useMemo(() => {
+    const regular = (sessions || []).map((s: any) => ({ ...s, _type: 'regular' as const }));
+    const live = (liveSessions || []).map((s: any) => ({
+      ...s,
+      _type: 'live' as const,
+      eventType: 'online',
+      sessionType: 'group',
+      enrollmentCount: 0,
+      status: s.status === 'scheduled' ? 'published' : s.status,
+    }));
+    return [...regular, ...live].sort(
+      (a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
+    );
+  }, [sessions, liveSessions]);
+
+  // Filter unified sessions by date
   const filteredSessions = useMemo(() => {
-    if (!sessions) return [];
-    
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    return sessions.filter((session: any) => {
+
+    return allUnifiedSessions.filter((session: any) => {
       const sessionDate = new Date(session.startTime);
-      
+
       switch (dateFilter) {
         case 'today':
           return sessionDate >= today && sessionDate < tomorrow;
@@ -426,117 +435,122 @@ export default function AdminSessions() {
           if (!customStartDate && !customEndDate) return true;
           const start = customStartDate ? new Date(customStartDate) : new Date(0);
           const end = customEndDate ? new Date(customEndDate) : new Date(9999, 11, 31);
-          end.setHours(23, 59, 59, 999); // Include entire end date
+          end.setHours(23, 59, 59, 999);
           return sessionDate >= start && sessionDate <= end;
         case 'all':
         default:
           return true;
       }
     });
-  }, [sessions, dateFilter, customStartDate, customEndDate]);
+  }, [allUnifiedSessions, dateFilter, customStartDate, customEndDate]);
 
   return (
     <AdminLayout>
       <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Sessions</h1>
-        <p className="text-muted-foreground mt-1">
-          Manage all sessions and enrollments in one place
-        </p>
+      {/* Header with two create buttons */}
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Sessions</h1>
+          <p className="text-muted-foreground mt-1">
+            Manage all sessions and enrollments in one place
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={openCreateLiveDialog}>
+            <Video className="h-4 w-4 mr-2" />
+            New Live Session
+          </Button>
+          <Button onClick={() => setIsCreateDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            Create Session
+          </Button>
+        </div>
       </div>
 
-      {/* Top-level tabs: Regular Sessions vs Live (Zoom) Sessions */}
-      <Tabs value={activeMainTab} onValueChange={setActiveMainTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="regular" className="flex items-center gap-2">
-            <Calendar className="h-4 w-4" />
-            Sessions
-          </TabsTrigger>
-          <TabsTrigger value="live" className="flex items-center gap-2">
-            <Video className="h-4 w-4" />
-            Live Sessions (Zoom)
-          </TabsTrigger>
-        </TabsList>
+      {/* Date Filter Controls */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <Label className="text-sm font-medium">Filter by date:</Label>
+              <Select value={dateFilter} onValueChange={(value: any) => setDateFilter(value)}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Sessions</SelectItem>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="upcoming">Upcoming</SelectItem>
+                  <SelectItem value="past">Past</SelectItem>
+                  <SelectItem value="custom">Custom Range</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-        {/* ============ REGULAR SESSIONS TAB ============ */}
-        <TabsContent value="regular" className="space-y-6">
-          <div className="flex justify-between items-center">
-            <div />
-            <Button onClick={() => setIsCreateDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Session
-            </Button>
-          </div>
-
-          {/* Date Filter Controls */}
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-4 flex-wrap">
+            {dateFilter === 'custom' && (
+              <>
                 <div className="flex items-center gap-2">
-                  <Label className="text-sm font-medium">Filter by date:</Label>
-                  <Select value={dateFilter} onValueChange={(value: any) => setDateFilter(value)}>
-                    <SelectTrigger className="w-[140px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Sessions</SelectItem>
-                      <SelectItem value="today">Today</SelectItem>
-                      <SelectItem value="upcoming">Upcoming</SelectItem>
-                      <SelectItem value="past">Past</SelectItem>
-                      <SelectItem value="custom">Custom Range</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label className="text-sm">From:</Label>
+                  <Input
+                    type="date"
+                    value={customStartDate}
+                    onChange={(e) => setCustomStartDate(e.target.value)}
+                    className="w-[150px]"
+                  />
                 </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm">To:</Label>
+                  <Input
+                    type="date"
+                    value={customEndDate}
+                    onChange={(e) => setCustomEndDate(e.target.value)}
+                    className="w-[150px]"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
-                {dateFilter === 'custom' && (
-                  <>
-                    <div className="flex items-center gap-2">
-                      <Label className="text-sm">From:</Label>
-                      <Input
-                        type="date"
-                        value={customStartDate}
-                        onChange={(e) => setCustomStartDate(e.target.value)}
-                        className="w-[150px]"
-                      />
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Label className="text-sm">To:</Label>
-                      <Input
-                        type="date"
-                        value={customEndDate}
-                        onChange={(e) => setCustomEndDate(e.target.value)}
-                        className="w-[150px]"
-                      />
-                    </div>
-                  </>
-                )}
-              </div>
+      {/* Unified Session List */}
+      {(isLoading || isLiveLoading) ? (
+        <div className="flex items-center justify-center min-h-[200px]">
+          <p className="text-muted-foreground">Loading sessions...</p>
+        </div>
+      ) : (
+      <div className="grid gap-4">
+        {filteredSessions.length === 0 ? (
+          <Card>
+            <CardContent className="py-12 text-center">
+              <p className="text-muted-foreground">No sessions found matching the selected filter.</p>
             </CardContent>
           </Card>
-
-          {isLoading ? (
-            <div className="flex items-center justify-center min-h-[200px]">
-              <p className="text-muted-foreground">Loading sessions...</p>
-            </div>
-          ) : (
-          <div className="grid gap-4">
-            {filteredSessions.length === 0 ? (
-              <Card>
-                <CardContent className="py-12 text-center">
-                  <p className="text-muted-foreground">No sessions found matching the selected filter.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              filteredSessions.map((session: any) => (
-              <Card key={session.id}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CardTitle>{session.title}</CardTitle>
-                        <Badge variant={session.status === "published" ? "default" : "secondary"}>
-                          {session.status}
-                        </Badge>
+        ) : (
+          filteredSessions.map((session: any) => (
+          <Card key={`${session._type}-${session.id}`}>
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <CardTitle>{session.title}</CardTitle>
+                    {/* Status badge */}
+                    {session._type === 'live' ? (
+                      <Badge className={statusBadgeClass(session.status === 'published' ? 'scheduled' : session.status)}>
+                        {session.status === 'published' ? 'scheduled' : session.status}
+                      </Badge>
+                    ) : (
+                      <Badge variant={session.status === "published" ? "default" : "secondary"}>
+                        {session.status}
+                      </Badge>
+                    )}
+                    {/* Type badges */}
+                    {session._type === 'live' ? (
+                      <Badge variant="outline" className="border-green-400 text-green-700">
+                        <Video className="h-3 w-3 mr-1" /> Live Zoom
+                      </Badge>
+                    ) : (
+                      <>
                         <Badge variant="outline">
                           {session.eventType === "online" ? (
                             <><LinkIcon className="h-3 w-3 mr-1" /> Online</>
@@ -547,200 +561,131 @@ export default function AdminSessions() {
                         <Badge variant="outline">
                           {session.sessionType === "group" ? "Group" : "Private"}
                         </Badge>
-                      </div>
-                      <CardDescription>
-                        {session.description || "No description"}
-                      </CardDescription>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleToggleStatus(session.id, session.status)}
-                      >
-                        {session.status === "published" ? (
-                          <><EyeOff className="h-4 w-4 mr-1" /> Unpublish</>
-                        ) : (
-                          <><Eye className="h-4 w-4 mr-1" /> Publish</>
-                        )}
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditClick(session)}
-                      >
-                        <Edit className="h-4 w-4 mr-1" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(session.id)}
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">
-                        {new Date(session.startTime).toLocaleString()}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">
-                        {session.enrollmentCount} / {session.capacity} enrolled
-                      </span>
-                    </div>
-                    {session.eventType === "in-person" && session.location && (
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-muted-foreground" />
-                        <span className="text-sm">{session.location}</span>
-                      </div>
-                    )}
-                    {session.isFree ? (
-                      <Badge variant="secondary">Free</Badge>
-                    ) : (
-                      <Badge variant="default">{session.price}</Badge>
+                      </>
                     )}
                   </div>
+                  <CardDescription>
+                    {session.description || "No description"}
+                  </CardDescription>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {/* Zoom buttons for live sessions */}
+                  {session._type === 'live' && !session.zoomMeetingId && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleCreateZoom(session.id)}
+                      disabled={createZoomMutation.isPending}
+                    >
+                      <Video className="h-4 w-4 mr-1" />
+                      Create Zoom
+                    </Button>
+                  )}
+                  {session._type === 'live' && session.zoomMeetingId && (
+                    <Button variant="outline" size="sm" asChild>
+                      <a
+                        href={`https://zoom.us/j/${session.zoomMeetingId.replace(/[^0-9]/g, '')}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <ExternalLink className="h-4 w-4 mr-1" />
+                        Join as Host
+                      </a>
+                    </Button>
+                  )}
+                  {/* Publish/Unpublish for regular sessions */}
+                  {session._type === 'regular' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleToggleStatus(session.id, session.status)}
+                    >
+                      {session.status === "published" ? (
+                        <><EyeOff className="h-4 w-4 mr-1" /> Unpublish</>
+                      ) : (
+                        <><Eye className="h-4 w-4 mr-1" /> Publish</>
+                      )}
+                    </Button>
+                  )}
+                  {/* Edit */}
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
-                    onClick={() => handleEnrollmentClick(session.id)}
+                    onClick={() => session._type === 'live' ? openEditLiveDialog(session) : handleEditClick(session)}
                   >
-                    <Users className="h-4 w-4 mr-2" />
-                    Manage Enrollments ({session.enrollmentCount})
+                    <Edit className="h-4 w-4 mr-1" />
+                    Edit
                   </Button>
-                </CardContent>
-              </Card>
-            )))
-            }
-          </div>
-          )}
-        </TabsContent>
-
-        {/* ============ LIVE SESSIONS (ZOOM) TAB ============ */}
-        <TabsContent value="live" className="space-y-6">
-          <div className="flex justify-between items-center">
-            <div />
-            <Button onClick={openCreateLiveDialog}>
-              <Plus className="h-4 w-4 mr-2" />
-              New Live Session
-            </Button>
-          </div>
-
-          {isLiveLoading ? (
-            <div className="flex items-center justify-center min-h-[200px]">
-              <p className="text-muted-foreground">Loading live sessions...</p>
-            </div>
-          ) : !liveSessions || liveSessions.length === 0 ? (
-            <Card>
-              <CardContent className="py-16 text-center">
-                <Video className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">No live sessions yet. Create your first one!</p>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4">
-              {liveSessions.map((session: any) => (
-                <Card key={session.id}>
-                  <CardHeader>
-                    <div className="flex justify-between items-start gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2 mb-1">
-                          <CardTitle className="text-lg">{session.title}</CardTitle>
-                          <Badge className={statusBadgeClass(session.status)}>
-                            {session.status}
-                          </Badge>
-                          <Badge variant="outline" className={session.isFree ? "border-emerald-400 text-emerald-700" : "border-amber-400 text-amber-700"}>
-                            {session.isFree ? "Free" : session.price || "Paid"}
-                          </Badge>
-                        </div>
-                        {session.description && (
-                          <p className="text-sm text-muted-foreground line-clamp-2">
-                            {session.description}
-                          </p>
-                        )}
-                        <div className="mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground">
-                          <span>Start: {new Date(session.startTime).toLocaleString()}</span>
-                          <span>End: {new Date(session.endTime).toLocaleString()}</span>
-                          {session.capacity && <span>Capacity: {session.capacity}</span>}
-                          {session.zoomMeetingId && (
-                            <a
-                              href={`https://zoom.us/j/${session.zoomMeetingId.replace(/[^0-9]/g, '')}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline"
-                            >
-                              <Video className="h-3.5 w-3.5" />
-                              Zoom ID: {session.zoomMeetingId}
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
-                        {!session.zoomMeetingId && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleCreateZoom(session.id)}
-                            disabled={createZoomMutation.isPending}
-                          >
-                            <Video className="h-4 w-4 mr-1" />
-                            Create Zoom
-                          </Button>
-                        )}
-                        {session.zoomMeetingId && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            asChild
-                          >
-                            <a
-                              href={`https://zoom.us/j/${session.zoomMeetingId.replace(/[^0-9]/g, '')}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <ExternalLink className="h-4 w-4 mr-1" />
-                              Join as Host
-                            </a>
-                          </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openEditLiveDialog(session)}
-                        >
-                          <Edit className="h-4 w-4 mr-1" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-destructive hover:text-destructive"
-                          onClick={() => handleDeleteLive(session.id)}
-                          disabled={deleteLiveMutation.isPending}
-                        >
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          Delete
-                        </Button>
-                      </div>
-                    </div>
-                  </CardHeader>
-                </Card>
-              ))}
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+                  {/* Delete */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => session._type === 'live' ? handleDeleteLive(session.id) : handleDelete(session.id)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">
+                    {new Date(session.startTime).toLocaleString()}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">
+                    {session._type === 'live'
+                      ? `Capacity: ${session.capacity}`
+                      : `${session.enrollmentCount} / ${session.capacity} enrolled`}
+                  </span>
+                </div>
+                {session.eventType === "in-person" && session.location && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm">{session.location}</span>
+                  </div>
+                )}
+                {/* Zoom ID - clickable link */}
+                {session._type === 'live' && session.zoomMeetingId && (
+                  <a
+                    href={`https://zoom.us/j/${session.zoomMeetingId.replace(/[^0-9]/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                  >
+                    <Video className="h-4 w-4" />
+                    Zoom: {session.zoomMeetingId}
+                    <ExternalLink className="h-3 w-3" />
+                  </a>
+                )}
+                {session.isFree ? (
+                  <Badge variant="secondary">Free</Badge>
+                ) : (
+                  <Badge variant="default">{session.price}</Badge>
+                )}
+              </div>
+              {/* Enrollment management for regular sessions */}
+              {session._type === 'regular' && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleEnrollmentClick(session.id)}
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  Manage Enrollments ({session.enrollmentCount})
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )))
+        }
+      </div>
+      )}
 
       {/* Create Session Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
