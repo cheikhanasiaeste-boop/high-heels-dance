@@ -38,6 +38,7 @@ import Conversations from "./pages/Conversations";
 import Membership from "./pages/Membership";
 import { SubscriptionSuccess } from "./pages/SubscriptionSuccess";
 import AuthCallback from "./pages/AuthCallback";
+import LiveSession from "./pages/LiveSession";
 import { AdminGuard } from "./components/AdminGuard";
 
 
@@ -61,6 +62,7 @@ function Router() {
       <Route path="/activity" component={Activity} />
       <Route path="/book-session" component={BookSession} />
       <Route path="/feedback" component={Feedback} />
+      <Route path="/live-session/:id" component={LiveSession} />
 
       <Route path="/admin">{() => <AdminGuard><AdminDashboard /></AdminGuard>}</Route>
       <Route path="/admin/courses">{() => <AdminGuard><AdminCourses /></AdminGuard>}</Route>
