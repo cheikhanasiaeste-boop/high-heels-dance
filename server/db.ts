@@ -43,7 +43,10 @@ import {
   InsertVisualSettings,
   messages,
   Message,
-  InsertMessage
+  InsertMessage,
+  liveSessions,
+  LiveSession,
+  InsertLiveSession
 } from "../drizzle/schema";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -2698,4 +2701,78 @@ export async function getDiscountUsageStats(discountCodeId: number) {
     totalDiscounted: rows.reduce((sum, r) => sum + parseFloat(r.discountAmount || 0), 0),
     totalRevenue: rows.reduce((sum, r) => sum + parseFloat(r.finalAmount || 0), 0),
   };
+}
+
+// ==================== Live Sessions ====================
+
+export async function getAllLiveSessions(): Promise<LiveSession[]> {
+  const db = await getDb();
+  if (db) {
+    try {
+      return await db.select().from(liveSessions).orderBy(desc(liveSessions.startTime));
+    } catch (e) { console.warn("[DB Fallback] getAllLiveSessions:", (e as Error).message); }
+  }
+  const { data } = await restFrom("live_sessions").select("*").order("startTime", { ascending: false });
+  return (data ?? []) as LiveSession[];
+}
+
+export async function getLiveSessionById(id: number): Promise<LiveSession | undefined> {
+  const db = await getDb();
+  if (db) {
+    try {
+      const result = await db.select().from(liveSessions).where(eq(liveSessions.id, id)).limit(1);
+      return result[0];
+    } catch (e) { console.warn("[DB Fallback] getLiveSessionById:", (e as Error).message); }
+  }
+  const { data } = await restFrom("live_sessions").select("*").eq("id", id).limit(1).single();
+  return (data ?? undefined) as LiveSession | undefined;
+}
+
+export async function createLiveSession(session: InsertLiveSession): Promise<LiveSession> {
+  const db = await getDb();
+  if (db) {
+    try { return (await db.insert(liveSessions).values(session).returning())[0]; }
+    catch (e) { console.warn("[DB Fallback] createLiveSession:", (e as Error).message); }
+  }
+  const { data, error } = await restFrom("live_sessions").insert(session as any).select("*").single();
+  if (error || !data) throw new Error(error?.message || "Insert failed");
+  return data as LiveSession;
+}
+
+export async function updateLiveSession(id: number, updates: Partial<InsertLiveSession>): Promise<LiveSession | undefined> {
+  const db = await getDb();
+  if (db) {
+    try {
+      const result = await db.update(liveSessions).set(updates).where(eq(liveSessions.id, id)).returning();
+      return result[0];
+    } catch (e) { console.warn("[DB Fallback] updateLiveSession:", (e as Error).message); }
+  }
+  const { data } = await restFrom("live_sessions").update(updates as any).eq("id", id).select("*").single();
+  return (data ?? undefined) as LiveSession | undefined;
+}
+
+export async function deleteLiveSession(id: number): Promise<void> {
+  const db = await getDb();
+  if (db) {
+    try { await db.delete(liveSessions).where(eq(liveSessions.id, id)); return; }
+    catch (e) { console.warn("[DB Fallback] deleteLiveSession:", (e as Error).message); }
+  }
+  await restFrom("live_sessions").delete().eq("id", id);
+}
+
+export async function getUpcomingLiveSessions(limit: number = 10): Promise<LiveSession[]> {
+  const now = new Date();
+  const db = await getDb();
+  if (db) {
+    try {
+      return await db.select().from(liveSessions)
+        .where(and(gte(liveSessions.startTime, now), eq(liveSessions.status, "scheduled")))
+        .orderBy(liveSessions.startTime)
+        .limit(limit);
+    } catch (e) { console.warn("[DB Fallback] getUpcomingLiveSessions:", (e as Error).message); }
+  }
+  const { data } = await restFrom("live_sessions").select("*")
+    .gte("startTime", now.toISOString()).eq("status", "scheduled")
+    .order("startTime", { ascending: true }).limit(limit);
+  return (data ?? []) as LiveSession[];
 }

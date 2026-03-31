@@ -441,3 +441,25 @@ export const discountUsage = pgTable("discountUsage", {
 
 export type DiscountUsage = typeof discountUsage.$inferSelect;
 export type InsertDiscountUsage = typeof discountUsage.$inferInsert;
+
+/**
+ * Live sessions table - stores Zoom live group dance sessions
+ */
+export const liveSessions = pgTable("live_sessions", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 200 }).notNull(),
+  description: text("description"),
+  startTime: timestamp("startTime").notNull(),
+  endTime: timestamp("endTime").notNull(),
+  isFree: boolean("isFree").default(true).notNull(),
+  price: varchar("price", { length: 20 }),
+  capacity: integer("capacity").default(100).notNull(),
+  zoomMeetingId: varchar("zoomMeetingId", { length: 50 }),
+  zoomMeetingNumber: varchar("zoomMeetingNumber", { length: 50 }),
+  status: text("status").$type<"scheduled" | "live" | "ended" | "cancelled">().default("scheduled").notNull(),
+  recordingUrl: text("recordingUrl"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type LiveSession = typeof liveSessions.$inferSelect;
+export type InsertLiveSession = typeof liveSessions.$inferInsert;
