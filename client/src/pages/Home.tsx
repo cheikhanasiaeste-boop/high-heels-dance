@@ -245,13 +245,6 @@ export default function Home() {
         }}
       />
 
-      {/* ── Announcement Banner ───────────────────────────────────────────── */}
-      {effectiveBannerText && (
-        <div className="bg-gradient-to-r from-fuchsia-600 via-pink-500 to-purple-600 text-white py-2 px-3 sm:py-2.5 sm:px-4 text-center text-xs sm:text-sm tracking-normal sm:tracking-[0.04em]" style={{ fontFamily: 'var(--font-body)' }}>
-          {effectiveBannerText}
-        </div>
-      )}
-
       {/* ── Header / Navigation ───────────────────────────────────────────── */}
       <header className="absolute top-0 left-0 right-0 z-50 border-b border-white/[0.08]">
         <div className="container px-4 py-5 flex justify-between items-center">
@@ -262,13 +255,13 @@ export default function Home() {
           {/* Center nav links — desktop */}
           <nav className="hidden lg:flex items-center gap-8">
             <Link href="/courses">
-              <span className="text-[13px] font-medium text-white/70 uppercase tracking-[0.15em] hover:text-white transition-colors cursor-pointer">Courses</span>
+              <span className="text-sm font-medium text-white/70 uppercase tracking-[0.15em] hover:text-white transition-colors cursor-pointer">Courses</span>
             </Link>
             <Link href="/book-session">
-              <span className="text-[13px] font-medium text-white/70 uppercase tracking-[0.15em] hover:text-white transition-colors cursor-pointer">Book Session</span>
+              <span className="text-sm font-medium text-white/70 uppercase tracking-[0.15em] hover:text-white transition-colors cursor-pointer">Book Session</span>
             </Link>
             <Link href="/membership">
-              <span className="text-[13px] font-medium text-white/70 uppercase tracking-[0.15em] hover:text-white transition-colors cursor-pointer">Membership</span>
+              <span className="text-sm font-medium text-white/70 uppercase tracking-[0.15em] hover:text-white transition-colors cursor-pointer">Membership</span>
             </Link>
           </nav>
 
