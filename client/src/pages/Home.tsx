@@ -413,31 +413,29 @@ export default function Home() {
 
               {/* Right: Editorial profile photo */}
               <div className="hidden lg:block animate-fade-up-delay-2">
-                <div className="relative">
-                  {/* Fuchsia glow behind photo */}
-                  <div className="absolute -inset-6 bg-gradient-to-br from-fuchsia-500/20 via-purple-500/10 to-transparent blur-3xl rounded-3xl" />
+                <div className="relative group overflow-hidden rounded-lg">
                   <img
                     src={heroProfilePictureUrl || "/profile.jpg"}
                     alt="Elizabeth Zolotova"
-                    className="relative w-[320px] h-[420px] object-cover rounded-2xl shadow-[0_30px_80px_rgba(0,0,0,0.5)] ring-1 ring-white/10"
+                    className="w-[340px] h-[440px] object-cover"
                     onError={(e) => { (e.target as HTMLImageElement).src = '/profile-photo.jpeg'; }}
                   />
-                  {/* Subtle label on image */}
-                  <div className="absolute bottom-4 left-4 right-4 bg-black/40 backdrop-blur-md rounded-xl px-4 py-3 border border-white/10">
-                    <p className="text-white/90 text-sm font-semibold" style={{ fontFamily: 'var(--font-body)' }}>Elizabeth Zolotova</p>
-                    <p className="text-white/50 text-xs">High Heels Dance Instructor</p>
+                  {/* Hover overlay — bio presentation */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#2e0033]/95 via-[#2e0033]/70 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-6">
+                    <p className="text-white font-bold text-lg mb-1 translate-y-4 group-hover:translate-y-0 transition-transform duration-500" style={{ fontFamily: 'var(--font-display)' }}>Elizabeth Zolotova</p>
+                    <p className="text-[#E879F9] text-sm font-medium mb-3 translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-75">High Heels Dance Instructor</p>
+                    <p className="text-white/60 text-sm leading-relaxed translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-150">Passionate about empowering women through dance. Transforming confidence, one step at a time.</p>
                   </div>
                 </div>
               </div>
 
               {/* Mobile: profile photo below CTAs */}
               <div className="lg:hidden flex justify-center animate-fade-up-delay-3">
-                <div className="relative">
-                  <div className="absolute -inset-4 bg-gradient-to-br from-fuchsia-500/20 via-purple-500/10 to-transparent blur-2xl rounded-2xl" />
+                <div className="relative overflow-hidden rounded-lg">
                   <img
                     src={heroProfilePictureUrl || "/profile.jpg"}
                     alt="Elizabeth Zolotova"
-                    className="relative w-48 h-64 object-cover rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.4)] ring-1 ring-white/10"
+                    className="w-52 h-68 object-cover"
                     onError={(e) => { (e.target as HTMLImageElement).src = '/profile-photo.jpeg'; }}
                   />
                 </div>
@@ -615,58 +613,65 @@ export default function Home() {
       </section>
 
       {/* ── Testimonials Section ──────────────────────────────────────────── */}
-      <section className="py-20 md:py-32 bg-[#141118] relative overflow-hidden">
+      <section className="py-20 md:py-28 bg-[#141118] relative overflow-hidden">
         <div className="container relative z-10">
+          <ScrollReveal>
+            <div className="text-center mb-14">
+              <p className="text-xs uppercase tracking-[0.3em] text-[#E879F9]/50 font-semibold mb-3" style={{ fontFamily: 'var(--font-body)' }}>Their words</p>
+              <h3 className="text-3xl md:text-[3.5rem] font-bold mb-3 text-white tracking-[-0.02em]" style={{ fontFamily: 'var(--font-display)' }}>
+                {testimonialsHeading || 'Student Success Stories'}
+              </h3>
+            </div>
+          </ScrollReveal>
           <Carousel
-            opts={{ align: "center", loop: true }}
+            opts={{ align: "start", loop: true }}
             plugins={[Autoplay({ delay: 6000 })]}
-            className="w-full max-w-4xl mx-auto"
+            className="w-full max-w-6xl mx-auto"
           >
             <CarouselContent>
               {allTestimonials.map((testimonial, index) => (
                 <CarouselItem
                   key={`${testimonial.type}-${testimonial.id}-${index}`}
-                  className="basis-full"
+                  className="md:basis-1/2 lg:basis-1/3 pl-4 md:pl-6"
                 >
                   {testimonial.type === 'video' && (testimonial as any).videoUrl ? (
                     <div
-                      className="text-center px-4 cursor-pointer group"
+                      className="text-center px-2 cursor-pointer group h-full"
                       onClick={() => setSelectedVideo(testimonial)}
                     >
-                      {/* Play button for video testimonial */}
-                      <div className="relative w-20 h-20 mx-auto mb-8 rounded-full bg-gradient-to-br from-fuchsia-500 to-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <Play className="h-8 w-8 text-white fill-white ml-1" />
+                      <div className="relative w-16 h-16 mx-auto mb-6 rounded-full bg-gradient-to-br from-fuchsia-500 to-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Play className="h-6 w-6 text-white fill-white ml-0.5" />
                       </div>
-                      <p className="text-xl md:text-2xl lg:text-3xl text-white/80 italic leading-relaxed max-w-3xl mx-auto mb-8" style={{ fontFamily: 'var(--font-display)' }}>
+                      <p className="text-base md:text-lg text-white/70 italic leading-relaxed mb-6 line-clamp-4" style={{ fontFamily: 'var(--font-display)' }}>
                         "{testimonial.review}"
                       </p>
-                      <p className="text-xs uppercase tracking-[0.2em] text-white/40 font-medium">
-                        {testimonial.userName}, Student
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-white/35 font-medium">
+                        {testimonial.userName}
                       </p>
                     </div>
                   ) : (
-                    <div className="text-center px-4">
-                      {/* Large quote marks */}
-                      <div className="text-6xl md:text-7xl text-white/20 leading-none mb-2 select-none" style={{ fontFamily: 'Georgia, serif' }}>"</div>
+                    <div className="text-center px-2 h-full flex flex-col">
+                      {/* Quote mark */}
+                      <div className="text-5xl text-white/15 leading-none mb-1 select-none" style={{ fontFamily: 'Georgia, serif' }}>"</div>
                       {/* Avatar */}
-                      <div className="w-16 h-16 mx-auto mb-8 rounded-full bg-gradient-to-br from-fuchsia-500 to-purple-500 flex items-center justify-center text-white text-xl font-bold ring-4 ring-fuchsia-500/20">
+                      <div className="w-14 h-14 mx-auto mb-5 rounded-full bg-gradient-to-br from-fuchsia-500 to-purple-500 flex items-center justify-center text-white text-lg font-bold ring-3 ring-fuchsia-500/20">
                         {testimonial.userName.charAt(0).toUpperCase()}
                       </div>
-                      {/* Quote text */}
-                      <p className="text-xl md:text-2xl lg:text-3xl text-white/80 italic leading-relaxed max-w-3xl mx-auto mb-8" style={{ fontFamily: 'var(--font-display)' }}>
+                      {/* Quote */}
+                      <p className="text-base md:text-lg text-white/70 italic leading-relaxed mb-6 flex-1 line-clamp-5" style={{ fontFamily: 'var(--font-display)' }}>
                         "{testimonial.review}"
                       </p>
                       {/* Name */}
-                      <p className="text-xs uppercase tracking-[0.2em] text-white/40 font-medium">
-                        {testimonial.userName}, Student
+                      <p className="text-[11px] uppercase tracking-[0.2em] text-white/35 font-medium mt-auto">
+                        {testimonial.userName}
                       </p>
                     </div>
                   )}
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="hidden md:flex -left-12 border-white/10 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white" />
-            <CarouselNext className="hidden md:flex -right-12 border-white/10 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white" />
+            <CarouselPrevious className="hidden md:flex -left-4 lg:-left-12 border-white/10 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white" />
+            <CarouselNext className="hidden md:flex -right-4 lg:-right-12 border-white/10 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white" />
           </Carousel>
         </div>
       </section>
