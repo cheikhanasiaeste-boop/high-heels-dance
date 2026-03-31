@@ -1826,36 +1826,51 @@ Never be pushy. Be genuinely helpful and make people feel welcome.`;
           assistantMessage = "Thanks for reaching out! I'm having a little moment — but you can explore our courses or book a dance session right from the menu above. Elizabeth would love to dance with you!";
         }
         
-        // Step 1: Clean up Gemini's blocked links — various patterns it outputs
-        assistantMessage = assistantMessage
-          .replace(/\[([^\]]*)\]\([^)]*\)\s*\[blocked\]/gi, '{{LINK:$1}}')  // [Text](url) [blocked]
-          .replace(/\[([^\]]*)\]\s*\[blocked\]/gi, '{{LINK:$1}}')           // [Text] [blocked]
-          .replace(/\[([^\]]*)\]\(blocked\)/gi, '{{LINK:$1}}')              // [Text](blocked)
-          .replace(/(Courses?)\s*\[blocked\]/gi, '{{LINK:Courses}}')         // Courses [blocked] (no brackets)
-          .replace(/(Book(?:ing)?(?:\s+a)?\s+Session)\s*\[blocked\]/gi, '{{LINK:Book a Session}}') // Book a Session [blocked]
-          .replace(/(Instagram|YouTube|Facebook)\s*\[blocked\]/gi, '{{LINK:$1}}') // Social [blocked]
-          .replace(/(\w[\w\s]*?)\s*\[blocked\]/gi, '{{LINK:$1}}')           // Any word(s) [blocked] — catch-all
-          .replace(/\[blocked\]/gi, '');                                      // standalone [blocked]
+        // ── Nuclear cleanup: strip ALL broken links, then inject correct ones ──
 
-        // Step 2: Replace our placeholders with real links
-        assistantMessage = assistantMessage
-          .replace(/\{\{INSTAGRAM\}\}/g, '[Instagram](https://www.instagram.com/elizabeth_zolotova/)')
-          .replace(/\{\{YOUTUBE\}\}/g, '[YouTube](https://www.youtube.com/@HighHeelsTutorials)')
-          .replace(/\{\{FACEBOOK\}\}/g, '[Facebook](https://www.facebook.com/liza.zolotova.399/)')
-          .replace(/\{\{COURSES\}\}/g, '[Courses page](/courses)')
-          .replace(/\{\{BOOK\}\}/g, '[Book a Session](/book-session)')
-          .replace(/\{\{WEBSITE\}\}/g, '[our website](https://www.elizabeth-zolotova.com)');
+        // 1. Remove every markdown link (Gemini can't be trusted with URLs — they always get blocked)
+        //    [any text](any url possibly with [blocked] inside) → just keep the text
+        assistantMessage = assistantMessage.replace(/\[([^\]]*)\]\([^)]*\)/g, '$1');
 
-        // Step 3: Convert recovered blocked links — guess the right placeholder from text
-        assistantMessage = assistantMessage.replace(/\{\{LINK:([^}]*)\}\}/gi, (_match, text: string) => {
-          const t = text.toLowerCase();
-          if (t.includes('course')) return '[Courses page](/courses)';
-          if (t.includes('book') || t.includes('session')) return '[Book a Session](/book-session)';
-          if (t.includes('instagram')) return '[Instagram](https://www.instagram.com/elizabeth_zolotova/)';
-          if (t.includes('youtube')) return '[YouTube](https://www.youtube.com/@HighHeelsTutorials)';
-          if (t.includes('facebook')) return '[Facebook](https://www.facebook.com/liza.zolotova.399/)';
-          return text; // fallback: just show the text without a link
-        });
+        // 2. Remove all [blocked] tags wherever they appear
+        assistantMessage = assistantMessage.replace(/\s*\[blocked\]/gi, '');
+
+        // 3. Remove leftover {{PLACEHOLDER}} tags (in case Gemini used them literally)
+        assistantMessage = assistantMessage.replace(/\{\{[A-Z_]+\}\}/g, '');
+
+        // 4. Clean up double spaces left behind
+        assistantMessage = assistantMessage.replace(/  +/g, ' ').trim();
+
+        // 5. Inject real links by replacing the LAST occurrence of each keyword
+        //    (the last match is most likely the extracted link text, not natural prose)
+        //    Group by topic so "course page" and "courses" don't both trigger
+        const linkGroups: { patterns: RegExp[]; link: string }[] = [
+          { patterns: [/\bcourses? page\b/i, /\bcourses?\b/i], link: '[Courses](/courses)' },
+          { patterns: [/\bbook(?:ing)?(?:\s+a)?\s+session\b/i], link: '[Book a Session](/book-session)' },
+          { patterns: [/\binstagram\b/i], link: '[Instagram](https://www.instagram.com/elizabeth_zolotova/)' },
+          { patterns: [/\byoutube\b/i], link: '[YouTube](https://www.youtube.com/@HighHeelsTutorials)' },
+          { patterns: [/\bfacebook\b/i], link: '[Facebook](https://www.facebook.com/liza.zolotova.399/)' },
+          { patterns: [/\b(?:website|elizabeth-zolotova)\b/i], link: '[our website](https://www.elizabeth-zolotova.com)' },
+        ];
+
+        for (const group of linkGroups) {
+          let bestMatch: { index: number; length: number } | null = null;
+          for (const pattern of group.patterns) {
+            const matches = [...assistantMessage.matchAll(new RegExp(pattern.source, 'gi'))];
+            if (matches.length > 0) {
+              const last = matches[matches.length - 1];
+              if (!bestMatch || last.index! > bestMatch.index) {
+                bestMatch = { index: last.index!, length: last[0].length };
+              }
+            }
+          }
+          if (bestMatch) {
+            assistantMessage =
+              assistantMessage.slice(0, bestMatch.index) +
+              group.link +
+              assistantMessage.slice(bestMatch.index + bestMatch.length);
+          }
+        }
 
         // Save assistant message (non-blocking)
         db.createChatMessage({ userId, role: 'assistant', content: assistantMessage }).catch(() => {});
