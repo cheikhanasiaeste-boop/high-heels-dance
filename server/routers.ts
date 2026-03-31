@@ -187,8 +187,32 @@ export const appRouter = router({
         }
       }
 
-      // 4. Stats
+      // 4. Stats + streak (consecutive days with activity)
       const totalCompleted = allProgress.filter((p: any) => p.isCompleted).length;
+
+      // Calculate streak: count consecutive days backwards from today where user had activity
+      let streakDays = 0;
+      const activityDates = new Set(
+        allProgress
+          .filter((p: any) => p.lastWatchedAt)
+          .map((p: any) => new Date(p.lastWatchedAt).toISOString().slice(0, 10))
+      );
+      const today = new Date();
+      for (let i = 0; i < 365; i++) {
+        const d = new Date(today);
+        d.setDate(d.getDate() - i);
+        const key = d.toISOString().slice(0, 10);
+        if (activityDates.has(key)) {
+          streakDays++;
+        } else if (i > 0) {
+          break; // gap found (skip today check to allow "not yet active today")
+        }
+      }
+
+      // Total watch time in minutes
+      const totalWatchMinutes = Math.round(
+        allProgress.reduce((sum: number, p: any) => sum + (p.watchedDuration || 0), 0) / 60
+      );
 
       return {
         continueWatching,
@@ -197,6 +221,8 @@ export const appRouter = router({
         stats: {
           totalCompleted,
           enrolledCourses: enrolledCourses.length,
+          streakDays,
+          totalWatchMinutes,
         },
       };
     }),
