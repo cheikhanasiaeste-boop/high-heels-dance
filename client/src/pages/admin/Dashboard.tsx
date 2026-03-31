@@ -103,7 +103,7 @@ export default function AdminDashboard() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(stats.totalRevenue)}</div>
+              <div className="text-2xl font-bold">{formatCurrency(safeStats.totalRevenue)}</div>
               <p className="text-xs text-muted-foreground mt-1">
                 Lifetime earnings
               </p>
@@ -168,9 +168,9 @@ export default function AdminDashboard() {
                     <p className="text-sm text-muted-foreground">{safeStats.coursePurchases} purchases</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold">{formatCurrency(stats.courseRevenue)}</p>
+                    <p className="font-bold">{formatCurrency(safeStats.courseRevenue)}</p>
                     <p className="text-sm text-muted-foreground">
-                      {((stats.courseRevenue / stats.totalRevenue) * 100).toFixed(0)}%
+                      {((safeStats.courseRevenue / safeStats.totalRevenue) * 100).toFixed(0)}%
                     </p>
                   </div>
                 </div>
@@ -180,9 +180,9 @@ export default function AdminDashboard() {
                     <p className="text-sm text-muted-foreground">{safeStats.paidBookings} paid sessions</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-bold">{formatCurrency(stats.sessionRevenue)}</p>
+                    <p className="font-bold">{formatCurrency(safeStats.sessionRevenue)}</p>
                     <p className="text-sm text-muted-foreground">
-                      {((stats.sessionRevenue / stats.totalRevenue) * 100).toFixed(0)}%
+                      {((safeStats.sessionRevenue / safeStats.totalRevenue) * 100).toFixed(0)}%
                     </p>
                   </div>
                 </div>
@@ -196,7 +196,7 @@ export default function AdminDashboard() {
               <CardDescription>Top selling courses</CardDescription>
             </CardHeader>
             <CardContent>
-              {safeStats.popularCourses && stats.popularCourses.length > 0 ? (
+              {safeStats.popularCourses && safeStats.popularCourses.length > 0 ? (
                 <div className="space-y-4">
                   {safeStats.popularCourses.slice(0, 3).map((course: any, index: number) => (
                     <div key={course.id} className="flex items-center justify-between">
@@ -232,7 +232,7 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium text-muted-foreground">Course Conversion Rate</p>
                 <p className="text-2xl font-bold mt-1">
                   {safeStats.totalUsers > 0 
-                    ? ((stats.coursePurchases / stats.totalUsers) * 100).toFixed(1)
+                    ? ((safeStats.coursePurchases / safeStats.totalUsers) * 100).toFixed(1)
                     : 0}%
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -243,7 +243,7 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium text-muted-foreground">Booking Rate</p>
                 <p className="text-2xl font-bold mt-1">
                   {safeStats.totalUsers > 0 
-                    ? ((stats.totalBookings / stats.totalUsers) * 100).toFixed(1)
+                    ? ((safeStats.totalBookings / safeStats.totalUsers) * 100).toFixed(1)
                     : 0}%
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -253,7 +253,7 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Avg Revenue Per User</p>
                 <p className="text-2xl font-bold mt-1">
-                  {formatCurrency(stats.totalUsers > 0 ? stats.totalRevenue / stats.totalUsers : 0)}
+                  {formatCurrency(safeStats.totalUsers > 0 ? safeStats.totalRevenue / safeStats.totalUsers : 0)}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Lifetime value
