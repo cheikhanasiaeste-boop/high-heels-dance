@@ -47,11 +47,11 @@ export function MobileNav({ onSignInClick }: MobileNavProps) {
       {/* Hamburger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden p-2 hover:bg-fuchsia-50 rounded-lg transition-colors"
+        className="lg:hidden p-2 hover:bg-white/10 rounded-lg transition-colors"
         aria-label="Toggle mobile menu"
         aria-expanded={isOpen}
       >
-        <Menu className="w-6 h-6 text-stone-700" />
+        <Menu className="w-6 h-6 text-white" />
       </button>
 
       {/* Overlay */}

@@ -1,10 +1,8 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
-import { Instagram, Youtube, Facebook, MessageCircle, Star, Play, ArrowRight, Sparkles } from "lucide-react";
+import { Instagram, Youtube, Facebook, MessageCircle, Star, Play, ArrowRight } from "lucide-react";
 import { Link } from "wouter";
 import { useState, useEffect } from "react";
 import ChatWidget from "@/components/ChatWidget";
@@ -255,56 +253,64 @@ export default function Home() {
       )}
 
       {/* ── Header / Navigation ───────────────────────────────────────────── */}
-      <header className="border-b border-stone-200/40 sticky top-0 z-50 backdrop-blur-2xl bg-white/80 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
-        <div className="container px-4 py-4 flex justify-between items-center">
-          <h1 className="text-xl sm:text-2xl lg:text-[1.7rem] font-bold text-[#831843] tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>High Heels Dance</h1>
+      <header className="absolute top-0 left-0 right-0 z-50 border-b border-white/[0.08]">
+        <div className="container px-4 py-5 flex justify-between items-center">
+          <h1 className="text-sm sm:text-base font-bold text-white uppercase tracking-[0.15em]" style={{ fontFamily: 'var(--font-body)' }}>High Heels Dance</h1>
 
           <MobileNav onSignInClick={() => setShowAuthModal(true)} />
 
-          <div className="hidden lg:flex items-center gap-2">
-            {isAuthenticated ? (
-              <Link href="/dashboard">
-                <button className="glow-button px-6 py-2.5 text-sm font-semibold text-white bg-[#C026D3] hover:bg-[#A21CAF] shadow-md rounded-full transition-all duration-300">
-                  My Studio
-                </button>
-              </Link>
-            ) : (
-              <>
-                <Link href="/book-session">
-                  <button className="glow-button px-6 py-2.5 text-sm font-semibold text-white bg-[#C026D3] hover:bg-[#A21CAF] shadow-md rounded-full transition-all duration-300">
-                    Book a Session
-                  </button>
-                </Link>
-                <Link href="/courses">
-                  <button className="px-6 py-2.5 text-sm font-medium text-[#C026D3] bg-transparent border border-[#C026D3]/30 hover:border-[#C026D3]/60 hover:bg-[#C026D3]/5 rounded-full transition-all duration-300">
-                    Browse Courses
-                  </button>
-                </Link>
-              </>
-            )}
+          {/* Center nav links — desktop */}
+          <nav className="hidden lg:flex items-center gap-8">
+            <Link href="/courses">
+              <span className="text-[13px] font-medium text-white/70 uppercase tracking-[0.15em] hover:text-white transition-colors cursor-pointer">Courses</span>
+            </Link>
+            <Link href="/book-session">
+              <span className="text-[13px] font-medium text-white/70 uppercase tracking-[0.15em] hover:text-white transition-colors cursor-pointer">Book Session</span>
+            </Link>
+            <Link href="/membership">
+              <span className="text-[13px] font-medium text-white/70 uppercase tracking-[0.15em] hover:text-white transition-colors cursor-pointer">Membership</span>
+            </Link>
+          </nav>
+
+          <div className="hidden lg:flex items-center gap-3">
             {isAuthenticated ? (
               <>
+                <Link href="/dashboard">
+                  <button className="px-6 py-2.5 text-sm font-semibold text-[#1a0a1e] bg-white hover:bg-white/90 rounded-full transition-all duration-300 uppercase tracking-[0.08em]">
+                    My Studio
+                  </button>
+                </Link>
                 {user?.role === 'admin' && (
-                  <Button variant="outline" asChild>
-                    <Link href="/admin">Admin</Link>
-                  </Button>
+                  <Link href="/admin">
+                    <button className="px-4 py-2.5 text-xs font-medium text-white/70 border border-white/20 hover:border-white/40 hover:text-white rounded-full transition-all duration-300 uppercase tracking-[0.08em]">
+                      Admin
+                    </button>
+                  </Link>
                 )}
                 <UserProfileDropdown unreadMessagesCount={unreadCount || 0} />
               </>
             ) : (
-              <button
-                onClick={() => setShowAuthModal(true)}
-                className="px-5 py-2.5 text-sm font-medium text-stone-600 hover:text-[#C026D3] transition-colors"
-              >
-                Sign In
-              </button>
+              <>
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="text-[13px] font-medium text-white/70 uppercase tracking-[0.15em] hover:text-white transition-colors"
+                >
+                  Sign In
+                </button>
+                <Link href="/book-session">
+                  <button className="px-6 py-2.5 text-sm font-semibold text-[#1a0a1e] bg-white hover:bg-white/90 rounded-full transition-all duration-300 uppercase tracking-[0.08em]">
+                    Let's Dance
+                    <ArrowRight className="w-3.5 h-3.5 inline ml-2 -mt-0.5" />
+                  </button>
+                </Link>
+              </>
             )}
           </div>
         </div>
       </header>
 
       {/* ── Hero Section ──────────────────────────────────────────────────── */}
-      <section className="relative py-14 md:py-28 overflow-hidden min-h-[580px] md:min-h-[750px] flex items-center bg-[#4a044e]">
+      <section className="relative overflow-hidden min-h-[100vh] flex flex-col bg-[#0d0010]">
         {/* Background — video for .mp4/.webm, direct img for everything else */}
         <div className="absolute inset-0 z-0 overflow-hidden">
           {!prefersReducedMotion && isVideoUrl(backgroundUrl) ? (
@@ -315,12 +321,11 @@ export default function Home() {
               muted
               playsInline
               preload="auto"
-              className="absolute inset-0 w-full h-full object-cover scale-105"
-              style={{ filter: 'brightness(0.45) saturate(1.15)' }}
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ filter: 'brightness(0.35) saturate(1.2)' }}
               ref={(el) => {
                 if (el) {
                   el.playbackRate = 1.2;
-                  // Re-apply on play in case browser resets it
                   el.addEventListener('play', () => { el.playbackRate = 1.2; }, { once: false });
                 }
               }}
@@ -331,7 +336,7 @@ export default function Home() {
                 fallbackImg.src = '/hero-bg.webp';
                 fallbackImg.alt = '';
                 fallbackImg.className = video.className;
-                fallbackImg.style.cssText = 'filter: brightness(0.45) saturate(1.15)';
+                fallbackImg.style.cssText = 'filter: brightness(0.35) saturate(1.2)';
                 video.parentElement?.insertBefore(fallbackImg, video);
               }}
             >
@@ -341,8 +346,8 @@ export default function Home() {
             <img
               src={backgroundUrl}
               alt=""
-              className="absolute inset-0 w-full h-full object-cover scale-105"
-              style={{ filter: 'brightness(0.45) saturate(1.15)' }}
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ filter: 'brightness(0.35) saturate(1.2)' }}
               onError={(e) => {
                 const img = e.currentTarget;
                 if (img.src !== window.location.origin + '/hero-bg.webp') {
@@ -351,76 +356,100 @@ export default function Home() {
               }}
             />
           )}
-          {/* Cinematic gradient overlay — deep plum tones */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#2e0033]/85 via-[#4a044e]/40 to-[#2e0033]/90" />
+          {/* Darker gradient overlay for deep cinematic feel */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0d0010]/60 via-transparent to-[#0d0010]" />
         </div>
 
-        <div className="container text-center relative z-10 px-4 md:px-6 w-full">
-          {/* Profile picture */}
-          <div className="flex justify-center mb-6 md:mb-8 animate-fade-up">
-            <div className="relative inline-block">
-              {/* Warm glow behind profile pic */}
-              <div className="absolute -inset-3 rounded-full bg-gradient-to-br from-fuchsia-400/50 via-purple-300/30 to-fuchsia-400/50 blur-xl" />
-              <img
-                src={heroProfilePictureUrl || "/profile.jpg"}
-                alt="Elizabeth Zolotova"
-                className="relative w-32 h-32 md:w-48 md:h-48 rounded-full object-cover shadow-[0_12px_50px_rgba(0,0,0,0.35)] ring-[3px] ring-white/20"
-                onError={(e) => { (e.target as HTMLImageElement).src = '/profile-photo.jpeg'; }}
-              />
+        {/* Hero content — pushed down to leave room for transparent nav */}
+        <div className="flex-1 flex items-center relative z-10">
+          <div className="container px-4 md:px-6 w-full py-32 md:py-40">
+            <div className="grid lg:grid-cols-[1fr_auto] gap-10 lg:gap-16 items-center">
+              {/* Left: Text content */}
+              <div className="text-center lg:text-left animate-fade-up">
+                {/* Label */}
+                <p className="text-xs uppercase tracking-[0.3em] text-[#E879F9]/60 font-semibold mb-4 animate-fade-up" style={{ fontFamily: 'var(--font-body)' }}>
+                  Professional Dance Education
+                </p>
+
+                {/* Name */}
+                <h2
+                  className="text-5xl md:text-7xl lg:text-8xl font-bold mb-5 md:mb-6 text-white tracking-[-0.03em] animate-fade-up-delay-1"
+                  style={{ fontFamily: 'var(--font-display)', textShadow: '0 4px 40px rgba(0,0,0,0.5)' }}
+                >
+                  {heroTitle || 'Elizabeth Zolotova'}
+                </h2>
+
+                {/* Tagline */}
+                <p
+                  className="text-lg md:text-xl mb-8 md:mb-10 max-w-lg mx-auto lg:mx-0 leading-relaxed text-white/60 animate-fade-up-delay-2"
+                  style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}
+                >
+                  {heroTagline || "Professional dancer & teacher — fall in love with dance."}
+                </p>
+
+                {/* CTA buttons */}
+                <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-3 md:gap-4 mb-8 animate-fade-up-delay-3">
+                  <Link href="/book-session">
+                    <span className="glow-button inline-flex items-center gap-2.5 px-8 sm:px-10 py-4 text-sm font-semibold text-[#0d0010] bg-white hover:bg-white/90 rounded-full shadow-lg tracking-wide cursor-pointer uppercase">
+                      Book a Session
+                      <ArrowRight className="w-4 h-4" />
+                    </span>
+                  </Link>
+                  <Link href="/courses">
+                    <span className="inline-flex items-center gap-2 px-8 sm:px-10 py-4 text-sm font-medium text-white/80 bg-white/[0.07] hover:bg-white/[0.14] border border-white/15 hover:border-white/30 rounded-full backdrop-blur-sm transition-all duration-300 tracking-wide cursor-pointer uppercase">
+                      Explore Courses
+                    </span>
+                  </Link>
+                </div>
+
+                {/* Social links */}
+                <div className="flex justify-center lg:justify-start gap-3 animate-fade-up-delay-3">
+                  {[
+                    { href: "https://www.instagram.com/elizabeth_zolotova/", Icon: Instagram },
+                    { href: "https://www.youtube.com/@HighHeelsTutorials", Icon: Youtube },
+                    { href: "https://www.facebook.com/liza.zolotova.399/", Icon: Facebook },
+                  ].map(({ href, Icon }) => (
+                    <a key={href} href={href} target="_blank" rel="noopener noreferrer">
+                      <span className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-white/10 bg-white/[0.05] text-white/50 hover:bg-white/10 hover:border-white/25 hover:text-white transition-all duration-300">
+                        <Icon className="h-4 w-4" />
+                      </span>
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              {/* Right: Editorial profile photo */}
+              <div className="hidden lg:block animate-fade-up-delay-2">
+                <div className="relative">
+                  {/* Fuchsia glow behind photo */}
+                  <div className="absolute -inset-6 bg-gradient-to-br from-fuchsia-500/20 via-purple-500/10 to-transparent blur-3xl rounded-3xl" />
+                  <img
+                    src={heroProfilePictureUrl || "/profile.jpg"}
+                    alt="Elizabeth Zolotova"
+                    className="relative w-[320px] h-[420px] object-cover rounded-2xl shadow-[0_30px_80px_rgba(0,0,0,0.5)] ring-1 ring-white/10"
+                    onError={(e) => { (e.target as HTMLImageElement).src = '/profile-photo.jpeg'; }}
+                  />
+                  {/* Subtle label on image */}
+                  <div className="absolute bottom-4 left-4 right-4 bg-black/40 backdrop-blur-md rounded-xl px-4 py-3 border border-white/10">
+                    <p className="text-white/90 text-sm font-semibold" style={{ fontFamily: 'var(--font-body)' }}>Elizabeth Zolotova</p>
+                    <p className="text-white/50 text-xs">High Heels Dance Instructor</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mobile: profile photo below CTAs */}
+              <div className="lg:hidden flex justify-center animate-fade-up-delay-3">
+                <div className="relative">
+                  <div className="absolute -inset-4 bg-gradient-to-br from-fuchsia-500/20 via-purple-500/10 to-transparent blur-2xl rounded-2xl" />
+                  <img
+                    src={heroProfilePictureUrl || "/profile.jpg"}
+                    alt="Elizabeth Zolotova"
+                    className="relative w-48 h-64 object-cover rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.4)] ring-1 ring-white/10"
+                    onError={(e) => { (e.target as HTMLImageElement).src = '/profile-photo.jpeg'; }}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-
-          {/* Name */}
-          <h2
-            className="text-5xl md:text-8xl font-bold mb-3 md:mb-5 text-white tracking-[-0.03em] animate-fade-up-delay-1"
-            style={{ fontFamily: 'var(--font-display)', textShadow: '0 4px 30px rgba(0,0,0,0.4)' }}
-          >
-            {heroTitle || 'Elizabeth Zolotova'}
-          </h2>
-
-          {/* Elegant gold divider */}
-          <div className="flex items-center justify-center gap-4 mb-4 md:mb-5 animate-fade-up-delay-1">
-            <div className="h-px w-16 bg-gradient-to-r from-transparent to-fuchsia-400/50" />
-            <div className="w-1.5 h-1.5 rounded-full bg-fuchsia-400/60 shadow-[0_0_8px_rgba(196,164,110,0.4)]" />
-            <div className="h-px w-16 bg-gradient-to-l from-transparent to-fuchsia-400/50" />
-          </div>
-
-          {/* Tagline */}
-          <p
-            className="text-lg md:text-xl mb-8 md:mb-12 max-w-xl mx-auto leading-relaxed text-white/70 tracking-wide animate-fade-up-delay-2"
-            style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}
-          >
-            {heroTagline || "Professional dancer & teacher — fall in love with dance."}
-          </p>
-
-          {/* Social links */}
-          <div className="flex justify-center gap-3 md:gap-4 mb-8 md:mb-10 animate-fade-up-delay-2">
-            {[
-              { href: "https://www.instagram.com/elizabeth_zolotova/", Icon: Instagram },
-              { href: "https://www.youtube.com/@HighHeelsTutorials", Icon: Youtube },
-              { href: "https://www.facebook.com/liza.zolotova.399/", Icon: Facebook },
-            ].map(({ href, Icon }) => (
-              <a key={href} href={href} target="_blank" rel="noopener noreferrer">
-                <span className="inline-flex items-center justify-center w-11 h-11 rounded-full border border-white/15 bg-white/[0.06] text-white/75 hover:bg-white/15 hover:border-white/35 hover:text-white backdrop-blur-sm transition-all duration-300 hover:scale-110">
-                  <Icon className="h-4 w-4" />
-                </span>
-              </a>
-            ))}
-          </div>
-
-          {/* CTA buttons */}
-          <div className="flex flex-col sm:flex-row justify-center gap-3 md:gap-4 animate-fade-up-delay-3">
-            <Link href="/book-session">
-              <span className="glow-button inline-flex items-center gap-2.5 px-8 sm:px-10 md:px-12 py-3.5 sm:py-4 md:py-[18px] text-sm md:text-base font-semibold text-white bg-[#C026D3] hover:bg-[#A21CAF] rounded-full shadow-lg shadow-[#C026D3]/25 tracking-wide cursor-pointer">
-                Book a Dance Session
-                <ArrowRight className="w-4 h-4" />
-              </span>
-            </Link>
-            <Link href="/courses">
-              <span className="inline-flex items-center gap-2 px-8 sm:px-10 md:px-12 py-3.5 sm:py-4 md:py-[18px] text-sm md:text-base font-medium text-white/85 bg-white/[0.07] hover:bg-white/[0.14] border border-white/15 hover:border-white/30 rounded-full backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 tracking-wide cursor-pointer">
-                Explore Courses
-              </span>
-            </Link>
           </div>
         </div>
       </section>
@@ -429,35 +458,35 @@ export default function Home() {
       <UpcomingSessionsWidget />
 
       {/* ── Courses Section ───────────────────────────────────────────────── */}
-      <section className="py-14 md:py-28 bg-[#FDF4FF] relative overflow-hidden">
-        {/* Subtle warm ambient glow */}
-        <div className="absolute inset-0 opacity-[0.03] z-0">
-          <div className="absolute top-20 left-10 w-[500px] h-[500px] bg-fuchsia-400 rounded-full blur-[120px]" />
-          <div className="absolute bottom-20 right-10 w-[400px] h-[400px] bg-purple-300 rounded-full blur-[120px]" />
+      <section className="py-16 md:py-28 bg-[#0d0010] relative overflow-hidden">
+        {/* Subtle ambient glow */}
+        <div className="absolute inset-0 opacity-[0.06] z-0">
+          <div className="absolute top-20 left-10 w-[500px] h-[500px] bg-fuchsia-500 rounded-full blur-[150px]" />
+          <div className="absolute bottom-20 right-10 w-[400px] h-[400px] bg-purple-400 rounded-full blur-[150px]" />
         </div>
         <div className="container relative z-10">
           <div className="text-center mb-14">
-            <p className="text-xs uppercase tracking-[0.3em] text-[#C026D3]/50 font-semibold mb-3" style={{ fontFamily: 'var(--font-body)' }}>Learn with passion</p>
-            <h3 className="text-3xl md:text-[3.5rem] font-bold mb-3 md:mb-4 text-[#831843] tracking-[-0.02em]" style={{ fontFamily: 'var(--font-display)' }}>
+            <p className="text-xs uppercase tracking-[0.3em] text-[#E879F9]/50 font-semibold mb-3" style={{ fontFamily: 'var(--font-body)' }}>Learn with passion</p>
+            <h3 className="text-3xl md:text-[3.5rem] font-bold mb-3 md:mb-4 text-white tracking-[-0.02em]" style={{ fontFamily: 'var(--font-display)' }}>
               {coursesHeading || 'Dance Courses'}
             </h3>
             <div className="flex items-center justify-center gap-3 mb-5">
-              <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#E879F9]/40" />
-              <div className="w-1 h-1 rounded-full bg-[#E879F9]/50" />
-              <div className="h-px w-12 bg-gradient-to-l from-transparent to-[#E879F9]/40" />
+              <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#E879F9]/30" />
+              <div className="w-1 h-1 rounded-full bg-[#E879F9]/40" />
+              <div className="h-px w-12 bg-gradient-to-l from-transparent to-[#E879F9]/30" />
             </div>
-            <p className="text-base md:text-lg text-stone-500 max-w-xl mx-auto mb-9 md:mb-11 leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-base md:text-lg text-white/40 max-w-xl mx-auto mb-9 md:mb-11 leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
               Professionally designed courses for every level — from your very first steps to stage performance
             </p>
 
             {/* Filter tabs */}
-            <div className="inline-flex items-center gap-1 bg-white p-1 rounded-full shadow-sm border border-stone-200/70">
+            <div className="inline-flex items-center gap-1 bg-white/[0.06] p-1 rounded-full border border-white/[0.08]">
               <button
                 onClick={() => setCourseFilter('all')}
                 className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                   courseFilter === 'all'
                     ? 'bg-[#C026D3] text-white shadow-sm'
-                    : 'text-stone-500 hover:text-stone-800 hover:bg-stone-50'
+                    : 'text-white/50 hover:text-white hover:bg-white/[0.06]'
                 }`}
               >
                 All
@@ -471,8 +500,8 @@ export default function Home() {
                 onClick={() => setCourseFilter('free')}
                 className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                   courseFilter === 'free'
-                    ? 'bg-emerald-700 text-white shadow-sm'
-                    : 'text-stone-500 hover:text-stone-800 hover:bg-stone-50'
+                    ? 'bg-emerald-600 text-white shadow-sm'
+                    : 'text-white/50 hover:text-white hover:bg-white/[0.06]'
                 }`}
               >
                 Free
@@ -487,7 +516,7 @@ export default function Home() {
                 className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                   courseFilter === 'premium'
                     ? 'bg-[#E879F9] text-white shadow-sm'
-                    : 'text-stone-500 hover:text-stone-800 hover:bg-stone-50'
+                    : 'text-white/50 hover:text-white hover:bg-white/[0.06]'
                 }`}
               >
                 Premium
@@ -502,131 +531,90 @@ export default function Home() {
 
           {filteredCourses.length > 0 ? (
             <div className="relative max-w-7xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8 items-stretch">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 items-stretch">
                 {filteredCourses.slice(0, 6).map((course, idx) => (
                   <ScrollReveal key={course.id} delay={idx * 0.08}>
                   <Link href={`/course/${course.id}`}>
-                    <Card className="group overflow-hidden shadow-bloom border border-stone-200/50 bg-white flex flex-col h-full cursor-pointer">
-                      {/* Thumbnail */}
-                      <div className="relative">
+                    <div className="group cursor-pointer">
+                      {/* Large image */}
+                      <div className="relative overflow-hidden rounded-xl mb-4">
                         {course.imageUrl ? (
-                          <>
-                            <img
-                              src={course.imageUrl}
-                              alt={course.title}
-                              className="w-full h-56 object-cover rounded-t-lg transition-transform duration-700 group-hover:scale-[1.04]"
-                            />
-                            {course.isTopPick && (
-                              <div className="absolute top-3 left-3 z-10">
-                                <div className="bg-[#C026D3] text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5 tracking-wide">
-                                  <Sparkles className="w-3 h-3" />
-                                  TOP PICK
-                                </div>
-                              </div>
-                            )}
-                            {!course.isFree && (
-                              <div className="absolute top-3 right-3 bg-[#E879F9] text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg tracking-wide">
-                                PREMIUM
-                              </div>
-                            )}
-                          </>
+                          <img
+                            src={course.imageUrl}
+                            alt={course.title}
+                            className="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+                          />
                         ) : (
-                          <div className="w-full h-56 bg-gradient-to-br from-[#831843] via-[#86198F] to-[#701A75] rounded-t-lg flex items-center justify-center relative overflow-hidden">
+                          <div className="w-full h-64 bg-gradient-to-br from-[#831843] via-[#86198F] to-[#701A75] flex items-center justify-center relative overflow-hidden">
                             <div className="absolute inset-0 opacity-30">
                               <div className="absolute top-0 left-1/4 w-40 h-40 bg-[#C026D3] rounded-full blur-3xl" />
                               <div className="absolute bottom-0 right-1/4 w-40 h-40 bg-[#E879F9] rounded-full blur-3xl" />
                             </div>
                             <span className="text-6xl relative z-10 transition-transform duration-500 group-hover:scale-110">👠</span>
-                            {course.isTopPick && (
-                              <div className="absolute top-3 left-3 z-10">
-                                <div className="bg-white/15 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5 tracking-wide border border-white/20">
-                                  <Sparkles className="w-3 h-3" />
-                                  TOP PICK
-                                </div>
-                              </div>
-                            )}
-                            {!course.isFree && (
-                              <div className="absolute top-3 right-3 bg-[#E879F9]/80 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg tracking-wide">
-                                PREMIUM
-                              </div>
-                            )}
                           </div>
                         )}
+                        {/* Overlay badges */}
+                        {course.isTopPick && (
+                          <div className="absolute top-3 left-3 z-10">
+                            <span className="uppercase text-[11px] font-bold tracking-[0.15em] text-white/80">{course.isFree ? 'Free' : `€${course.price}`}</span>
+                          </div>
+                        )}
+                        <div className="absolute top-3 right-3">
+                          <span className="uppercase text-[11px] font-bold tracking-[0.15em] text-white/80">
+                            {course.isFree ? 'Free' : course.isTopPick ? 'Top Pick' : 'Premium'}
+                          </span>
+                        </div>
+                        {/* Bottom gradient for readability */}
+                        <div className="absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-black/40 to-transparent" />
                       </div>
-
-                      <CardHeader className="pb-3 flex-grow">
-                        <div className="flex justify-between items-start mb-2">
-                          <CardTitle className="text-lg font-semibold text-[#831843] group-hover:text-[#C026D3] transition-colors" style={{ fontFamily: 'var(--font-display)' }}>
-                            {course.title}
-                          </CardTitle>
-                          {course.isFree && (
-                            <Badge className="bg-emerald-700 text-white border-0 shadow-sm shrink-0 text-xs">
-                              Free
-                            </Badge>
+                      {/* Title + price */}
+                      <h4 className="text-lg font-semibold text-white group-hover:text-[#E879F9] transition-colors mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+                        {course.title}
+                      </h4>
+                      <p className="text-sm text-white/40 line-clamp-2 mb-3">{course.description}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-lg font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>
+                          {course.isFree ? 'Free' : `€${course.price}`}
+                          {course.originalPrice && Number(course.originalPrice) > Number(course.price) && (
+                            <span className="ml-2 text-sm text-white/30 line-through font-normal">€{course.originalPrice}</span>
                           )}
-                        </div>
-                        <CardDescription className="line-clamp-3 text-sm leading-relaxed text-stone-500">
-                          {course.description}
-                        </CardDescription>
-                      </CardHeader>
-
-                      <CardContent className="pb-4">
-                        <div className="flex items-baseline gap-2">
-                          {course.isFree ? (
-                            <span className="text-3xl font-bold text-emerald-700" style={{ fontFamily: 'var(--font-display)' }}>
-                              Free
-                            </span>
-                          ) : (
-                            <>
-                              <span className="text-3xl font-bold text-[#831843]" style={{ fontFamily: 'var(--font-display)' }}>
-                                €{course.price}
-                              </span>
-                              {course.originalPrice && Number(course.originalPrice) > Number(course.price) && (
-                                <span className="text-lg text-stone-400 line-through">
-                                  €{course.originalPrice}
-                                </span>
-                              )}
-                            </>
-                          )}
-                        </div>
-                      </CardContent>
-
-                      <CardFooter className="mt-auto">
-                        <div className="glow-button w-full text-sm py-3.5 bg-[#C026D3] hover:bg-[#A21CAF] shadow-sm rounded-lg flex items-center justify-center text-white font-semibold tracking-wide gap-2">
-                          <span>Enroll Now</span>
-                          <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
-                        </div>
-                      </CardFooter>
-                    </Card>
+                        </span>
+                        <span className="text-sm font-medium text-[#E879F9] uppercase tracking-wide opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                          View <ArrowRight className="w-3.5 h-3.5" />
+                        </span>
+                      </div>
+                      {/* Separator line */}
+                      <div className="mt-4 h-px bg-gradient-to-r from-[#E879F9]/30 via-[#C026D3]/20 to-transparent" />
+                    </div>
                   </Link>
                   </ScrollReveal>
                 ))}
               </div>
 
               {filteredCourses.length > 6 && (
-                <div className="flex justify-center mt-10">
-                  <Button size="sm" variant="outline" className="shadow-sm border-stone-300 text-stone-600 hover:bg-stone-50 hover:border-stone-400 font-medium rounded-full px-6" asChild>
-                    <Link href="/courses">View All {filteredCourses.length} Courses</Link>
-                  </Button>
+                <div className="flex justify-center mt-12">
+                  <Link href="/courses">
+                    <button className="px-8 py-3 text-sm font-medium text-white/70 border border-white/15 hover:border-white/30 hover:text-white rounded-full transition-all duration-300 uppercase tracking-[0.1em]">
+                      View All {filteredCourses.length} Courses
+                    </button>
+                  </Link>
                 </div>
               )}
             </div>
           ) : (
             <div className="text-center py-12">
-              <p className="text-muted-foreground text-lg">
+              <p className="text-white/40 text-lg">
                 {courseFilter === 'all'
                   ? 'No courses available at the moment. Check back soon!'
                   : `No ${courseFilter} courses available at the moment.`}
               </p>
               {courseFilter !== 'all' && (
-                <Button
-                  variant="outline"
-                  size="sm"
+                <button
                   onClick={() => setCourseFilter('all')}
-                  className="mt-4 border-gray-300 text-gray-700 hover:bg-gray-50 font-medium"
+                  className="mt-4 px-6 py-2 text-sm text-white/60 border border-white/15 hover:border-white/30 rounded-full transition-all"
                 >
                   View All Courses
-                </Button>
+                </button>
               )}
             </div>
           )}
@@ -634,142 +622,92 @@ export default function Home() {
       </section>
 
       {/* ── Testimonials Section ──────────────────────────────────────────── */}
-      <section className="py-16 md:py-28 bg-gradient-to-b from-[#4a044e] via-[#701A75] to-[#4a044e] relative overflow-hidden">
-        {/* Subtle ambient glows */}
-        <div className="absolute inset-0 opacity-15">
-          <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[#C026D3] rounded-full blur-[150px]" />
-          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-[#E879F9] rounded-full blur-[150px]" />
-        </div>
+      <section className="py-20 md:py-32 bg-[#141118] relative overflow-hidden">
         <div className="container relative z-10">
-          <ScrollReveal>
-          <div className="text-center mb-16">
-            <p className="text-xs uppercase tracking-[0.3em] text-[#E879F9]/60 font-semibold mb-3" style={{ fontFamily: 'var(--font-body)' }}>Their words</p>
-            <h3 className="text-3xl md:text-[3.5rem] font-bold mb-3 text-white/95 tracking-[-0.02em]" style={{ fontFamily: 'var(--font-display)' }}>
-              {testimonialsHeading || 'Student Success Stories'}
-            </h3>
-            <div className="flex items-center justify-center gap-4 mb-5">
-              <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#E879F9]/30" />
-              <div className="w-1 h-1 rounded-full bg-[#E879F9]/40" />
-              <div className="h-px w-12 bg-gradient-to-l from-transparent to-[#E879F9]/30" />
-            </div>
-            <p className="text-base md:text-lg text-white/45 max-w-xl mx-auto" style={{ fontFamily: 'var(--font-body)' }}>
-              Hear from our students about their transformation
-            </p>
-          </div>
-          </ScrollReveal>
           <Carousel
-            opts={{ align: "start", loop: true }}
+            opts={{ align: "center", loop: true }}
             plugins={[Autoplay({ delay: 6000 })]}
-            className="w-full max-w-6xl mx-auto"
+            className="w-full max-w-4xl mx-auto"
           >
             <CarouselContent>
               {allTestimonials.map((testimonial, index) => (
                 <CarouselItem
                   key={`${testimonial.type}-${testimonial.id}-${index}`}
-                  className="md:basis-1/2 lg:basis-1/3"
+                  className="basis-full"
                 >
                   {testimonial.type === 'video' && (testimonial as any).videoUrl ? (
-                    <Card
-                      className="h-full cursor-pointer hover:shadow-xl transition-all duration-300 group bg-white/[0.07] backdrop-blur-md border-white/[0.10] hover:bg-white/[0.12] hover:border-white/[0.16]"
+                    <div
+                      className="text-center px-4 cursor-pointer group"
                       onClick={() => setSelectedVideo(testimonial)}
                     >
-                      <div className="relative aspect-video bg-gradient-to-br from-[#831843] to-[#701A75] overflow-hidden">
-                        <video
-                          data-src={(testimonial as any).videoUrl}
-                          data-lazy="true"
-                          className="w-full h-full object-cover"
-                          preload="none"
-                          poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 9'%3E%3Crect fill='%234A1225' width='16' height='9'/%3E%3C/svg%3E"
-                        />
-                        <div className="absolute inset-0 bg-black/25 group-hover:bg-black/35 transition-colors flex items-center justify-center">
-                          <div className="bg-white/90 rounded-full p-3.5 group-hover:scale-110 transition-transform shadow-lg">
-                            <Play className="h-7 w-7 text-[#C026D3] fill-[#C026D3]" />
-                          </div>
-                        </div>
+                      {/* Play button for video testimonial */}
+                      <div className="relative w-20 h-20 mx-auto mb-8 rounded-full bg-gradient-to-br from-fuchsia-500 to-purple-500 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Play className="h-8 w-8 text-white fill-white ml-1" />
                       </div>
-                      <CardHeader>
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-[#C026D3]/40 flex items-center justify-center font-semibold text-white/70 text-sm">
-                              {testimonial.userName.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                              <CardTitle className="text-sm text-white/85">{testimonial.userName}</CardTitle>
-                              <div className="flex gap-0.5 mt-1">
-                                {Array.from({ length: testimonial.rating }).map((_, i) => (
-                                  <Star key={i} className="h-3 w-3 fill-[#E879F9] text-[#E879F9]" />
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                          <Badge variant="secondary" className="bg-white/10 text-white/60 border-0 text-xs">Video</Badge>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-white/50 line-clamp-2 italic" style={{ fontFamily: 'var(--font-display)' }}>"{testimonial.review}"</p>
-                      </CardContent>
-                    </Card>
+                      <p className="text-xl md:text-2xl lg:text-3xl text-white/80 italic leading-relaxed max-w-3xl mx-auto mb-8" style={{ fontFamily: 'var(--font-display)' }}>
+                        "{testimonial.review}"
+                      </p>
+                      <p className="text-xs uppercase tracking-[0.2em] text-white/40 font-medium">
+                        {testimonial.userName}, Student
+                      </p>
+                    </div>
                   ) : (
-                    <Card className="h-full bg-white/[0.07] backdrop-blur-md border-white/[0.10] hover:bg-white/[0.12] hover:border-white/[0.16] transition-all duration-300">
-                      <CardHeader>
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className="w-11 h-11 rounded-full bg-[#C026D3]/30 flex items-center justify-center font-semibold text-white/60 text-base">
-                            {testimonial.userName.charAt(0).toUpperCase()}
-                          </div>
-                          <div className="flex-1">
-                            <CardTitle className="text-sm text-white/85">{testimonial.userName}</CardTitle>
-                            <div className="flex gap-0.5 mt-1">
-                              {Array.from({ length: testimonial.rating }).map((_, i) => (
-                                <Star key={i} className="h-3.5 w-3.5 fill-[#E879F9] text-[#E879F9]" />
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <p className="text-sm text-white/55 italic leading-relaxed" style={{ fontFamily: 'var(--font-display)' }}>"{testimonial.review}"</p>
-                      </CardContent>
-                    </Card>
+                    <div className="text-center px-4">
+                      {/* Large quote marks */}
+                      <div className="text-6xl md:text-7xl text-white/20 leading-none mb-2 select-none" style={{ fontFamily: 'Georgia, serif' }}>"</div>
+                      {/* Avatar */}
+                      <div className="w-16 h-16 mx-auto mb-8 rounded-full bg-gradient-to-br from-fuchsia-500 to-purple-500 flex items-center justify-center text-white text-xl font-bold ring-4 ring-fuchsia-500/20">
+                        {testimonial.userName.charAt(0).toUpperCase()}
+                      </div>
+                      {/* Quote text */}
+                      <p className="text-xl md:text-2xl lg:text-3xl text-white/80 italic leading-relaxed max-w-3xl mx-auto mb-8" style={{ fontFamily: 'var(--font-display)' }}>
+                        "{testimonial.review}"
+                      </p>
+                      {/* Name */}
+                      <p className="text-xs uppercase tracking-[0.2em] text-white/40 font-medium">
+                        {testimonial.userName}, Student
+                      </p>
+                    </div>
                   )}
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="hidden md:flex" />
-            <CarouselNext className="hidden md:flex" />
+            <CarouselPrevious className="hidden md:flex -left-12 border-white/10 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white" />
+            <CarouselNext className="hidden md:flex -right-12 border-white/10 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white" />
           </Carousel>
         </div>
       </section>
 
       {/* ── Footer ────────────────────────────────────────────────────────── */}
-      <footer className="border-t border-stone-200/40 py-14 md:py-18 bg-[#FDF4FF]">
+      <footer className="border-t border-white/[0.06] py-14 md:py-18 bg-[#0d0010]">
         <div className="container px-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-8">
             {/* Brand */}
             <div>
-              <h3 className="text-xl font-bold text-[#831843] mb-2" style={{ fontFamily: 'var(--font-display)' }}>High Heels Dance</h3>
-              <p className="text-sm text-stone-500">Professional dance education with Elizabeth Zolotova. Fall in love with dance.</p>
+              <h3 className="text-base font-bold text-white uppercase tracking-[0.1em] mb-2" style={{ fontFamily: 'var(--font-body)' }}>High Heels Dance</h3>
+              <p className="text-sm text-white/35">Professional dance education with Elizabeth Zolotova. Fall in love with dance.</p>
             </div>
             {/* Quick Links */}
             <div>
-              <h4 className="text-sm font-semibold text-stone-700 mb-3">Quick Links</h4>
+              <h4 className="text-xs font-semibold text-white/50 uppercase tracking-[0.15em] mb-3">Quick Links</h4>
               <div className="flex flex-col gap-2">
-                <a href="/courses" className="text-sm text-stone-500 hover:text-[#C026D3] transition-colors">Browse Courses</a>
-                <a href="/book-session" className="text-sm text-stone-500 hover:text-[#C026D3] transition-colors">Book a Session</a>
-                <a href="/membership" className="text-sm text-stone-500 hover:text-[#C026D3] transition-colors">Membership</a>
+                <a href="/courses" className="text-sm text-white/40 hover:text-[#E879F9] transition-colors">Browse Courses</a>
+                <a href="/book-session" className="text-sm text-white/40 hover:text-[#E879F9] transition-colors">Book a Session</a>
+                <a href="/membership" className="text-sm text-white/40 hover:text-[#E879F9] transition-colors">Membership</a>
               </div>
             </div>
             {/* Contact */}
             <div>
-              <h4 className="text-sm font-semibold text-stone-700 mb-3">Connect</h4>
+              <h4 className="text-xs font-semibold text-white/50 uppercase tracking-[0.15em] mb-3">Connect</h4>
               <div className="flex flex-col gap-2">
-                <a href="https://www.instagram.com/elizabeth_zolotova/" target="_blank" rel="noopener noreferrer" className="text-sm text-stone-500 hover:text-[#C026D3] transition-colors">Instagram</a>
-                <a href="https://www.youtube.com/@elizabeth_zolotova" target="_blank" rel="noopener noreferrer" className="text-sm text-stone-500 hover:text-[#C026D3] transition-colors">YouTube</a>
-                <a href="mailto:dance.with.elizabeth.zolotova@gmail.com" className="text-sm text-stone-500 hover:text-[#C026D3] transition-colors">Contact Us</a>
+                <a href="https://www.instagram.com/elizabeth_zolotova/" target="_blank" rel="noopener noreferrer" className="text-sm text-white/40 hover:text-[#E879F9] transition-colors">Instagram</a>
+                <a href="https://www.youtube.com/@elizabeth_zolotova" target="_blank" rel="noopener noreferrer" className="text-sm text-white/40 hover:text-[#E879F9] transition-colors">YouTube</a>
+                <a href="mailto:dance.with.elizabeth.zolotova@gmail.com" className="text-sm text-white/40 hover:text-[#E879F9] transition-colors">Contact Us</a>
               </div>
             </div>
           </div>
-          <div className="border-t border-stone-200/40 pt-8 text-center">
-            <p className="text-xs text-stone-400">&copy; 2026 High Heels Dance — Elizabeth Zolotova. All rights reserved.</p>
+          <div className="border-t border-white/[0.06] pt-8 text-center">
+            <p className="text-xs text-white/25">&copy; 2026 High Heels Dance — Elizabeth Zolotova. All rights reserved.</p>
           </div>
         </div>
       </footer>
