@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { VideoUpload } from "@/components/VideoUpload";
 import { BunnyVideoUploader } from "@/components/BunnyVideoUploader";
+import { BulkVideoUploadDialog } from "@/components/BulkVideoUploadDialog";
 import {
   GraduationCap,
   ShoppingCart,
@@ -29,6 +30,8 @@ import {
   Eye,
   EyeOff,
   Pencil,
+  FolderUp,
+  Video,
 } from "lucide-react";
 
 type Tab = "thumbnail" | "checkout" | "course" | "options";
@@ -200,6 +203,7 @@ export default function CourseContentManager() {
                   <ModuleCard
                     key={module.id}
                     module={module}
+                    courseId={courseId}
                     isSelected={selectedModuleId === module.id}
                     onSelect={() => setSelectedModuleId(module.id)}
                     onDelete={() => deleteModuleMutation.mutate({ id: module.id })}
@@ -248,6 +252,7 @@ export default function CourseContentManager() {
 // Module Card Component
 function ModuleCard({
   module,
+  courseId,
   isSelected,
   onSelect,
   onDelete,
@@ -256,6 +261,7 @@ function ModuleCard({
   onDeleteLesson,
 }: {
   module: any;
+  courseId: number;
   isSelected: boolean;
   onSelect: () => void;
   onDelete: () => void;
@@ -263,6 +269,38 @@ function ModuleCard({
   onAddLesson: (title: string) => void;
   onDeleteLesson: (lessonId: number) => void;
 }) {
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const utils = trpc.useUtils();
+
+  const createLessonMut = trpc.admin.courseContent.createLesson.useMutation();
+  const bunnyUploadMut = trpc.admin.media.uploadLessonToBunny.useMutation();
+
+  const handleBulkUploadLesson = async (params: {
+    moduleId: number;
+    courseId: number;
+    title: string;
+    order: number;
+    isFree: boolean;
+    file: File;
+    base64: string;
+  }) => {
+    // 1. Create the lesson
+    const lesson = await createLessonMut.mutateAsync({
+      moduleId: params.moduleId,
+      courseId: params.courseId,
+      title: params.title,
+      order: params.order,
+      isFree: params.isFree,
+    });
+
+    // 2. Upload video to Bunny
+    await bunnyUploadMut.mutateAsync({
+      lessonId: lesson.id,
+      title: params.title,
+      data: params.base64,
+    });
+  };
+
   return (
     <Card className="border-2">
       <div className="p-4">
@@ -309,12 +347,42 @@ function ModuleCard({
                 key={lesson.id}
                 className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg"
               >
-                <GripVertical className="w-4 h-4 text-muted-foreground cursor-move" />
-                <div className="flex-1">
-                  <p className="font-medium text-sm">{lesson.title}</p>
-                  {lesson.duration && (
-                    <p className="text-xs text-muted-foreground">{lesson.duration}min</p>
-                  )}
+                <GripVertical className="w-4 h-4 text-muted-foreground cursor-move flex-shrink-0" />
+                {/* Thumbnail */}
+                {lesson.bunnyThumbnailUrl && lesson.videoStatus === 'ready' ? (
+                  <img
+                    src={lesson.bunnyThumbnailUrl}
+                    alt=""
+                    className="w-14 h-9 rounded object-cover flex-shrink-0 bg-black"
+                  />
+                ) : lesson.bunnyVideoId ? (
+                  <div className="w-14 h-9 rounded bg-muted flex items-center justify-center flex-shrink-0">
+                    <Video className="w-4 h-4 text-muted-foreground" />
+                  </div>
+                ) : null}
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">{lesson.title}</p>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    {lesson.durationSeconds && lesson.durationSeconds > 0 ? (
+                      <span>{Math.floor(lesson.durationSeconds / 60)}:{String(lesson.durationSeconds % 60).padStart(2, '0')}</span>
+                    ) : lesson.duration ? (
+                      <span>{lesson.duration}min</span>
+                    ) : null}
+                    {lesson.videoStatus && lesson.videoStatus !== 'pending' && (
+                      <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                        lesson.videoStatus === 'ready' ? 'bg-emerald-100 text-emerald-700' :
+                        lesson.videoStatus === 'failed' ? 'bg-red-100 text-red-700' :
+                        'bg-amber-100 text-amber-700'
+                      }`}>
+                        {lesson.videoStatus}
+                      </span>
+                    )}
+                    {lesson.isFree && (
+                      <span className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-700">
+                        free
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <EditLessonDialog lesson={lesson} />
                 <Button
@@ -327,8 +395,33 @@ function ModuleCard({
               </div>
             ))}
 
-            {/* Add Lesson Button */}
-            <AddLessonDialog onAdd={onAddLesson} />
+            {/* Add Lesson + Bulk Upload buttons */}
+            <div className="flex gap-2">
+              <AddLessonDialog onAdd={onAddLesson} />
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-dashed"
+                onClick={() => setBulkOpen(true)}
+              >
+                <FolderUp className="w-3 h-3 mr-2" />
+                Bulk Upload
+              </Button>
+            </div>
+
+            <BulkVideoUploadDialog
+              open={bulkOpen}
+              onOpenChange={setBulkOpen}
+              moduleId={module.id}
+              courseId={courseId}
+              nextOrder={lessons.length}
+              onUploadLesson={handleBulkUploadLesson}
+              onComplete={() => {
+                utils.admin.courseContent.getLessons.invalidate();
+                utils.admin.courseContent.getModules.invalidate();
+                toast.success("Bulk upload complete!");
+              }}
+            />
           </div>
         )}
       </div>
@@ -415,7 +508,7 @@ function AddLessonDialog({ onAdd }: { onAdd: (title: string) => void }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="w-full border-dashed">
+        <Button variant="outline" size="sm" className="flex-1 border-dashed">
           <Plus className="w-3 h-3 mr-2" />
           Add Lesson
         </Button>
