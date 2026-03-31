@@ -1,358 +1,192 @@
 import { useAuth } from "@/_core/hooks/useAuth";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { trpc } from "@/lib/trpc";
-import { 
-  DollarSign, 
-  Users, 
-  BookOpen, 
-  Calendar,
-  TrendingUp,
-  TrendingDown,
-  Eye,
-  MousePointer,
-  Clock,
-  Activity
-} from "lucide-react";
+import { DollarSign, Users, BookOpen, Calendar, TrendingUp } from "lucide-react";
 import { AdminLayout } from "@/components/AdminLayout";
-import { AnalyticsChart } from "@/components/AnalyticsChart";
-import { Button } from "@/components/ui/button";
-import { useState } from "react";
 
 export default function AdminDashboard() {
   const { user, isAuthenticated } = useAuth();
-  const [analyticsPeriod, setAnalyticsPeriod] = useState<'24h' | '7d' | '30d'>('7d');
-  
-  const { data: stats, isLoading: statsLoading } = trpc.admin.dashboard.stats.useQuery(
+
+  const { data: stats, isLoading } = trpc.admin.dashboard.stats.useQuery(
     undefined,
     { enabled: isAuthenticated && user?.role === 'admin', retry: 1 }
   );
 
-  const { data: revenue, isLoading: revenueLoading } = trpc.admin.dashboard.revenue.useQuery(
-    undefined,
-    { enabled: isAuthenticated && user?.role === 'admin', retry: 1 }
-  );
-  
-  // Calculate date range based on selected period
-  const getDateRange = (period: '24h' | '7d' | '30d') => {
-    const end = new Date();
-    const start = new Date();
-    
-    switch (period) {
-      case '24h':
-        start.setHours(start.getHours() - 24);
-        break;
-      case '7d':
-        start.setDate(start.getDate() - 7);
-        break;
-      case '30d':
-        start.setDate(start.getDate() - 30);
-        break;
-    }
-    
-    return { startDate: start.toISOString(), endDate: end.toISOString() };
+  const s = {
+    totalUsers: 0, totalCourses: 0, totalRevenue: 0, courseRevenue: 0,
+    sessionRevenue: 0, totalBookings: 0, freeBookings: 0, paidBookings: 0,
+    paidCourses: 0, freeCourses: 0, coursePurchases: 0, confirmedBookings: 0,
+    newUsersToday: 0, newUsersThisWeek: 0, popularCourses: [] as any[],
+    ...(stats || {}),
   };
-  
-  const dateRange = getDateRange(analyticsPeriod);
-  const { data: analytics, isLoading: analyticsLoading } = trpc.admin.dashboard.analytics.useQuery(
-    dateRange,
-    { enabled: isAuthenticated && user?.role === 'admin', retry: 1 }
-  );
 
-  if (statsLoading || revenueLoading) {
+  const fmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'EUR' }).format(n || 0);
+  const pct = (a: number, b: number) => b > 0 ? ((a / b) * 100).toFixed(1) : "0";
+
+  if (isLoading) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center h-96">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
         </div>
       </AdminLayout>
     );
   }
 
-  // Safe defaults for all properties the template uses
-  const defaultStats = { totalUsers: 0, totalCourses: 0, totalRevenue: 0, courseRevenue: 0, sessionRevenue: 0, totalBookings: 0, freeBookings: 0, paidBookings: 0, paidCourses: 0, freeCourses: 0, newUsersToday: 0, newUsersThisWeek: 0, topCourses: [] as any[] };
-  const safeStats = { ...defaultStats, ...(stats || {}) };
-  const safeRevenue = { today: 0, yesterday: 0, week: 0, lastWeek: 0, month: 0, lastMonth: 0, ...(revenue || {}) };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(amount);
-  };
-
-  const calculateChange = (current: number, previous: number) => {
-    if (previous === 0) return current > 0 ? 100 : 0;
-    return ((current - previous) / previous) * 100;
-  };
-
   return (
     <AdminLayout>
-      <div className="space-y-8">
+      <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          <p className="text-muted-foreground mt-2">
-            Overview of your dance course platform performance
-          </p>
+          <p className="text-muted-foreground mt-1">Platform overview</p>
         </div>
 
         {/* Key Metrics */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+              <CardTitle className="text-sm font-medium">Revenue</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{formatCurrency(safeStats.totalRevenue)}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Lifetime earnings
-              </p>
+              <div className="text-2xl font-bold">{fmt(s.totalRevenue)}</div>
+              <p className="text-xs text-muted-foreground mt-1">Lifetime earnings</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+              <CardTitle className="text-sm font-medium">Users</CardTitle>
               <Users className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{safeStats.totalUsers}</div>
+              <div className="text-2xl font-bold">{s.totalUsers}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                Registered students
+                +{s.newUsersThisWeek} this week
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Courses</CardTitle>
+              <CardTitle className="text-sm font-medium">Courses</CardTitle>
               <BookOpen className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{safeStats.totalCourses}</div>
+              <div className="text-2xl font-bold">{s.totalCourses}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                {safeStats.paidCourses} premium, {safeStats.freeCourses} free
+                {s.paidCourses} premium, {s.freeCourses} free
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Bookings</CardTitle>
+              <CardTitle className="text-sm font-medium">Bookings</CardTitle>
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{safeStats.totalBookings}</div>
+              <div className="text-2xl font-bold">{s.totalBookings}</div>
               <p className="text-xs text-muted-foreground mt-1">
-                {safeStats.confirmedBookings} confirmed
+                {s.paidBookings} paid, {s.freeBookings} free
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Analytics Chart with Period Filtering */}
-        <AnalyticsChart />
-
-        {/* Revenue Breakdown */}
+        {/* Revenue + Conversion */}
         <div className="grid gap-4 md:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Revenue by Source</CardTitle>
-              <CardDescription>Breakdown of income streams</CardDescription>
+              <CardTitle className="text-lg">Revenue Breakdown</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Course Sales</p>
-                    <p className="text-sm text-muted-foreground">{safeStats.coursePurchases} purchases</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold">{formatCurrency(safeStats.courseRevenue)}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {((safeStats.courseRevenue / safeStats.totalRevenue) * 100).toFixed(0)}%
-                    </p>
-                  </div>
+            <CardContent className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Course Sales</span>
+                <div className="text-right">
+                  <span className="font-bold">{fmt(s.courseRevenue)}</span>
+                  <span className="text-xs text-muted-foreground ml-2">({pct(s.courseRevenue, s.totalRevenue)}%)</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">Session Bookings</p>
-                    <p className="text-sm text-muted-foreground">{safeStats.paidBookings} paid sessions</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold">{formatCurrency(safeStats.sessionRevenue)}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {((safeStats.sessionRevenue / safeStats.totalRevenue) * 100).toFixed(0)}%
-                    </p>
-                  </div>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2">
+                <div className="bg-primary rounded-full h-2" style={{ width: `${pct(s.courseRevenue, s.totalRevenue)}%` }} />
+              </div>
+
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Session Bookings</span>
+                <div className="text-right">
+                  <span className="font-bold">{fmt(s.sessionRevenue)}</span>
+                  <span className="text-xs text-muted-foreground ml-2">({pct(s.sessionRevenue, s.totalRevenue)}%)</span>
                 </div>
+              </div>
+              <div className="w-full bg-muted rounded-full h-2">
+                <div className="bg-fuchsia-500 rounded-full h-2" style={{ width: `${pct(s.sessionRevenue, s.totalRevenue)}%` }} />
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Popular Courses</CardTitle>
-              <CardDescription>Top selling courses</CardDescription>
+              <CardTitle className="text-lg">Conversion Rates</CardTitle>
             </CardHeader>
-            <CardContent>
-              {safeStats.popularCourses && safeStats.popularCourses.length > 0 ? (
-                <div className="space-y-4">
-                  {safeStats.popularCourses.slice(0, 3).map((course: any, index: number) => (
-                    <div key={course.id} className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold">
-                          {index + 1}
-                        </div>
-                        <div>
-                          <p className="font-medium">{course.title}</p>
-                          <p className="text-sm text-muted-foreground">{course.purchaseCount} sales</p>
-                        </div>
-                      </div>
-                      <p className="font-bold">{formatCurrency(course.revenue)}</p>
-                    </div>
-                  ))}
+            <CardContent className="space-y-5">
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Course Purchases</span>
+                  <span className="font-bold">{pct(s.coursePurchases, s.totalUsers)}%</span>
                 </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">No course sales yet</p>
-              )}
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div className="bg-green-500 rounded-full h-2" style={{ width: `${pct(s.coursePurchases, s.totalUsers)}%` }} />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">{s.coursePurchases} of {s.totalUsers} users</p>
+              </div>
+
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span>Session Bookings</span>
+                  <span className="font-bold">{pct(s.totalBookings, s.totalUsers)}%</span>
+                </div>
+                <div className="w-full bg-muted rounded-full h-2">
+                  <div className="bg-blue-500 rounded-full h-2" style={{ width: `${pct(s.totalBookings, s.totalUsers)}%` }} />
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">{s.totalBookings} of {s.totalUsers} users</p>
+              </div>
+
+              <div className="pt-2 border-t">
+                <div className="flex justify-between">
+                  <span className="text-sm">Avg Revenue / User</span>
+                  <span className="font-bold">{fmt(s.totalUsers > 0 ? s.totalRevenue / s.totalUsers : 0)}</span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Conversion Metrics */}
+        {/* Popular Courses */}
         <Card>
           <CardHeader>
-            <CardTitle>Conversion Metrics</CardTitle>
-            <CardDescription>Platform performance indicators</CardDescription>
+            <CardTitle className="text-lg">Popular Courses</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-3">
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Course Conversion Rate</p>
-                <p className="text-2xl font-bold mt-1">
-                  {safeStats.totalUsers > 0 
-                    ? ((safeStats.coursePurchases / safeStats.totalUsers) * 100).toFixed(1)
-                    : 0}%
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Users who purchased courses
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Booking Rate</p>
-                <p className="text-2xl font-bold mt-1">
-                  {safeStats.totalUsers > 0 
-                    ? ((safeStats.totalBookings / safeStats.totalUsers) * 100).toFixed(1)
-                    : 0}%
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Users who booked sessions
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">Avg Revenue Per User</p>
-                <p className="text-2xl font-bold mt-1">
-                  {formatCurrency(safeStats.totalUsers > 0 ? safeStats.totalRevenue / safeStats.totalUsers : 0)}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Lifetime value
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        
-        {/* Website Analytics */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Website Analytics</CardTitle>
-                <CardDescription>Visitor behavior and engagement metrics</CardDescription>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant={analyticsPeriod === '24h' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setAnalyticsPeriod('24h')}
-                >
-                  Last 24 hours
-                </Button>
-                <Button
-                  variant={analyticsPeriod === '7d' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setAnalyticsPeriod('7d')}
-                >
-                  Last week
-                </Button>
-                <Button
-                  variant={analyticsPeriod === '30d' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setAnalyticsPeriod('30d')}
-                >
-                  Last month
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {analytics ? (
-              <div className="grid gap-4 md:grid-cols-5">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Eye className="h-5 w-5 text-blue-600" />
+            {s.popularCourses && s.popularCourses.length > 0 ? (
+              <div className="space-y-3">
+                {s.popularCourses.slice(0, 5).map((course: any, i: number) => (
+                  <div key={course.id || i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                        {i + 1}
+                      </div>
+                      <div>
+                        <p className="font-medium text-sm">{course.title}</p>
+                        <p className="text-xs text-muted-foreground">{course.purchaseCount || 0} sales</p>
+                      </div>
+                    </div>
+                    <span className="font-bold text-sm">{fmt(course.revenue || 0)}</span>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Page Views</p>
-                    <p className="text-2xl font-bold">{analytics.pageViews.toLocaleString()}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-100 rounded-lg">
-                    <MousePointer className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Visits</p>
-                    <p className="text-2xl font-bold">{analytics.visits.toLocaleString()}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-purple-100 rounded-lg">
-                    <Users className="h-5 w-5 text-purple-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Visitors</p>
-                    <p className="text-2xl font-bold">{analytics.visitors.toLocaleString()}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-orange-100 rounded-lg">
-                    <Clock className="h-5 w-5 text-orange-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Avg Duration</p>
-                    <p className="text-2xl font-bold">{Math.floor(analytics.avgDuration / 60)}m {analytics.avgDuration % 60}s</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-red-100 rounded-lg">
-                    <Activity className="h-5 w-5 text-red-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Bounce Rate</p>
-                    <p className="text-2xl font-bold">{analytics.bounceRate}%</p>
-                  </div>
-                </div>
-              </div>
-            ) : analyticsLoading ? (
-              <div className="flex items-center justify-center h-32">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                ))}
               </div>
             ) : (
-              <div className="flex items-center justify-center h-32 text-muted-foreground">
-                <p className="text-sm">No analytics data yet. Data will appear as visitors browse the site.</p>
-              </div>
+              <p className="text-sm text-muted-foreground text-center py-4">No course sales yet</p>
             )}
           </CardContent>
         </Card>
