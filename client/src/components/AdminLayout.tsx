@@ -1,15 +1,16 @@
 import { Link, useLocation } from "wouter";
-import { 
-  LayoutDashboard, 
-  BookOpen, 
-  Calendar, 
-  Clock, 
+import {
+  LayoutDashboard,
+  BookOpen,
+  Calendar,
+  Clock,
   MessageSquare,
   Settings,
   ArrowLeft,
   Users,
   Activity,
-  Percent
+  Percent,
+  Video
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AdminNotifications } from "@/components/AdminNotifications";
@@ -23,6 +24,7 @@ const menuItems = [
   { path: "/admin", icon: LayoutDashboard, label: "Dashboard" },
   { path: "/admin/courses", icon: BookOpen, label: "Courses" },
   { path: "/admin/sessions", icon: Calendar, label: "Sessions" },
+  { path: "/admin/live-sessions", icon: Video, label: "Live Sessions" },
   { path: "/admin/users", icon: Users, label: "Users" },
   { path: "/admin/user-activity", icon: Activity, label: "User Activity" },
   { path: "/admin/testimonials", icon: MessageSquare, label: "Testimonials" },
