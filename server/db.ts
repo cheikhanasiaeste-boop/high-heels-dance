@@ -1810,6 +1810,17 @@ export async function updateCourseLesson(
 /**
  * Delete a course lesson
  */
+export async function getLessonsByModuleId(moduleId: number): Promise<CourseLesson[]> {
+  const db = await getDb();
+  if (db) {
+    try {
+      return await db.select().from(courseLessons).where(eq(courseLessons.moduleId, moduleId));
+    } catch (e) { console.warn("[DB Fallback] getLessonsByModuleId:", (e as Error).message); }
+  }
+  const { data } = await restFrom("courseLessons").select("*").eq("moduleId", moduleId);
+  return (data ?? []) as CourseLesson[];
+}
+
 export async function deleteCourseLesson(id: number) {
   const db = await getDb();
   if (db) {

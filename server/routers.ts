@@ -461,10 +461,22 @@ export const appRouter = router({
           return await db.updateCourseModule(id, updates);
         }),
       
-      // Delete a module
+      // Delete a module (also cleans up Bunny videos for all lessons in the module)
       deleteModule: adminProcedure
         .input(z.object({ id: z.number() }))
         .mutation(async ({ input }) => {
+          // Clean up Bunny videos for all lessons in this module
+          try {
+            const bunny = await import('./lib/bunny');
+            const lessons = await db.getLessonsByModuleId(input.id);
+            await Promise.allSettled(
+              lessons
+                .filter((l: any) => l.bunnyVideoId)
+                .map((l: any) => bunny.deleteVideo(l.bunnyVideoId))
+            );
+          } catch (e) {
+            console.warn("[Bunny] Failed to clean up module videos:", (e as Error).message);
+          }
           await db.deleteCourseModule(input.id);
           return { success: true };
         }),
@@ -506,10 +518,21 @@ export const appRouter = router({
           return await db.updateCourseLesson(id, updates);
         }),
       
-      // Delete a lesson
+      // Delete a lesson (also cleans up Bunny video if present)
       deleteLesson: adminProcedure
         .input(z.object({ id: z.number() }))
         .mutation(async ({ input }) => {
+          // Fetch lesson first to check for Bunny video
+          const lesson = await db.getLessonById(input.id);
+          if (lesson?.bunnyVideoId) {
+            try {
+              const bunny = await import('./lib/bunny');
+              await bunny.deleteVideo(lesson.bunnyVideoId);
+            } catch (e) {
+              console.warn("[Bunny] Failed to delete video:", (e as Error).message);
+              // Continue with lesson deletion even if Bunny cleanup fails
+            }
+          }
           await db.deleteCourseLesson(input.id);
           return { success: true };
         }),

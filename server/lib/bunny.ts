@@ -160,9 +160,10 @@ export async function getSignedPlaybackUrl(
   const { cdnHostname, libraryId, tokenAuthKey } = getConfig();
   const host = cdnHostname || `${libraryId}.b-cdn.net`;
 
-  // If no token auth key is set, return unsigned URL (for development)
   if (!tokenAuthKey) {
-    return `https://${host}/${videoGuid}/playlist.m3u8`;
+    throw new Error(
+      "Bunny.net token auth key not configured: set BUNNY_STREAM_TOKEN_AUTH_KEY to enable signed playback URLs"
+    );
   }
 
   const expiresAt = Math.floor(Date.now() / 1000) + expiresInSeconds;
