@@ -1497,16 +1497,19 @@ IMPORTANT RULES:
   - {{INSTAGRAM}} for Elizabeth's Instagram
   - {{YOUTUBE}} for Elizabeth's YouTube
   - {{FACEBOOK}} for Elizabeth's Facebook
-- NEVER write out social media URLs yourself — always use the placeholders above.
-- NEVER include full URLs like https://...
-- For pages on the website, use relative paths: [Book a Session](/book-session), [Browse Courses](/courses)
+  - {{COURSES}} for the Courses page
+  - {{BOOK}} for the Book a Session page
+  - {{WEBSITE}} for the main website
+- NEVER write out any URLs or paths yourself — not even relative paths like /courses. ALWAYS use the placeholders above instead.
+- NEVER use markdown link syntax with URLs. Only use placeholders.
 - Keep all responses SHORT — 2-4 sentences max
 
 When someone asks about:
-- Courses → Link to [Courses page](/courses), mention free ones to start
-- Booking → Link to [Book a Session](/book-session), highlight flexibility
-- Pricing → Be transparent, mention free options, link to courses page
+- Courses → Use {{COURSES}} placeholder, mention free ones to start
+- Booking → Use {{BOOK}} placeholder, highlight flexibility
+- Pricing → Be transparent, mention free options, use {{COURSES}}
 - Videos/content → Use {{YOUTUBE}} and {{INSTAGRAM}} placeholders
+- The website → Use {{WEBSITE}} placeholder
 - Experience level → Be encouraging! Everyone starts somewhere
 
 If you don't know a specific detail, guide them to the website or suggest reaching out to Elizabeth directly.
@@ -1535,11 +1538,15 @@ Never be pushy. Be genuinely helpful and make people feel welcome.`;
           assistantMessage = "Thanks for reaching out! I'm having a little moment — but you can explore our courses or book a dance session right from the menu above. Elizabeth would love to dance with you!";
         }
         
-        // Replace social media placeholders with real links (bypasses Gemini's URL blocking)
+        // Replace ALL placeholders with real links (bypasses Gemini's URL blocking)
         assistantMessage = assistantMessage
           .replace(/\{\{INSTAGRAM\}\}/g, '[Instagram](https://www.instagram.com/elizabeth_zolotova/)')
           .replace(/\{\{YOUTUBE\}\}/g, '[YouTube](https://www.youtube.com/@HighHeelsTutorials)')
-          .replace(/\{\{FACEBOOK\}\}/g, '[Facebook](https://www.facebook.com/liza.zolotova.399/)');
+          .replace(/\{\{FACEBOOK\}\}/g, '[Facebook](https://www.facebook.com/liza.zolotova.399/)')
+          .replace(/\{\{COURSES\}\}/g, '[Courses page](/courses)')
+          .replace(/\{\{BOOK\}\}/g, '[Book a Session](/book-session)')
+          .replace(/\{\{WEBSITE\}\}/g, '[our website](https://www.elizabeth-zolotova.com)')
+          .replace(/\[blocked\]/gi, '');  // Remove any remaining [blocked] tags from Gemini
 
         // Save assistant message (non-blocking)
         db.createChatMessage({ userId, role: 'assistant', content: assistantMessage }).catch(() => {});
