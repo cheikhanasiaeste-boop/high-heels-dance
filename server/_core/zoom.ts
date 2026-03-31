@@ -93,7 +93,7 @@ export async function createZoomMeeting(
         join_before_host: false, // CRITICAL: Users cannot join before host
         waiting_room: true, // CRITICAL: Waiting room enabled for security
         mute_upon_entry: true,
-        auto_recording: "none",
+        auto_recording: "cloud",
         meeting_authentication: false, // We handle auth on our side
       },
     }),
@@ -162,14 +162,14 @@ export function generateZoomSDKSignature(
 /**
  * Verify if user can join meeting based on time window
  * 
- * Users can only join 15 minutes before the session starts
- * 
+ * Users can only join 5 minutes before the session starts
+ *
  * @param startTime - Session start time
  * @returns true if user can join, false otherwise
  */
 export function canJoinMeeting(startTime: Date): boolean {
   const now = new Date();
-  const joinWindowStart = new Date(startTime.getTime() - 15 * 60 * 1000); // 15 min before
+  const joinWindowStart = new Date(startTime.getTime() - 5 * 60 * 1000); // 5 min before
   
   return now >= joinWindowStart;
 }
