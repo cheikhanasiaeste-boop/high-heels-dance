@@ -68,9 +68,10 @@ export default function AdminDashboard() {
     );
   }
 
-  // Use defaults if queries failed
-  const safeStats = stats || { totalUsers: 0, totalCourses: 0, totalRevenue: 0, courseRevenue: 0, sessionRevenue: 0, totalBookings: 0, freeBookings: 0, paidBookings: 0, newUsersToday: 0, newUsersThisWeek: 0 };
-  const safeRevenue = revenue || { today: 0, yesterday: 0, week: 0, lastWeek: 0, month: 0, lastMonth: 0 };
+  // Safe defaults for all properties the template uses
+  const defaultStats = { totalUsers: 0, totalCourses: 0, totalRevenue: 0, courseRevenue: 0, sessionRevenue: 0, totalBookings: 0, freeBookings: 0, paidBookings: 0, paidCourses: 0, freeCourses: 0, newUsersToday: 0, newUsersThisWeek: 0, topCourses: [] as any[] };
+  const safeStats = { ...defaultStats, ...(stats || {}) };
+  const safeRevenue = { today: 0, yesterday: 0, week: 0, lastWeek: 0, month: 0, lastMonth: 0, ...(revenue || {}) };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
