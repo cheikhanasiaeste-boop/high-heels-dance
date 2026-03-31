@@ -14,6 +14,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { VideoUpload } from "@/components/VideoUpload";
 import { BunnyVideoUploader } from "@/components/BunnyVideoUploader";
@@ -378,8 +379,9 @@ function ModuleCard({
                       </span>
                     )}
                     {lesson.isFree && (
-                      <span className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-700">
-                        free
+                      <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-violet-100 text-violet-700">
+                        <Eye className="w-2.5 h-2.5" />
+                        Preview
                       </span>
                     )}
                   </div>
@@ -779,6 +781,7 @@ function EditLessonDialog({ lesson }: { lesson: any }) {
   const [title, setTitle] = useState(lesson.title);
   const [description, setDescription] = useState(lesson.description || "");
   const [duration, setDuration] = useState(lesson.duration?.toString() || "");
+  const [isFree, setIsFree] = useState(lesson.isFree || false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const utils = trpc.useUtils();
@@ -846,6 +849,7 @@ function EditLessonDialog({ lesson }: { lesson: any }) {
       title,
       description,
       duration: duration ? parseInt(duration) : undefined,
+      isFree,
     });
   };
 
@@ -890,6 +894,23 @@ function EditLessonDialog({ lesson }: { lesson: any }) {
               onChange={(e) => setDuration(e.target.value)}
               placeholder="Auto-detected after upload, or set manually"
             />
+          </div>
+
+          {/* Free Preview toggle */}
+          <div className="flex items-center gap-3 rounded-lg border p-3">
+            <Checkbox
+              id="edit-lesson-isFree"
+              checked={isFree}
+              onCheckedChange={(checked) => setIsFree(checked === true)}
+            />
+            <div>
+              <label htmlFor="edit-lesson-isFree" className="text-sm font-medium cursor-pointer">
+                Free Preview Lesson
+              </label>
+              <p className="text-xs text-muted-foreground">
+                Anyone can watch this lesson without purchasing the course or a membership.
+              </p>
+            </div>
           </div>
 
           {/* Bunny.net Stream upload — for full tutorial videos */}

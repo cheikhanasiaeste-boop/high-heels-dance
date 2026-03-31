@@ -145,19 +145,27 @@ export const appRouter = router({
       }),
     
     // Get signed Bunny.net playback URL for a lesson video
+    // Access rules:
+    //   - lesson.isFree = true  → any logged-in user can play (preview lessons)
+    //   - course.isFree = true  → any logged-in user can play all lessons
+    //   - otherwise             → requires course purchase OR active membership
     getVideoPlaybackUrl: protectedProcedure
       .input(z.object({ lessonId: z.number(), courseId: z.number() }))
       .query(async ({ ctx, input }) => {
-        // 1. Check course-level access
         const course = await db.getCourseById(input.courseId);
         if (!course) {
           throw new TRPCError({ code: 'NOT_FOUND', message: 'Course not found' });
         }
 
-        let hasAccess = false;
-        if (course.isFree) {
-          hasAccess = true;
-        } else {
+        const lesson = await db.getLessonById(input.lessonId);
+        if (!lesson) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Lesson not found' });
+        }
+
+        // Free/preview lessons and free courses skip purchase checks
+        let hasAccess = lesson.isFree || course.isFree;
+
+        if (!hasAccess) {
           const { canAccessContent } = await import("./membership-products");
           const hasPurchased = await db.hasUserPurchasedCourse(ctx.user.id, input.courseId);
           hasAccess = canAccessContent(
@@ -175,25 +183,46 @@ export const appRouter = router({
           });
         }
 
-        // 2. Get lesson and generate signed URL
-        const lesson = await db.getLessonById(input.lessonId);
-        if (!lesson) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Lesson not found' });
-        }
-
-        // If lesson has a Bunny video, return signed HLS URL
         if (lesson.bunnyVideoId && lesson.videoStatus === 'ready') {
           const bunny = await import('./lib/bunny');
           const url = await bunny.getSignedPlaybackUrl(lesson.bunnyVideoId);
           return { url, type: 'hls' as const, thumbnailUrl: lesson.bunnyThumbnailUrl };
         }
 
-        // Fallback: direct video URL (for legacy/preview videos stored elsewhere)
         if (lesson.videoUrl) {
           return { url: lesson.videoUrl, type: 'direct' as const, thumbnailUrl: null };
         }
 
         throw new TRPCError({ code: 'NOT_FOUND', message: 'No video available for this lesson' });
+      }),
+
+    // Public preview playback — no login required for isFree lessons
+    getPreviewPlaybackUrl: publicProcedure
+      .input(z.object({ lessonId: z.number(), courseId: z.number() }))
+      .query(async ({ input }) => {
+        const lesson = await db.getLessonById(input.lessonId);
+        if (!lesson) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Lesson not found' });
+        }
+
+        if (!lesson.isFree) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'This lesson requires a course purchase or membership.',
+          });
+        }
+
+        if (lesson.bunnyVideoId && lesson.videoStatus === 'ready') {
+          const bunny = await import('./lib/bunny');
+          const url = await bunny.getSignedPlaybackUrl(lesson.bunnyVideoId);
+          return { url, type: 'hls' as const, thumbnailUrl: lesson.bunnyThumbnailUrl };
+        }
+
+        if (lesson.videoUrl) {
+          return { url: lesson.videoUrl, type: 'direct' as const, thumbnailUrl: null };
+        }
+
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'No video available' });
       }),
 
     // Mark lesson as completed
