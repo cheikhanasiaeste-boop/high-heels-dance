@@ -128,6 +128,11 @@ export function MobileNav({ onSignInClick }: MobileNavProps) {
             <>
               {/* User Menu Items */}
               <div className="pt-3 border-t space-y-2">
+                <Button variant="ghost" className="w-full justify-start" size="lg" asChild>
+                  <Link href="/dashboard" onClick={closeMenu}>
+                    My Dashboard
+                  </Link>
+                </Button>
                 <Button variant="ghost" className="w-full justify-start relative" size="lg" asChild>
                   <Link href="/my-messages" onClick={closeMenu}>
                     My Messages

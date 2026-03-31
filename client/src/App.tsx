@@ -40,6 +40,7 @@ import Membership from "./pages/Membership";
 import { SubscriptionSuccess } from "./pages/SubscriptionSuccess";
 import AuthCallback from "./pages/AuthCallback";
 import LiveSession from "./pages/LiveSession";
+import StudentDashboard from "./pages/StudentDashboard";
 import { AdminGuard } from "./components/AdminGuard";
 
 
@@ -52,6 +53,7 @@ function Router() {
       <Route path="/courses/:id" component={CourseDetail} />
       <Route path="/course/:id/learn" component={CourseLearn} />
       <Route path="/courses/:id/learn" component={CourseLearn} />
+      <Route path="/dashboard" component={StudentDashboard} />
       <Route path="/my-courses" component={MyCourses} />
       <Route path="/my-bookings" component={MyBookings} />
       <Route path="/membership" component={Membership} />

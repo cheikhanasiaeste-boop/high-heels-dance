@@ -1971,6 +1971,17 @@ export async function getLessonProgress(userId: number, lessonId: number): Promi
   return (data as UserLessonProgress) ?? null;
 }
 
+export async function getAllUserProgress(userId: number): Promise<UserLessonProgress[]> {
+  const db = await getDb();
+  if (db) {
+    try {
+      return await db.select().from(userLessonProgress).where(eq(userLessonProgress.userId, userId));
+    } catch (e) { console.warn("[DB Fallback] getAllUserProgress:", (e as Error).message); }
+  }
+  const { data } = await restFrom("userLessonProgress").select("*").eq("userId", userId);
+  return (data ?? []) as UserLessonProgress[];
+}
+
 export async function getUserCourseProgress(userId: number, courseId: number) {
   const db = await getDb();
   if (db) {

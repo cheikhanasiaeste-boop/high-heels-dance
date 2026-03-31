@@ -129,7 +129,78 @@ export const appRouter = router({
       .query(async ({ ctx, input }) => {
         return await db.getLessonProgress(ctx.user.id, input.lessonId);
       }),
-    
+
+    // Student dashboard — one call for all dashboard data
+    getDashboardData: protectedProcedure.query(async ({ ctx }) => {
+      const userId = ctx.user.id;
+
+      // 1. Get all user's purchases + free courses
+      const [purchases, allCourses, allProgress, upcomingSessions] = await Promise.all([
+        db.getUserPurchases(userId),
+        db.getAllPublishedCourses(),
+        db.getAllUserProgress(userId),
+        db.getUpcomingLiveSessions(5),
+      ]);
+
+      const purchasedIds = new Set(
+        purchases.filter((p: any) => p.status === 'completed').map((p: any) => p.courseId)
+      );
+
+      // Enrolled = purchased + free courses
+      const enrolledCourses = allCourses.filter(
+        (c: any) => c.isFree || purchasedIds.has(c.id)
+      );
+
+      // 2. Per-course progress
+      const courseProgress = enrolledCourses.map((course: any) => {
+        const courseModuleProgress = allProgress.filter((p: any) => p.courseId === course.id);
+        const completedCount = courseModuleProgress.filter((p: any) => p.isCompleted).length;
+        return {
+          ...course,
+          completedLessons: completedCount,
+        };
+      });
+
+      // 3. Continue watching — most recently watched lesson
+      const recentProgress = allProgress
+        .filter((p: any) => p.lastWatchedAt && !p.isCompleted && p.watchedDuration > 0)
+        .sort((a: any, b: any) =>
+          new Date(b.lastWatchedAt).getTime() - new Date(a.lastWatchedAt).getTime()
+        );
+
+      let continueWatching = null;
+      if (recentProgress.length > 0) {
+        const recent = recentProgress[0];
+        const lesson = await db.getLessonById(recent.lessonId);
+        const course = allCourses.find((c: any) => c.id === recent.courseId);
+        if (lesson && course) {
+          continueWatching = {
+            lessonId: lesson.id,
+            lessonTitle: lesson.title,
+            courseId: course.id,
+            courseTitle: course.title,
+            thumbnailUrl: lesson.bunnyThumbnailUrl || course.imageUrl,
+            watchedDuration: recent.watchedDuration,
+            totalDuration: lesson.durationSeconds || 0,
+            lastWatchedAt: recent.lastWatchedAt,
+          };
+        }
+      }
+
+      // 4. Stats
+      const totalCompleted = allProgress.filter((p: any) => p.isCompleted).length;
+
+      return {
+        continueWatching,
+        courses: courseProgress,
+        upcomingSessions,
+        stats: {
+          totalCompleted,
+          enrolledCourses: enrolledCourses.length,
+        },
+      };
+    }),
+
     // Check if user has access (alias for hasAccess)
     checkAccess: protectedProcedure
       .input(z.object({ courseId: z.number() }))
