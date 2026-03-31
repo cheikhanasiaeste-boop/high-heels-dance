@@ -13,7 +13,9 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Plus, Calendar, Users, MapPin, Link as LinkIcon, Edit, Trash2, Eye, EyeOff, UserPlus, UserMinus } from "lucide-react";
+import { Plus, Calendar, Users, MapPin, Link as LinkIcon, Edit, Trash2, Eye, EyeOff, UserPlus, UserMinus, Video, ExternalLink } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { useLocation } from "wouter";
 
 type SessionStatus = "draft" | "published";
 type EventType = "online" | "in-person";
@@ -49,8 +51,52 @@ const defaultFormData: SessionFormData = {
   status: "draft",
 };
 
+interface LiveSessionFormData {
+  title: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+  isFree: boolean;
+  price: string;
+  capacity: number;
+}
+
+const defaultLiveFormData: LiveSessionFormData = {
+  title: "",
+  description: "",
+  startTime: "",
+  endTime: "",
+  isFree: true,
+  price: "",
+  capacity: 100,
+};
+
+function formatDateTimeLocal(dateString: string): string {
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+function statusBadgeClass(status: string): string {
+  switch (status) {
+    case "live": return "bg-green-500 text-white hover:bg-green-600";
+    case "scheduled": return "bg-blue-100 text-blue-800 border-blue-300";
+    case "ended": return "bg-gray-100 text-gray-600 border-gray-300";
+    case "cancelled": return "bg-red-100 text-red-700 border-red-300";
+    default: return "";
+  }
+}
+
 export default function AdminSessions() {
   const utils = trpc.useUtils();
+  const [location] = useLocation();
+  // Determine initial tab from URL
+  const initialTab = location === "/admin/live-sessions" ? "live" : "regular";
+  const [activeMainTab, setActiveMainTab] = useState<string>(initialTab);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isEnrollmentDialogOpen, setIsEnrollmentDialogOpen] = useState(false);
@@ -58,6 +104,11 @@ export default function AdminSessions() {
   const [formData, setFormData] = useState<SessionFormData>(defaultFormData);
   const [selectedUsers, setSelectedUsers] = useState<number[]>([]);
   const [dateFilter, setDateFilter] = useState<'all' | 'upcoming' | 'past' | 'today' | 'custom'>('all');
+
+  // === Live Sessions state ===
+  const [isLiveDialogOpen, setIsLiveDialogOpen] = useState(false);
+  const [editingLiveSession, setEditingLiveSession] = useState<any>(null);
+  const [liveFormData, setLiveFormData] = useState<LiveSessionFormData>(defaultLiveFormData);
   const [customStartDate, setCustomStartDate] = useState('');
   const [customEndDate, setCustomEndDate] = useState('');
 
@@ -139,6 +190,100 @@ export default function AdminSessions() {
       toast.error(error.message);
     },
   });
+
+  // === Live Sessions queries & mutations ===
+  const { data: liveSessions, isLoading: isLiveLoading } = trpc.liveSessions.adminList.useQuery();
+
+  const createLiveMutation = trpc.liveSessions.create.useMutation({
+    onSuccess: () => {
+      toast.success("Live session created");
+      setIsLiveDialogOpen(false);
+      setLiveFormData(defaultLiveFormData);
+      utils.liveSessions.adminList.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const updateLiveMutation = trpc.liveSessions.update.useMutation({
+    onSuccess: () => {
+      toast.success("Live session updated");
+      setIsLiveDialogOpen(false);
+      setEditingLiveSession(null);
+      setLiveFormData(defaultLiveFormData);
+      utils.liveSessions.adminList.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const deleteLiveMutation = trpc.liveSessions.delete.useMutation({
+    onSuccess: () => {
+      toast.success("Live session deleted");
+      utils.liveSessions.adminList.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  const createZoomMutation = trpc.liveSessions.createZoom.useMutation({
+    onSuccess: (data) => {
+      toast.success(`Zoom meeting created — Meeting ID: ${data.meetingNumber}`);
+      utils.liveSessions.adminList.invalidate();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+  // === Live Sessions handlers ===
+  const openCreateLiveDialog = () => {
+    setEditingLiveSession(null);
+    setLiveFormData(defaultLiveFormData);
+    setIsLiveDialogOpen(true);
+  };
+
+  const openEditLiveDialog = (session: any) => {
+    setEditingLiveSession(session);
+    setLiveFormData({
+      title: session.title,
+      description: session.description || "",
+      startTime: formatDateTimeLocal(session.startTime),
+      endTime: formatDateTimeLocal(session.endTime),
+      isFree: session.isFree,
+      price: session.price || "",
+      capacity: session.capacity ?? 100,
+    });
+    setIsLiveDialogOpen(true);
+  };
+
+  const handleLiveSubmit = () => {
+    if (!liveFormData.title || !liveFormData.startTime || !liveFormData.endTime) {
+      toast.error("Title, start time, and end time are required");
+      return;
+    }
+    const payload = {
+      title: liveFormData.title,
+      description: liveFormData.description || undefined,
+      startTime: liveFormData.startTime,
+      endTime: liveFormData.endTime,
+      isFree: liveFormData.isFree,
+      price: liveFormData.isFree ? undefined : liveFormData.price || undefined,
+      capacity: Number(liveFormData.capacity),
+    };
+    if (editingLiveSession) {
+      updateLiveMutation.mutate({ id: editingLiveSession.id, ...payload });
+    } else {
+      createLiveMutation.mutate(payload);
+    }
+  };
+
+  const handleDeleteLive = (id: number) => {
+    if (confirm("Are you sure you want to delete this live session? This cannot be undone.")) {
+      deleteLiveMutation.mutate({ id });
+    }
+  };
+
+  const handleCreateZoom = (sessionId: number) => {
+    createZoomMutation.mutate({ sessionId });
+  };
+
+  const isLivePending = createLiveMutation.isPending || updateLiveMutation.isPending;
 
   const handleCreate = () => {
     const startTime = new Date(formData.startTime);
@@ -290,181 +435,312 @@ export default function AdminSessions() {
     });
   }, [sessions, dateFilter, customStartDate, customEndDate]);
 
-  if (isLoading) {
-    return (
-      <AdminLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <p className="text-muted-foreground">Loading sessions...</p>
-        </div>
-      </AdminLayout>
-    );
-  }
-
   return (
     <AdminLayout>
-      <div className="space-y-8">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Sessions</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage sessions and enrollments in one place
-          </p>
-        </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          Create Session
-        </Button>
+      <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold">Sessions</h1>
+        <p className="text-muted-foreground mt-1">
+          Manage all sessions and enrollments in one place
+        </p>
       </div>
 
-      {/* Date Filter Controls */}
-      <Card className="mb-6">
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-4 flex-wrap">
-            <div className="flex items-center gap-2">
-              <Label className="text-sm font-medium">Filter by date:</Label>
-              <Select value={dateFilter} onValueChange={(value: any) => setDateFilter(value)}>
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sessions</SelectItem>
-                  <SelectItem value="today">Today</SelectItem>
-                  <SelectItem value="upcoming">Upcoming</SelectItem>
-                  <SelectItem value="past">Past</SelectItem>
-                  <SelectItem value="custom">Custom Range</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            {dateFilter === 'custom' && (
-              <>
-                <div className="flex items-center gap-2">
-                  <Label className="text-sm">From:</Label>
-                  <Input
-                    type="date"
-                    value={customStartDate}
-                    onChange={(e) => setCustomStartDate(e.target.value)}
-                    className="w-[150px]"
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <Label className="text-sm">To:</Label>
-                  <Input
-                    type="date"
-                    value={customEndDate}
-                    onChange={(e) => setCustomEndDate(e.target.value)}
-                    className="w-[150px]"
-                  />
-                </div>
-              </>
-            )}
+      {/* Top-level tabs: Regular Sessions vs Live (Zoom) Sessions */}
+      <Tabs value={activeMainTab} onValueChange={setActiveMainTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="regular" className="flex items-center gap-2">
+            <Calendar className="h-4 w-4" />
+            Sessions
+          </TabsTrigger>
+          <TabsTrigger value="live" className="flex items-center gap-2">
+            <Video className="h-4 w-4" />
+            Live Sessions (Zoom)
+          </TabsTrigger>
+        </TabsList>
+
+        {/* ============ REGULAR SESSIONS TAB ============ */}
+        <TabsContent value="regular" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div />
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Create Session
+            </Button>
           </div>
-        </CardContent>
-      </Card>
 
-      <div className="grid gap-4">
-        {filteredSessions.length === 0 ? (
+          {/* Date Filter Controls */}
           <Card>
-            <CardContent className="py-12 text-center">
-              <p className="text-muted-foreground">No sessions found matching the selected filter.</p>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm font-medium">Filter by date:</Label>
+                  <Select value={dateFilter} onValueChange={(value: any) => setDateFilter(value)}>
+                    <SelectTrigger className="w-[140px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Sessions</SelectItem>
+                      <SelectItem value="today">Today</SelectItem>
+                      <SelectItem value="upcoming">Upcoming</SelectItem>
+                      <SelectItem value="past">Past</SelectItem>
+                      <SelectItem value="custom">Custom Range</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {dateFilter === 'custom' && (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <Label className="text-sm">From:</Label>
+                      <Input
+                        type="date"
+                        value={customStartDate}
+                        onChange={(e) => setCustomStartDate(e.target.value)}
+                        className="w-[150px]"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Label className="text-sm">To:</Label>
+                      <Input
+                        type="date"
+                        value={customEndDate}
+                        onChange={(e) => setCustomEndDate(e.target.value)}
+                        className="w-[150px]"
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
             </CardContent>
           </Card>
-        ) : (
-          filteredSessions.map((session: any) => (
-          <Card key={session.id}>
-            <CardHeader>
-              <div className="flex justify-between items-start">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <CardTitle>{session.title}</CardTitle>
-                    <Badge variant={session.status === "published" ? "default" : "secondary"}>
-                      {session.status}
-                    </Badge>
-                    <Badge variant="outline">
-                      {session.eventType === "online" ? (
-                        <><LinkIcon className="h-3 w-3 mr-1" /> Online</>
-                      ) : (
-                        <><MapPin className="h-3 w-3 mr-1" /> In-person</>
-                      )}
-                    </Badge>
-                    <Badge variant="outline">
-                      {session.sessionType === "group" ? "Group" : "Private"}
-                    </Badge>
+
+          {isLoading ? (
+            <div className="flex items-center justify-center min-h-[200px]">
+              <p className="text-muted-foreground">Loading sessions...</p>
+            </div>
+          ) : (
+          <div className="grid gap-4">
+            {filteredSessions.length === 0 ? (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <p className="text-muted-foreground">No sessions found matching the selected filter.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              filteredSessions.map((session: any) => (
+              <Card key={session.id}>
+                <CardHeader>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CardTitle>{session.title}</CardTitle>
+                        <Badge variant={session.status === "published" ? "default" : "secondary"}>
+                          {session.status}
+                        </Badge>
+                        <Badge variant="outline">
+                          {session.eventType === "online" ? (
+                            <><LinkIcon className="h-3 w-3 mr-1" /> Online</>
+                          ) : (
+                            <><MapPin className="h-3 w-3 mr-1" /> In-person</>
+                          )}
+                        </Badge>
+                        <Badge variant="outline">
+                          {session.sessionType === "group" ? "Group" : "Private"}
+                        </Badge>
+                      </div>
+                      <CardDescription>
+                        {session.description || "No description"}
+                      </CardDescription>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleToggleStatus(session.id, session.status)}
+                      >
+                        {session.status === "published" ? (
+                          <><EyeOff className="h-4 w-4 mr-1" /> Unpublish</>
+                        ) : (
+                          <><Eye className="h-4 w-4 mr-1" /> Publish</>
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEditClick(session)}
+                      >
+                        <Edit className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(session.id)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-1" />
+                        Delete
+                      </Button>
+                    </div>
                   </div>
-                  <CardDescription>
-                    {session.description || "No description"}
-                  </CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleToggleStatus(session.id, session.status)}
-                  >
-                    {session.status === "published" ? (
-                      <><EyeOff className="h-4 w-4 mr-1" /> Unpublish</>
-                    ) : (
-                      <><Eye className="h-4 w-4 mr-1" /> Publish</>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">
+                        {new Date(session.startTime).toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm">
+                        {session.enrollmentCount} / {session.capacity} enrolled
+                      </span>
+                    </div>
+                    {session.eventType === "in-person" && session.location && (
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm">{session.location}</span>
+                      </div>
                     )}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleEditClick(session)}
-                  >
-                    <Edit className="h-4 w-4 mr-1" />
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(session.id)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Delete
-                  </Button>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">
-                    {new Date(session.startTime).toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">
-                    {session.enrollmentCount} / {session.capacity} enrolled
-                  </span>
-                </div>
-                {session.eventType === "in-person" && session.location && (
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm">{session.location}</span>
+                    {session.isFree ? (
+                      <Badge variant="secondary">Free</Badge>
+                    ) : (
+                      <Badge variant="default">{session.price}</Badge>
+                    )}
                   </div>
-                )}
-                {session.isFree ? (
-                  <Badge variant="secondary">Free</Badge>
-                ) : (
-                  <Badge variant="default">{session.price}</Badge>
-                )}
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => handleEnrollmentClick(session.id)}
-              >
-                <Users className="h-4 w-4 mr-2" />
-                Manage Enrollments ({session.enrollmentCount})
-              </Button>
-            </CardContent>
-          </Card>
-        )))
-        }
-      </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEnrollmentClick(session.id)}
+                  >
+                    <Users className="h-4 w-4 mr-2" />
+                    Manage Enrollments ({session.enrollmentCount})
+                  </Button>
+                </CardContent>
+              </Card>
+            )))
+            }
+          </div>
+          )}
+        </TabsContent>
+
+        {/* ============ LIVE SESSIONS (ZOOM) TAB ============ */}
+        <TabsContent value="live" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div />
+            <Button onClick={openCreateLiveDialog}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Live Session
+            </Button>
+          </div>
+
+          {isLiveLoading ? (
+            <div className="flex items-center justify-center min-h-[200px]">
+              <p className="text-muted-foreground">Loading live sessions...</p>
+            </div>
+          ) : !liveSessions || liveSessions.length === 0 ? (
+            <Card>
+              <CardContent className="py-16 text-center">
+                <Video className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p className="text-muted-foreground">No live sessions yet. Create your first one!</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid gap-4">
+              {liveSessions.map((session: any) => (
+                <Card key={session.id}>
+                  <CardHeader>
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <CardTitle className="text-lg">{session.title}</CardTitle>
+                          <Badge className={statusBadgeClass(session.status)}>
+                            {session.status}
+                          </Badge>
+                          <Badge variant="outline" className={session.isFree ? "border-emerald-400 text-emerald-700" : "border-amber-400 text-amber-700"}>
+                            {session.isFree ? "Free" : session.price || "Paid"}
+                          </Badge>
+                        </div>
+                        {session.description && (
+                          <p className="text-sm text-muted-foreground line-clamp-2">
+                            {session.description}
+                          </p>
+                        )}
+                        <div className="mt-2 flex flex-wrap gap-4 text-sm text-muted-foreground">
+                          <span>Start: {new Date(session.startTime).toLocaleString()}</span>
+                          <span>End: {new Date(session.endTime).toLocaleString()}</span>
+                          {session.capacity && <span>Capacity: {session.capacity}</span>}
+                          {session.zoomMeetingId && (
+                            <a
+                              href={`https://zoom.us/j/${session.zoomMeetingId.replace(/[^0-9]/g, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1 text-blue-600 hover:text-blue-800 hover:underline"
+                            >
+                              <Video className="h-3.5 w-3.5" />
+                              Zoom ID: {session.zoomMeetingId}
+                              <ExternalLink className="h-3 w-3" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+                        {!session.zoomMeetingId && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleCreateZoom(session.id)}
+                            disabled={createZoomMutation.isPending}
+                          >
+                            <Video className="h-4 w-4 mr-1" />
+                            Create Zoom
+                          </Button>
+                        )}
+                        {session.zoomMeetingId && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            asChild
+                          >
+                            <a
+                              href={`https://zoom.us/j/${session.zoomMeetingId.replace(/[^0-9]/g, '')}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <ExternalLink className="h-4 w-4 mr-1" />
+                              Join as Host
+                            </a>
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEditLiveDialog(session)}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          onClick={() => handleDeleteLive(session.id)}
+                          disabled={deleteLiveMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
+                    </div>
+                  </CardHeader>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Create Session Dialog */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
@@ -925,6 +1201,125 @@ export default function AdminSessions() {
               setSelectedUsers([]);
             }}>
               Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Live Session Create / Edit Dialog */}
+      <Dialog open={isLiveDialogOpen} onOpenChange={(open) => {
+        setIsLiveDialogOpen(open);
+        if (!open) {
+          setEditingLiveSession(null);
+          setLiveFormData(defaultLiveFormData);
+        }
+      }}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingLiveSession ? "Edit Live Session" : "Create Live Session"}</DialogTitle>
+            <DialogDescription>
+              {editingLiveSession
+                ? "Update the session details below."
+                : "Fill in the details to schedule a new live Zoom session."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <Label htmlFor="ls-title">Title *</Label>
+              <Input
+                id="ls-title"
+                value={liveFormData.title}
+                onChange={(e) => setLiveFormData({ ...liveFormData, title: e.target.value })}
+                placeholder="e.g., High Heels Masterclass"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ls-description">Description</Label>
+              <Textarea
+                id="ls-description"
+                value={liveFormData.description}
+                onChange={(e) => setLiveFormData({ ...liveFormData, description: e.target.value })}
+                placeholder="Describe this live session..."
+                rows={3}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="ls-startTime">Start Date & Time *</Label>
+                <Input
+                  id="ls-startTime"
+                  type="datetime-local"
+                  value={liveFormData.startTime}
+                  onChange={(e) => setLiveFormData({ ...liveFormData, startTime: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="ls-endTime">End Date & Time *</Label>
+                <Input
+                  id="ls-endTime"
+                  type="datetime-local"
+                  value={liveFormData.endTime}
+                  onChange={(e) => setLiveFormData({ ...liveFormData, endTime: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <Label htmlFor="ls-isFree" className="font-medium">Free session</Label>
+                <p className="text-sm text-muted-foreground">Anyone can join for free</p>
+              </div>
+              <Switch
+                id="ls-isFree"
+                checked={liveFormData.isFree}
+                onCheckedChange={(checked) => setLiveFormData({ ...liveFormData, isFree: checked })}
+              />
+            </div>
+
+            {!liveFormData.isFree && (
+              <div className="space-y-2">
+                <Label htmlFor="ls-price">Price</Label>
+                <Input
+                  id="ls-price"
+                  value={liveFormData.price}
+                  onChange={(e) => setLiveFormData({ ...liveFormData, price: e.target.value })}
+                  placeholder="e.g., €25"
+                />
+              </div>
+            )}
+
+            <div className="space-y-2">
+              <Label htmlFor="ls-capacity">Capacity</Label>
+              <Input
+                id="ls-capacity"
+                type="number"
+                min={1}
+                value={liveFormData.capacity}
+                onChange={(e) =>
+                  setLiveFormData({ ...liveFormData, capacity: parseInt(e.target.value) || 1 })
+                }
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsLiveDialogOpen(false);
+                setEditingLiveSession(null);
+                setLiveFormData(defaultLiveFormData);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleLiveSubmit} disabled={isLivePending}>
+              {isLivePending
+                ? editingLiveSession ? "Saving..." : "Creating..."
+                : editingLiveSession ? "Save Changes" : "Create Session"}
             </Button>
           </DialogFooter>
         </DialogContent>

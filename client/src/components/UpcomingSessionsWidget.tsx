@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
-import { Calendar, Clock } from 'lucide-react';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { Calendar, Clock, Video } from 'lucide-react';
 import { trpc } from '@/lib/trpc';
 import { useProgressiveAuth } from '@/hooks/useProgressiveAuth';
 import { ProgressiveAuthModal } from '@/components/ProgressiveAuthModal';
@@ -13,10 +13,32 @@ export function UpcomingSessionsWidget() {
   const [isFocused, setIsFocused] = useState(false);
   const [widgetTop, setWidgetTop] = useState(96); // Default top position (24 * 4px)
   const [, setLocation] = useLocation();
-  const { data: events, isLoading} = trpc.admin.availability.upcoming.useQuery({ limit: 5 });
+  const { data: regularEvents, isLoading: isLoadingRegular } = trpc.admin.availability.upcoming.useQuery({ limit: 5 });
+  const { data: liveEvents, isLoading: isLoadingLive } = trpc.liveSessions.upcoming.useQuery({ limit: 5 });
   const { isAuthModalOpen, authContext, authContextDetails, requireAuth, closeAuthModal } = useProgressiveAuth();
   const widgetRef = useRef<HTMLDivElement>(null);
   const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const isLoading = isLoadingRegular || isLoadingLive;
+
+  // Merge regular and live sessions, sorted by start time
+  const events = useMemo(() => {
+    const regular = (regularEvents || []).map((e: any) => ({
+      ...e,
+      _type: 'regular' as const,
+    }));
+    const live = (liveEvents || []).map((e: any) => ({
+      ...e,
+      _type: 'live' as const,
+      // Normalize fields to match regular events shape
+      eventType: 'online',
+      sessionType: 'group',
+      currentBookings: 0,
+    }));
+    return [...regular, ...live]
+      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+      .slice(0, 5);
+  }, [regularEvents, liveEvents]);
   
   // Constrain widget top position: never overlap the sticky header
   useEffect(() => {
@@ -59,12 +81,17 @@ export function UpcomingSessionsWidget() {
     };
   }, [isHovered, isFocused]);
   
-  const handleBookClick = (eventId: number) => {
+  const handleBookClick = (event: any) => {
+    if (event._type === 'live') {
+      // Live sessions: navigate directly (access control is on the page)
+      setLocation(`/live-session/${event.id}`);
+      return;
+    }
     requireAuth(
       'booking',
       'Sign in to book this session and manage your bookings',
       () => {
-        setLocation(`/book-session?eventId=${eventId}`);
+        setLocation(`/book-session?eventId=${event.id}`);
       }
     );
   };
@@ -156,15 +183,21 @@ export function UpcomingSessionsWidget() {
               >
                 {/* Event Type Badge */}
                 <div className="flex items-center gap-1.5 mb-1.5">
-                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium rounded-full ${
-                    event.eventType === 'online' 
-                      ? 'bg-blue-100 text-blue-900' 
-                      : 'bg-purple-100 text-purple-900'
-                  }`}>
-                    {event.eventType === 'online' ? '🌐 Online' : '📍 In-Person'}
-                  </span>
+                  {event._type === 'live' ? (
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-900">
+                      <Video className="w-3 h-3" /> Live Zoom
+                    </span>
+                  ) : (
+                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium rounded-full ${
+                      event.eventType === 'online'
+                        ? 'bg-blue-100 text-blue-900'
+                        : 'bg-purple-100 text-purple-900'
+                    }`}>
+                      {event.eventType === 'online' ? '🌐 Online' : '📍 In-Person'}
+                    </span>
+                  )}
                   <span className="text-xs text-gray-500 capitalize">
-                    {event.sessionType}
+                    {event._type === 'live' ? 'group' : event.sessionType}
                   </span>
                 </div>
                 
@@ -187,22 +220,24 @@ export function UpcomingSessionsWidget() {
                 {/* Footer */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs font-medium ${
-                      spotsLeft <= 2 ? 'text-amber-600' : 'text-gray-700'
-                    }`}>
-                      {spotsLeft} {spotsLeft === 1 ? 'spot' : 'spots'}
-                    </span>
+                    {event._type !== 'live' && (
+                      <span className={`text-xs font-medium ${
+                        spotsLeft <= 2 ? 'text-amber-600' : 'text-gray-700'
+                      }`}>
+                        {spotsLeft} {spotsLeft === 1 ? 'spot' : 'spots'}
+                      </span>
+                    )}
                     <span className="text-xs font-semibold text-gray-900">
                       {event.isFree ? 'Free' : `€${event.price}`}
                     </span>
                   </div>
-                  
+
                   <Button
                     size="sm"
-                    onClick={() => handleBookClick(event.id)}
+                    onClick={() => handleBookClick(event)}
                     className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-xs px-3 py-1"
                   >
-                    Book
+                    {event._type === 'live' ? 'View' : 'Book'}
                   </Button>
                 </div>
               </div>

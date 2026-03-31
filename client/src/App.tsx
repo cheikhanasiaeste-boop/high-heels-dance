@@ -25,7 +25,7 @@ import AdminUserManagement from "./pages/admin/UserManagementNew";
 import AdminUserActivity from "./pages/admin/UserActivity";
 import AdminSessions from "./pages/admin/AdminSessions";
 import AdminDiscounts from "./pages/admin/Discounts";
-import AdminLiveSessions from "./pages/admin/LiveSessions";
+// LiveSessions is now integrated into AdminSessions as a tab
 import CourseContentManager from "./pages/admin/CourseContentManager";
 import BookSession from "./pages/BookSession";
 import Feedback from './pages/Feedback';
@@ -71,7 +71,7 @@ function Router() {
       <Route path="/admin/bookings">{() => <AdminGuard><AdminBookings /></AdminGuard>}</Route>
       <Route path="/admin/availability">{() => <AdminGuard><AdminAvailability /></AdminGuard>}</Route>
       <Route path="/admin/sessions">{() => <AdminGuard><AdminSessions /></AdminGuard>}</Route>
-      <Route path="/admin/live-sessions">{() => <AdminGuard><AdminLiveSessions /></AdminGuard>}</Route>
+      <Route path="/admin/live-sessions">{() => <AdminGuard><AdminSessions /></AdminGuard>}</Route>
       <Route path="/admin/testimonials">{() => <AdminGuard><AdminTestimonials /></AdminGuard>}</Route>
       <Route path="/admin/users">{() => <AdminGuard><AdminUserManagement /></AdminGuard>}</Route>
       <Route path="/admin/user-activity">{() => <AdminGuard><AdminUserActivity /></AdminGuard>}</Route>
