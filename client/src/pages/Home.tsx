@@ -313,8 +313,16 @@ export default function Home() {
               loop
               muted
               playsInline
+              preload="auto"
               className="absolute inset-0 w-full h-full object-cover scale-105"
               style={{ filter: 'brightness(0.45) saturate(1.15)' }}
+              ref={(el) => {
+                if (el) {
+                  el.playbackRate = 1.2;
+                  // Re-apply on play in case browser resets it
+                  el.addEventListener('play', () => { el.playbackRate = 1.2; }, { once: false });
+                }
+              }}
               onError={(e) => {
                 const video = e.currentTarget;
                 video.style.display = 'none';
