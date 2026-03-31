@@ -1826,12 +1826,15 @@ Never be pushy. Be genuinely helpful and make people feel welcome.`;
           assistantMessage = "Thanks for reaching out! I'm having a little moment — but you can explore our courses or book a dance session right from the menu above. Elizabeth would love to dance with you!";
         }
         
-        // Step 1: Clean up Gemini's blocked links — it outputs [text](url) but url gets [blocked]
-        // Match patterns like: [Courses](/courses) [blocked], [text][blocked], [text](blocked), text [blocked]
+        // Step 1: Clean up Gemini's blocked links — various patterns it outputs
         assistantMessage = assistantMessage
           .replace(/\[([^\]]*)\]\([^)]*\)\s*\[blocked\]/gi, '{{LINK:$1}}')  // [Text](url) [blocked]
           .replace(/\[([^\]]*)\]\s*\[blocked\]/gi, '{{LINK:$1}}')           // [Text] [blocked]
           .replace(/\[([^\]]*)\]\(blocked\)/gi, '{{LINK:$1}}')              // [Text](blocked)
+          .replace(/(Courses?)\s*\[blocked\]/gi, '{{LINK:Courses}}')         // Courses [blocked] (no brackets)
+          .replace(/(Book(?:ing)?(?:\s+a)?\s+Session)\s*\[blocked\]/gi, '{{LINK:Book a Session}}') // Book a Session [blocked]
+          .replace(/(Instagram|YouTube|Facebook)\s*\[blocked\]/gi, '{{LINK:$1}}') // Social [blocked]
+          .replace(/(\w[\w\s]*?)\s*\[blocked\]/gi, '{{LINK:$1}}')           // Any word(s) [blocked] — catch-all
           .replace(/\[blocked\]/gi, '');                                      // standalone [blocked]
 
         // Step 2: Replace our placeholders with real links
