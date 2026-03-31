@@ -100,8 +100,8 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     contents.unshift({ role: "user", parts: [{ text: "Hello" }] });
   }
 
-  // Single fast call — no retries, fail fast so fallback message shows quickly
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${apiKey}`;
+  // Use gemini-2.5-flash — confirmed working with this API key
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
   const response = await fetch(url, {
     method: "POST",
     headers: { "content-type": "application/json" },
