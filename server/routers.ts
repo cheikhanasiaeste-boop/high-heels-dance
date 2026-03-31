@@ -116,6 +116,25 @@ export const appRouter = router({
       .query(async ({ input }) => {
         return await db.getCourseModulesWithLessons(input.courseId);
       }),
+
+    // Public curriculum overview — shows module/lesson titles + metadata but no video URLs
+    getPublicCurriculum: publicProcedure
+      .input(z.object({ courseId: z.number() }))
+      .query(async ({ input }) => {
+        const modules = await db.getCourseModulesWithLessons(input.courseId);
+        // Strip sensitive data, keep only what's needed for the landing page
+        return modules.map((m: any) => ({
+          id: m.id,
+          title: m.title,
+          description: m.description,
+          lessons: (m.lessons || []).map((l: any) => ({
+            id: l.id,
+            title: l.title,
+            durationSeconds: l.durationSeconds,
+            isFree: l.isFree,
+          })),
+        }));
+      }),
     
     // Get user progress for a course
     getUserProgress: protectedProcedure

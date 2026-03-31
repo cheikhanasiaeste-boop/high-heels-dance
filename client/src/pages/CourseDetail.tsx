@@ -2,46 +2,66 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
 import { trpc } from "@/lib/trpc";
-import { ArrowLeft, Lock, CheckCircle, Play, X, Crown } from "lucide-react";
+import {
+  ArrowLeft,
+  Lock,
+  CheckCircle,
+  Play,
+  X,
+  Crown,
+  Clock,
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  Users,
+  Star,
+  Sparkles,
+} from "lucide-react";
 import { Link, useParams } from "wouter";
 import { toast } from "sonner";
 import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { ProgressiveAuthModal } from "@/components/ProgressiveAuthModal";
-import { FloatingVideoPlayer } from "@/components/FloatingVideoPlayer";
-import { CourseBreadcrumb } from "@/components/CourseBreadcrumb";
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+
+function fmt(s: number): string {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${String(sec).padStart(2, "0")}`;
+}
 
 export default function CourseDetail() {
   const params = useParams();
   const courseId = Number(params.id);
   const { user, isAuthenticated } = useAuth();
   const { isAuthModalOpen, authContext, authContextDetails, requireAuth, closeAuthModal } = useProgressiveAuth();
-  
+
   const [showMobileCTA, setShowMobileCTA] = useState(false);
   const [isMobileCTADismissed, setIsMobileCTADismissed] = useState(false);
-  const videoRef = useRef<HTMLDivElement>(null);
-  const thumbnailRef = useRef<HTMLDivElement>(null);
-  const ctaContainerRef = useRef<HTMLDivElement>(null);
-  const footerObserverRef = useRef<HTMLDivElement>(null);
-  
+  const [expandedModules, setExpandedModules] = useState<Set<number>>(new Set());
+  const heroRef = useRef<HTMLDivElement>(null);
+
   const { data: course, isLoading } = trpc.courses.getById.useQuery({ id: courseId });
   const { data: hasAccess } = trpc.courses.hasAccess.useQuery(
     { courseId },
     { enabled: isAuthenticated }
   );
-  
   const { data: membershipStatus } = trpc.membership.getStatus.useQuery(
     undefined,
     { enabled: isAuthenticated }
   );
-  
+  const { data: curriculum } = trpc.courses.getPublicCurriculum.useQuery(
+    { courseId },
+    { enabled: !!courseId }
+  );
+
   const checkoutMutation = trpc.purchases.createCheckoutSession.useMutation({
     onSuccess: (data) => {
       if (data.url) {
         toast.info("Redirecting to checkout...");
-        window.open(data.url, '_blank');
+        window.open(data.url, "_blank");
       }
     },
     onError: (error: any) => {
@@ -49,83 +69,60 @@ export default function CourseDetail() {
     },
   });
 
-  // Mobile sticky CTA behavior - show when video scrolls out of view
+  // Mobile sticky CTA
   useEffect(() => {
-    if (typeof window === 'undefined' || !videoRef.current) return;
-
+    if (!heroRef.current) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        // Show mobile CTA when video is not visible and user hasn't dismissed it
-        if (window.innerWidth < 1024) { // lg breakpoint
+        if (window.innerWidth < 1024) {
           setShowMobileCTA(!entry.isIntersecting && !isMobileCTADismissed);
         }
       },
       { threshold: 0.1 }
     );
-
-    observer.observe(videoRef.current);
+    observer.observe(heroRef.current);
     return () => observer.disconnect();
   }, [isMobileCTADismissed]);
 
-  // Desktop sticky CTA - stop before footer
+  // Auto-expand first module
   useEffect(() => {
-    if (typeof window === 'undefined' || !footerObserverRef.current || !ctaContainerRef.current) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (ctaContainerRef.current) {
-          // When footer is visible, stop sticky behavior
-          if (entry.isIntersecting) {
-            ctaContainerRef.current.style.position = 'absolute';
-            ctaContainerRef.current.style.bottom = '0';
-          } else {
-            ctaContainerRef.current.style.position = 'sticky';
-            ctaContainerRef.current.style.bottom = 'auto';
-          }
-        }
-      },
-      { threshold: 0 }
-    );
-
-    observer.observe(footerObserverRef.current);
-    return () => observer.disconnect();
-  }, []);
+    if (curriculum && curriculum.length > 0 && expandedModules.size === 0) {
+      setExpandedModules(new Set([curriculum[0].id]));
+    }
+  }, [curriculum]);
 
   const handlePurchase = () => {
-    const contextDetails = course ? `${course.title}${course.isFree ? ' (Free)' : ` - €${course.price}`}` : 'Course';
-    
-    requireAuth('course', contextDetails, () => {
+    const contextDetails = course ? `${course.title}${course.isFree ? " (Free)" : ` - €${course.price}`}` : "Course";
+    requireAuth("course", contextDetails, () => {
       if (course?.isFree) {
         toast.success("You now have access to this free course!");
         window.location.reload();
         return;
       }
-      
       checkoutMutation.mutate({ courseId });
     });
   };
 
+  // Derived
+  const canAccess = course?.isFree || (isAuthenticated && hasAccess);
+  const totalLessons = curriculum?.reduce((sum, m) => sum + m.lessons.length, 0) || 0;
+  const totalDuration = curriculum?.reduce(
+    (sum, m) => sum + m.lessons.reduce((s: number, l: any) => s + (l.durationSeconds || 0), 0),
+    0
+  ) || 0;
+  const freeLessons = curriculum?.reduce(
+    (sum, m) => sum + m.lessons.filter((l: any) => l.isFree).length, 0
+  ) || 0;
+
+  // ── Loading ──
   if (isLoading) {
     return (
       <div className="min-h-screen">
-        <header className="border-b bg-card">
-          <div className="container py-4">
-            <a href="/courses">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Courses
-              </Button>
-            </a>
-          </div>
-        </header>
-        <div className="container py-16">
-          <div className="animate-pulse grid lg:grid-cols-[1fr_400px] gap-8">
-            <div>
-              <div className="h-64 bg-muted rounded-lg mb-6"></div>
-              <div className="h-8 bg-muted rounded w-1/2 mb-4"></div>
-              <div className="h-4 bg-muted rounded w-3/4"></div>
-            </div>
-            <div className="h-96 bg-muted rounded-lg"></div>
+        <div className="bg-gradient-to-br from-fuchsia-950 via-purple-950 to-black h-[50vh] animate-pulse" />
+        <div className="container max-w-5xl -mt-16 px-4">
+          <div className="bg-card rounded-2xl p-8 shadow-xl animate-pulse">
+            <div className="h-8 bg-muted rounded w-2/3 mb-4" />
+            <div className="h-4 bg-muted rounded w-1/2" />
           </div>
         </div>
       </div>
@@ -134,341 +131,400 @@ export default function CourseDetail() {
 
   if (!course) {
     return (
-      <div className="min-h-screen">
-        <header className="border-b bg-card">
-          <div className="container py-4">
-            <a href="/courses">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Courses
-              </Button>
-            </a>
-          </div>
-        </header>
-        <div className="container py-16 text-center">
-          <h2 className="text-2xl font-bold mb-4">Course Not Found</h2>
-          <p className="text-muted-foreground mb-8">The course you're looking for doesn't exist.</p>
-          <Link href="/">
-            <Button>Browse Courses</Button>
-          </Link>
-        </div>
+      <div className="min-h-screen flex flex-col items-center justify-center px-4">
+        <div className="text-5xl mb-4">🩰</div>
+        <h2 className="text-2xl font-bold mb-2">Course Not Found</h2>
+        <p className="text-muted-foreground mb-6">This course doesn't exist or has been removed.</p>
+        <Link href="/courses"><Button>Browse Courses</Button></Link>
       </div>
     );
   }
 
-  const canAccess = course.isFree || (isAuthenticated && hasAccess);
-
-  const CTAButton = () => {
+  // ── CTA Button ──
+  const CTAButton = ({ size = "lg", fullWidth = true }: { size?: "lg" | "default" | "sm"; fullWidth?: boolean }) => {
+    const cls = fullWidth ? "w-full" : "";
     if (canAccess) {
       return (
-        <Button 
-          asChild
-          className="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-lg py-6" 
-          size="lg"
-        >
+        <Button asChild size={size} className={`${cls} bg-[#C026D3] hover:bg-[#A21CAF] text-white shadow-lg`}>
           <Link href={`/course/${courseId}/learn`}>
-            <Play className="w-5 h-5 mr-2" />
-            Start Learning
+            <Play className="h-5 w-5 mr-2" />
+            Access the Course
           </Link>
         </Button>
       );
     }
-
-    // Show upgrade to membership option for paid courses
-    if (!course.isFree && !membershipStatus?.isActive) {
+    if (course.isFree) {
       return (
-        <div className="space-y-3">
-          <Button 
-            className="w-full text-lg py-6" 
-            size="lg"
-            onClick={handlePurchase}
-            disabled={checkoutMutation.isPending}
-          >
-            {checkoutMutation.isPending 
-              ? "Processing..." 
-              : `Purchase for €${course.price}`}
-          </Button>
-          <div className="text-center text-sm text-muted-foreground">
-            or{" "}
-            <Link href="/membership" className="text-purple-600 hover:underline font-semibold">
-              Get Membership for unlimited access
-            </Link>
-          </div>
-        </div>
+        <Button size={size} className={`${cls} bg-[#C026D3] hover:bg-[#A21CAF] text-white shadow-lg`} onClick={handlePurchase}>
+          <Sparkles className="h-5 w-5 mr-2" />
+          Start Free Course
+        </Button>
       );
     }
-    
     return (
-      <Button 
-        className="w-full text-lg py-6" 
-        size="lg"
+      <Button
+        size={size}
+        className={`${cls} bg-[#C026D3] hover:bg-[#A21CAF] text-white shadow-lg`}
         onClick={handlePurchase}
         disabled={checkoutMutation.isPending}
       >
-        {checkoutMutation.isPending 
-          ? "Processing..." 
-          : "Enroll for Free"}
+        {checkoutMutation.isPending ? "Processing..." : `Purchase for €${course.price}`}
       </Button>
     );
   };
 
   return (
-    <div className="min-h-screen">
-      <header className="border-b bg-card">
-        <div className="container py-4 space-y-3">
-          <a href="/courses">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Courses
-            </Button>
-          </a>
-          <CourseBreadcrumb courseName={course.title} courseId={courseId} />
+    <div className="min-h-screen bg-background">
+      {/* ── Hero Section ────────────────────────── */}
+      <div ref={heroRef} className="relative bg-gradient-to-br from-fuchsia-950 via-purple-950 to-black overflow-hidden">
+        {/* Back button */}
+        <div className="absolute top-0 left-0 right-0 z-20">
+          <div className="container max-w-5xl px-4 py-4">
+            <Link href="/courses">
+              <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                All Courses
+              </Button>
+            </Link>
+          </div>
         </div>
-      </header>
 
-      <div className="container py-8 lg:py-16">
-        {/* Two-column grid: Left (content) + Right (CTA) */}
-        <div className="grid lg:grid-cols-[1fr_400px] gap-8 lg:gap-12">
-          
-          {/* LEFT COLUMN: Preview Video + Description */}
-          <div className="space-y-6">
-            {/* Preview Video with Floating Behavior */}
-            <div ref={videoRef}>
-              {course.previewVideoUrl ? (
-                <FloatingVideoPlayer
-                  videoUrl={course.previewVideoUrl}
-                  posterUrl={course.imageUrl || undefined}
-                  thumbnailContainerRef={thumbnailRef}
-                />
-              ) : (
-                <div className="aspect-video bg-gradient-to-br from-purple-900 to-pink-900 rounded-lg overflow-hidden shadow-xl relative">
-                  <div className="absolute inset-0 flex flex-col items-center justify-center text-white">
-                    <Play className="w-16 h-16 mb-4 opacity-50" />
-                    <p className="text-sm opacity-75">Preview video coming soon</p>
-                  </div>
-                </div>
-              )}
-            </div>
+        {/* Background image with overlay */}
+        {course.imageUrl && (
+          <div className="absolute inset-0 opacity-20">
+            <img src={course.imageUrl} alt="" className="w-full h-full object-cover blur-2xl scale-110" />
+          </div>
+        )}
 
-            {/* Course Title + Badge */}
-            <div className="flex items-start justify-between gap-4">
-              <h1 className="text-3xl lg:text-4xl font-bold leading-tight">{course.title}</h1>
-              {course.isFree && (
-                <Badge variant="secondary" className="text-base px-3 py-1 shrink-0">Free</Badge>
-              )}
-            </div>
+        <div className="container max-w-5xl px-4 pt-20 pb-32 relative z-10">
+          <div className="grid lg:grid-cols-[1fr_380px] gap-8 items-center">
+            {/* Left: text */}
+            <div className="text-white">
+              <div className="flex items-center gap-3 mb-4">
+                {course.isFree ? (
+                  <Badge className="bg-emerald-500/90 text-white border-0 text-sm px-3 py-1">Free Course</Badge>
+                ) : (
+                  <Badge className="bg-white/15 text-white border-0 backdrop-blur-sm text-sm px-3 py-1">
+                    Premium Course
+                  </Badge>
+                )}
+                {canAccess && (
+                  <Badge className="bg-emerald-500/90 text-white border-0 text-sm px-3 py-1">
+                    <CheckCircle className="h-3 w-3 mr-1" />
+                    Enrolled
+                  </Badge>
+                )}
+              </div>
 
-            {/* Course Description - Optimized readability */}
-            <div className="prose prose-lg max-w-none">
-              <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-wrap">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4 tracking-tight">
+                {course.title}
+              </h1>
+
+              <p className="text-lg text-white/70 leading-relaxed mb-6 max-w-xl line-clamp-3">
                 {course.description}
               </p>
+
+              {/* Meta pills */}
+              <div className="flex flex-wrap items-center gap-3 mb-8">
+                {totalLessons > 0 && (
+                  <span className="flex items-center gap-1.5 text-sm text-white/60 bg-white/10 rounded-full px-3 py-1.5">
+                    <BookOpen className="h-4 w-4" />
+                    {totalLessons} lessons
+                  </span>
+                )}
+                {totalDuration > 0 && (
+                  <span className="flex items-center gap-1.5 text-sm text-white/60 bg-white/10 rounded-full px-3 py-1.5">
+                    <Clock className="h-4 w-4" />
+                    {Math.round(totalDuration / 60)} min
+                  </span>
+                )}
+                <span className="flex items-center gap-1.5 text-sm text-white/60 bg-white/10 rounded-full px-3 py-1.5">
+                  <Star className="h-4 w-4" />
+                  All Levels
+                </span>
+              </div>
+
+              {/* CTA — prominent on desktop */}
+              <div className="hidden lg:flex items-center gap-4">
+                <CTAButton fullWidth={false} />
+                {!canAccess && !course.isFree && !membershipStatus?.isActive && (
+                  <Link href="/membership">
+                    <Button variant="ghost" className="text-white/70 hover:text-white hover:bg-white/10">
+                      <Crown className="h-4 w-4 mr-2" />
+                      Membership
+                    </Button>
+                  </Link>
+                )}
+              </div>
             </div>
 
-            {/* Access Status Alert */}
-            {canAccess ? (
-              <Alert className="bg-green-50 border-green-200">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800">
-                  You have access to this course! Click "Start Learning" to begin.
-                </AlertDescription>
-              </Alert>
-            ) : (
-              <Alert>
-                <Lock className="h-4 w-4" />
-                <AlertDescription>
-                  {isAuthenticated 
-                    ? "Purchase this course to access all content."
-                    : "Sign in and purchase this course to access all content."}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {/* Mobile CTA Card - Always visible on mobile */}
-            <Card className="lg:hidden shadow-xl border-2">
-              <CardContent className="p-6 space-y-6">
-                {/* Price Display */}
-                <div>
-                  <div className="flex items-baseline gap-2 mb-2">
-                    <span className="text-4xl font-bold text-primary">
-                      {course.isFree ? 'Free' : `€${course.price}`}
-                    </span>
-                    {course.originalPrice && Number(course.originalPrice) > Number(course.price) && (
-                      <span className="text-xl text-muted-foreground line-through">
-                        €{course.originalPrice}
-                      </span>
-                    )}
+            {/* Right: preview video or image */}
+            <div className="relative group">
+              <div className="aspect-video rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+                {course.previewVideoUrl ? (
+                  <video
+                    src={course.previewVideoUrl}
+                    poster={course.imageUrl || undefined}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    className="w-full h-full object-cover"
+                  />
+                ) : course.imageUrl ? (
+                  <img src={course.imageUrl} alt={course.title} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-fuchsia-800 to-purple-800 flex items-center justify-center">
+                    <span className="text-7xl">💃</span>
                   </div>
+                )}
+              </div>
+              {freeLessons > 0 && !canAccess && (
+                <div className="absolute -bottom-3 left-1/2 -translate-x-1/2">
+                  <Badge className="bg-white text-[#C026D3] shadow-lg border-0 text-xs px-3 py-1">
+                    <Eye className="h-3 w-3 mr-1" />
+                    {freeLessons} free preview{freeLessons > 1 ? "s" : ""}
+                  </Badge>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Content Area ───────────────────────── */}
+      <div className="container max-w-5xl px-4 -mt-16 relative z-10 pb-24">
+        <div className="grid lg:grid-cols-[1fr_340px] gap-8">
+
+          {/* ── Left Column ──────────────────────── */}
+          <div className="space-y-8">
+
+            {/* Mobile CTA card */}
+            <Card className="lg:hidden shadow-xl border-2 border-[#C026D3]/20">
+              <CardContent className="p-5 space-y-4">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl font-bold">{course.isFree ? "Free" : `€${course.price}`}</span>
                   {course.originalPrice && Number(course.originalPrice) > Number(course.price) && (
-                    <p className="text-sm text-green-600 font-medium">
-                      Save €{(Number(course.originalPrice) - Number(course.price)).toFixed(2)}
-                    </p>
+                    <span className="text-lg text-muted-foreground line-through">€{course.originalPrice}</span>
                   )}
                 </div>
-
-                {/* Primary CTA Button */}
                 <CTAButton />
+                {!canAccess && !course.isFree && !membershipStatus?.isActive && (
+                  <p className="text-center text-xs text-muted-foreground">
+                    or <Link href="/membership" className="text-[#C026D3] font-semibold hover:underline">get Membership</Link> for unlimited access
+                  </p>
+                )}
+              </CardContent>
+            </Card>
 
-                {/* Course Metadata */}
-                <div className="pt-4 border-t space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Level</span>
-                    <Badge variant="outline" className="font-medium">All Levels</Badge>
+            {/* What you'll learn */}
+            {course.description && (
+              <Card className="shadow-lg">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                    <Sparkles className="h-5 w-5 text-[#C026D3]" />
+                    About This Course
+                  </h2>
+                  <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                    {course.description}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Curriculum */}
+            {curriculum && curriculum.length > 0 && (
+              <Card className="shadow-lg">
+                <CardContent className="p-6">
+                  <h2 className="text-xl font-bold mb-1 flex items-center gap-2">
+                    <BookOpen className="h-5 w-5 text-[#C026D3]" />
+                    Course Curriculum
+                  </h2>
+                  <p className="text-sm text-muted-foreground mb-5">
+                    {totalLessons} lessons
+                    {totalDuration > 0 && ` \u00b7 ${Math.round(totalDuration / 60)} min total`}
+                  </p>
+
+                  <div className="space-y-3">
+                    {curriculum.map((module) => {
+                      const isExpanded = expandedModules.has(module.id);
+                      const moduleDuration = module.lessons.reduce((s: number, l: any) => s + (l.durationSeconds || 0), 0);
+                      return (
+                        <div key={module.id} className="rounded-xl border overflow-hidden">
+                          <button
+                            onClick={() => {
+                              setExpandedModules((prev) => {
+                                const next = new Set(prev);
+                                next.has(module.id) ? next.delete(module.id) : next.add(module.id);
+                                return next;
+                              });
+                            }}
+                            className="w-full flex items-center justify-between p-4 hover:bg-muted/50 transition-colors text-left"
+                          >
+                            <div>
+                              <h3 className="font-semibold text-sm">{module.title}</h3>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {module.lessons.length} lesson{module.lessons.length !== 1 ? "s" : ""}
+                                {moduleDuration > 0 && ` \u00b7 ${Math.round(moduleDuration / 60)} min`}
+                              </p>
+                            </div>
+                            {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                          </button>
+                          {isExpanded && (
+                            <div className="border-t">
+                              {module.lessons.map((lesson: any, idx: number) => (
+                                <div
+                                  key={lesson.id}
+                                  className="flex items-center gap-3 px-4 py-3 text-sm hover:bg-muted/30 transition-colors border-b last:border-b-0"
+                                >
+                                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-medium flex-shrink-0">
+                                    {idx + 1}
+                                  </span>
+                                  <span className="flex-1 truncate">{lesson.title}</span>
+                                  {lesson.isFree && (
+                                    <Badge variant="outline" className="text-[10px] border-[#C026D3]/40 text-[#C026D3] flex-shrink-0">
+                                      <Eye className="h-2.5 w-2.5 mr-0.5" />
+                                      Preview
+                                    </Badge>
+                                  )}
+                                  {lesson.durationSeconds > 0 && (
+                                    <span className="text-xs text-muted-foreground tabular-nums flex-shrink-0">
+                                      {fmt(lesson.durationSeconds)}
+                                    </span>
+                                  )}
+                                  {!canAccess && !lesson.isFree && (
+                                    <Lock className="h-3.5 w-3.5 text-muted-foreground/40 flex-shrink-0" />
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Language</span>
-                    <Badge variant="outline" className="font-medium">English</Badge>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Instructor */}
+            <Card className="shadow-lg">
+              <CardContent className="p-6">
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <Users className="h-5 w-5 text-[#C026D3]" />
+                  Your Instructor
+                </h2>
+                <div className="flex items-start gap-4">
+                  <div className="h-16 w-16 rounded-full bg-gradient-to-br from-fuchsia-400 to-purple-500 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0 shadow-lg">
+                    EZ
                   </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Access</span>
-                    <Badge variant="outline" className="font-medium">
-                      {course.isFree ? 'Free' : 'Lifetime'}
-                    </Badge>
+                  <div>
+                    <h3 className="font-bold text-lg">Elizabeth Zolotova</h3>
+                    <p className="text-sm text-[#C026D3] font-medium mb-2">Professional High Heels Dance Instructor</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      With years of experience in high heels dance, Elizabeth brings passion, expertise, and an infectious energy to every class. Her teaching style focuses on building confidence through movement, proper technique, and self-expression.
+                    </p>
                   </div>
                 </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* RIGHT COLUMN: Thumbnail + Sticky CTA Container */}
-          <div className="relative">
-            <div className="lg:sticky lg:top-8 space-y-6" ref={ctaContainerRef}>
-              
-              {/* Course Thumbnail - Target for floating video */}
-              <div 
-                ref={thumbnailRef}
-                className="aspect-video bg-gradient-to-br from-pink-100 to-purple-100 rounded-lg overflow-hidden relative shadow-lg"
-              >
-                {course.imageUrl ? (
-                  <img 
-                    src={course.imageUrl} 
-                    alt={course.title} 
-                    loading="eager"
-                    className="absolute"
-                    style={{
-                      top: '50%',
-                      left: '50%',
-                      width: 'auto',
-                      height: 'auto',
-                      maxWidth: 'none',
-                      maxHeight: 'none',
-                      minWidth: '100%',
-                      minHeight: '100%',
-                      transform: `translate(-50%, -50%) scale(${parseFloat(course.imageCropZoom || "1.00")}) translate(${parseFloat(course.imageCropOffsetX || "0")}px, ${parseFloat(course.imageCropOffsetY || "0")}px)`,
-                      transformOrigin: 'center center',
-                    }}
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-8xl">💃</span>
-                  </div>
-                )}
-              </div>
-
-              {/* CTA Container - Sticky on desktop */}
-              <Card className="shadow-xl border-2">
-                <CardContent className="p-6 space-y-6">
-                  
-                  {/* Price Display */}
+          {/* ── Right Column (Desktop sticky CTA) ── */}
+          <div className="hidden lg:block">
+            <div className="sticky top-8 space-y-4">
+              <Card className="shadow-xl border-2 border-[#C026D3]/15">
+                <CardContent className="p-6 space-y-5">
+                  {/* Price */}
                   <div>
-                    <div className="flex items-baseline gap-2 mb-2">
-                      <span className="text-4xl font-bold text-primary">
-                        {course.isFree ? 'Free' : `€${course.price}`}
-                      </span>
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span className="text-4xl font-bold">{course.isFree ? "Free" : `€${course.price}`}</span>
                       {course.originalPrice && Number(course.originalPrice) > Number(course.price) && (
-                        <span className="text-xl text-muted-foreground line-through">
-                          €{course.originalPrice}
-                        </span>
+                        <span className="text-xl text-muted-foreground line-through">€{course.originalPrice}</span>
                       )}
                     </div>
                     {course.originalPrice && Number(course.originalPrice) > Number(course.price) && (
-                      <p className="text-sm text-green-600 font-medium">
+                      <p className="text-sm text-emerald-600 font-medium">
                         Save €{(Number(course.originalPrice) - Number(course.price)).toFixed(2)}
                       </p>
                     )}
                   </div>
 
-                  {/* Primary CTA Button */}
+                  {/* CTA */}
                   <CTAButton />
 
-                  {/* Membership CTA - Show for all courses when user doesn't have membership */}
-                  {isAuthenticated && !membershipStatus?.isActive && (
-                    <div className="pt-4 border-t">
-                      <p className="text-sm text-muted-foreground mb-3 text-center">
-                        Or get unlimited access to all courses
-                      </p>
-                      <a href="/membership">
-                        <Button variant="outline" className="w-full" size="lg">
+                  {/* Membership upsell */}
+                  {!canAccess && !course.isFree && !membershipStatus?.isActive && (
+                    <div className="text-center">
+                      <p className="text-xs text-muted-foreground mb-2">Or get unlimited access</p>
+                      <Link href="/membership">
+                        <Button variant="outline" className="w-full" size="sm">
                           <Crown className="h-4 w-4 mr-2" />
-                          View Membership Plans
+                          View Membership
                         </Button>
-                      </a>
+                      </Link>
                     </div>
                   )}
 
-                  {/* Course Metadata - Visually grouped */}
-                  <div className="pt-4 border-t space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Level</span>
-                      <Badge variant="outline" className="font-medium">All Levels</Badge>
+                  {/* Access confirmation */}
+                  {canAccess && (
+                    <div className="flex items-center gap-2 text-sm text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 rounded-lg p-3">
+                      <CheckCircle className="h-4 w-4 flex-shrink-0" />
+                      <span>You have full access to this course</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Language</span>
-                      <Badge variant="outline" className="font-medium">English</Badge>
+                  )}
+
+                  {/* Course stats */}
+                  <div className="border-t pt-4 space-y-3 text-sm">
+                    {totalLessons > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Lessons</span>
+                        <span className="font-medium">{totalLessons}</span>
+                      </div>
+                    )}
+                    {totalDuration > 0 && (
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Duration</span>
+                        <span className="font-medium">{Math.round(totalDuration / 60)} min</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Level</span>
+                      <span className="font-medium">All Levels</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">Access</span>
-                      <Badge variant="outline" className="font-medium">
-                        {course.isFree ? 'Free' : 'Lifetime'}
-                      </Badge>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Access</span>
+                      <span className="font-medium">{course.isFree ? "Free" : "Lifetime"}</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
-
-            {/* Footer observer for sticky behavior */}
-            <div ref={footerObserverRef} className="absolute bottom-0 left-0 w-full h-1"></div>
           </div>
         </div>
       </div>
 
-      {/* Mobile Sticky CTA Bar - Appears when video scrolls out */}
+      {/* ── Mobile Sticky CTA ──────────────────── */}
       {showMobileCTA && !isMobileCTADismissed && (
-        <div className="fixed bottom-0 left-0 right-0 bg-card border-t shadow-2xl z-50 lg:hidden animate-in slide-in-from-bottom duration-300">
-          <div className="container py-4 flex items-center gap-3">
-            <div className="flex-1">
-              <div className="flex items-baseline gap-2 mb-1">
-                <span className="text-2xl font-bold text-primary">
-                  {course.isFree ? 'Free' : `€${course.price}`}
-                </span>
-                {course.originalPrice && Number(course.originalPrice) > Number(course.price) && (
-                  <span className="text-sm text-muted-foreground line-through">
-                    €{course.originalPrice}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-muted-foreground">{course.title}</p>
+        <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t shadow-2xl z-50 lg:hidden animate-in slide-in-from-bottom duration-300">
+          <div className="container py-3 flex items-center gap-3 px-4">
+            <div className="flex-1 min-w-0">
+              <span className="text-lg font-bold">{course.isFree ? "Free" : `€${course.price}`}</span>
+              <p className="text-xs text-muted-foreground truncate">{course.title}</p>
             </div>
-            <CTAButton />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="shrink-0"
-              onClick={() => setIsMobileCTADismissed(true)}
-              aria-label="Dismiss"
-            >
+            <CTAButton size="default" fullWidth={false} />
+            <Button variant="ghost" size="icon" className="shrink-0 h-8 w-8" onClick={() => setIsMobileCTADismissed(true)}>
               <X className="h-4 w-4" />
             </Button>
           </div>
         </div>
       )}
 
-      {/* Progressive Authentication Modal */}
+      {/* Progressive Auth Modal */}
       <ProgressiveAuthModal
         isOpen={isAuthModalOpen}
         onClose={closeAuthModal}
-        context={authContext || 'course'}
+        context={authContext || "course"}
         contextDetails={authContextDetails}
       />
     </div>
