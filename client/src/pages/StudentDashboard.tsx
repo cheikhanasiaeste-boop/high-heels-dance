@@ -89,11 +89,11 @@ export default function StudentDashboard() {
       <div className="bg-gradient-to-r from-fuchsia-600 via-pink-500 to-purple-600 text-white">
         <div className="container max-w-6xl px-4 py-8">
           <div className="flex items-center justify-between">
-            {/* Left: Welcome message */}
+            {/* Left: My Studio + Welcome */}
             <div>
-              <p className="text-pink-200 text-sm mb-0.5">Welcome back,</p>
+              <p className="text-pink-200 text-xs uppercase tracking-widest mb-1">My Studio</p>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-                {firstName}
+                Welcome back, {firstName}
                 {stats.streakDays > 0 && (
                   <span className="inline-flex items-center align-middle ml-2 text-lg">
                     <Flame className="h-5 w-5 text-amber-300" />
