@@ -66,7 +66,7 @@ export default function StudentDashboard() {
           Sign in to track your progress, resume lessons, and join live sessions with Elizabeth.
         </p>
         <Link href="/">
-          <Button size="lg" className="bg-[#C026D3] hover:bg-[#A21CAF] text-white">Get Started</Button>
+          <Button size="lg" className="glow-button bg-[#C026D3] hover:bg-[#A21CAF] text-white">Get Started</Button>
         </Link>
       </div>
     );
@@ -86,13 +86,13 @@ export default function StudentDashboard() {
   return (
     <div className="min-h-screen bg-background">
       {/* ── Header ── */}
-      <div className="bg-gradient-to-r from-fuchsia-600 via-pink-500 to-purple-600 text-white">
-        <div className="container max-w-6xl px-4 py-8">
+      <div className="bg-gradient-to-r from-fuchsia-700 via-pink-600 to-purple-700 text-white">
+        <div className="container max-w-6xl px-4 py-10">
           <div className="flex items-center justify-between">
             {/* Left: My Studio + Welcome */}
             <div>
-              <p className="text-pink-200 text-xs uppercase tracking-widest mb-1">My Studio</p>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+              <p className="text-pink-200/80 text-[11px] uppercase tracking-[0.25em] mb-1.5">My Studio</p>
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
                 Welcome back, {firstName}
                 {stats.streakDays > 0 && (
                   <span className="inline-flex items-center align-middle ml-2 text-lg">
@@ -139,7 +139,7 @@ export default function StudentDashboard() {
                 {cw && (
                   <section>
                     <Heading icon={<Play className="h-5 w-5" />} title="Continue Watching" />
-                    <Card className="overflow-hidden border-2 border-[#C026D3]/20 shadow-lg shadow-fuchsia-500/5">
+                    <Card className="overflow-hidden border-2 border-[#C026D3]/25 shadow-xl shadow-fuchsia-500/8">
                       <div className="flex flex-col sm:flex-row">
                         <Link href={`/course/${cw.courseId}/learn`} className="relative sm:w-72 flex-shrink-0 group">
                           <div className="aspect-video sm:aspect-auto sm:h-full bg-black">
@@ -179,7 +179,7 @@ export default function StudentDashboard() {
                             {cw.totalDuration > 0 && <Progress value={Math.round((cw.watchedDuration / cw.totalDuration) * 100)} className="h-2 mb-4" indicatorClassName="bg-[#C026D3]" />}
                           </div>
                           <Link href={`/course/${cw.courseId}/learn`}>
-                            <Button size="lg" className="bg-[#C026D3] hover:bg-[#A21CAF] text-white shadow-md w-full sm:w-auto">
+                            <Button size="lg" className="glow-button bg-[#C026D3] hover:bg-[#A21CAF] text-white shadow-md w-full sm:w-auto">
                               <Play className="h-5 w-5 mr-2" />Resume Lesson
                             </Button>
                           </Link>
@@ -208,7 +208,7 @@ export default function StudentDashboard() {
                           Explore Elizabeth's high heels dance courses and start your journey today.
                         </p>
                         <Link href="/courses">
-                          <Button size="lg" className="bg-[#C026D3] hover:bg-[#A21CAF] text-white">
+                          <Button size="lg" className="glow-button bg-[#C026D3] hover:bg-[#A21CAF] text-white">
                             <BookOpen className="h-4 w-4 mr-2" />Browse Courses
                           </Button>
                         </Link>
@@ -237,9 +237,9 @@ export default function StudentDashboard() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       {recommended.map((course: any) => (
                         <Link key={course.id} href={`/course/${course.id}`}>
-                          <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group border-0 shadow-md">
+                          <Card className="overflow-hidden shadow-bloom cursor-pointer group border-0 shadow-md">
                             {/* Large image */}
-                            <div className="relative h-44 bg-gradient-to-br from-fuchsia-200 via-pink-100 to-purple-200 overflow-hidden">
+                            <div className="relative h-48 bg-gradient-to-br from-fuchsia-200 via-pink-100 to-purple-200 overflow-hidden">
                               {course.imageUrl ? (
                                 <img src={course.imageUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                               ) : (
@@ -248,7 +248,7 @@ export default function StudentDashboard() {
                                 </div>
                               )}
                               {/* Gradient overlay */}
-                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
                               {/* Price badge */}
                               <div className="absolute top-3 right-3">
                                 <span className={`px-3 py-1.5 rounded-full text-sm font-bold shadow-lg ${
@@ -405,7 +405,7 @@ export default function StudentDashboard() {
 
 function Heading({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
-    <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+    <h2 className="text-lg lg:text-xl font-bold mb-3 flex items-center gap-2">
       <span className="text-[#C026D3]">{icon}</span>
       {title}
     </h2>
@@ -414,14 +414,14 @@ function Heading({ icon, title }: { icon: React.ReactNode; title: string }) {
 
 function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string | number; accent?: boolean }) {
   return (
-    <Card className={`shadow-sm transition-shadow hover:shadow-md ${accent ? "ring-2 ring-orange-200 dark:ring-orange-800" : ""}`}>
+    <Card className={`shadow-md transition-all hover:shadow-lg border-t-2 ${accent ? "border-t-orange-300 ring-2 ring-orange-200 dark:ring-orange-800" : "border-t-fuchsia-200/50"}`}>
       <CardContent className="p-4 flex items-center gap-3">
-        <div className={`flex h-10 w-10 items-center justify-center rounded-lg flex-shrink-0 ${accent ? "bg-orange-50 dark:bg-orange-950/30" : "bg-muted"}`}>
+        <div className={`flex h-11 w-11 items-center justify-center rounded-xl flex-shrink-0 ${accent ? "bg-orange-50 dark:bg-orange-950/30" : "bg-muted"}`}>
           {icon}
         </div>
         <div>
-          <p className="text-xl font-bold leading-none tabular-nums">{value}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+          <p className="text-2xl font-bold leading-none tabular-nums">{value}</p>
+          <p className="text-xs text-muted-foreground mt-1">{label}</p>
         </div>
       </CardContent>
     </Card>
@@ -439,8 +439,8 @@ function CourseCard({ course }: { course: any }) {
   const isComplete = pct >= 100;
 
   return (
-    <Card className="overflow-hidden flex flex-col hover:shadow-md transition-shadow group">
-      <Link href={`/course/${course.id}/learn`} className="relative h-32 bg-gradient-to-br from-pink-100 to-purple-100 overflow-hidden">
+    <Card className="overflow-hidden flex flex-col hover:shadow-lg transition-all duration-300 group">
+      <Link href={`/course/${course.id}/learn`} className="relative h-36 bg-gradient-to-br from-pink-100 to-purple-100 overflow-hidden">
         {course.imageUrl ? (
           <img src={course.imageUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
         ) : (
@@ -465,7 +465,7 @@ function CourseCard({ course }: { course: any }) {
               <span>{course.completedLessons} of {totalLessons} lessons</span>
               <span className="font-semibold text-[#C026D3]">{pct}%</span>
             </div>
-            <Progress value={pct} className="h-1.5" indicatorClassName={isComplete ? "bg-emerald-500" : "bg-[#C026D3]"} />
+            <Progress value={pct} className="h-2" indicatorClassName={isComplete ? "bg-emerald-500" : "bg-[#C026D3]"} />
           </div>
         )}
       </div>

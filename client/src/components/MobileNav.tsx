@@ -47,17 +47,17 @@ export function MobileNav({ onSignInClick }: MobileNavProps) {
       {/* Hamburger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        className="lg:hidden p-2 hover:bg-fuchsia-50 rounded-lg transition-colors"
         aria-label="Toggle mobile menu"
         aria-expanded={isOpen}
       >
-        <Menu className="w-6 h-6 text-gray-700" />
+        <Menu className="w-6 h-6 text-stone-700" />
       </button>
 
       {/* Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-50 lg:hidden animate-fade-in"
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 lg:hidden animate-fade-in"
           onClick={closeMenu}
           aria-hidden="true"
         />
@@ -65,7 +65,7 @@ export function MobileNav({ onSignInClick }: MobileNavProps) {
 
       {/* Slide-out Menu */}
       <div
-        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
+        className={`fixed top-0 right-0 h-full w-80 max-w-[85vw] bg-white/95 backdrop-blur-xl shadow-2xl z-50 transform transition-transform duration-300 ease-in-out lg:hidden ${
           isOpen ? 'translate-x-0' : 'translate-x-full'
         }`}
         role="dialog"
@@ -73,14 +73,14 @@ export function MobileNav({ onSignInClick }: MobileNavProps) {
         aria-label="Mobile navigation menu"
       >
         {/* Menu Header */}
-        <div className="flex items-center justify-between p-4 border-b">
+        <div className="flex items-center justify-between p-4 border-b border-fuchsia-100/50">
           <h2 className="text-lg font-bold text-primary">Menu</h2>
           <button
             onClick={closeMenu}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-fuchsia-50 rounded-lg transition-colors"
             aria-label="Close mobile menu"
           >
-            <X className="w-6 h-6 text-gray-700" />
+            <X className="w-6 h-6 text-stone-700" />
           </button>
         </div>
 
@@ -90,7 +90,7 @@ export function MobileNav({ onSignInClick }: MobileNavProps) {
           {isAuthenticated && user && (
             <div className="pb-3 border-b">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-semibold shadow-md">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-fuchsia-600 to-purple-500 flex items-center justify-center text-white font-semibold shadow-md">
                   {(user.name || 'U')
                     .split(' ')
                     .map((n: string) => n[0])

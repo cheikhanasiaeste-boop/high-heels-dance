@@ -46,33 +46,34 @@
   --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
   --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
 
-  --primary: oklch(0.55 0.22 330); /* Vibrant fuchsia-pink */
+  --primary: oklch(0.52 0.24 330); /* Deep vibrant fuchsia */
   --primary-foreground: oklch(0.98 0.01 320);
-  --sidebar-primary: oklch(0.55 0.22 330);
+  --sidebar-primary: oklch(0.52 0.24 330);
   --sidebar-primary-foreground: oklch(0.98 0.01 320);
-  --chart-1: oklch(0.72 0.15 330); /* Light pink */
-  --chart-2: oklch(0.55 0.22 330); /* Fuchsia */
-  --chart-3: oklch(0.50 0.20 310); /* Purple */
-  --chart-4: oklch(0.65 0.18 340); /* Rose */
-  --chart-5: oklch(0.45 0.18 300); /* Deep purple */
+  --chart-1: oklch(0.72 0.15 330);
+  --chart-2: oklch(0.52 0.24 330);
+  --chart-3: oklch(0.48 0.22 310);
+  --chart-4: oklch(0.65 0.18 340);
+  --chart-5: oklch(0.42 0.20 300);
   --radius: 0.625rem;
-  --background: oklch(0.98 0.01 320); /* Very light pink/white */
-  --foreground: oklch(0.25 0.02 320); /* Dark purple-gray */
+  --background: oklch(0.985 0.008 320); /* Cleaner near-white */
+  --foreground: oklch(0.18 0.03 320); /* Darker for stronger contrast */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.25 0.02 320);
+  --card-foreground: oklch(0.18 0.03 320);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.25 0.02 320);
-  --secondary: oklch(0.93 0.04 320); /* Soft lavender-pink */
-  --secondary-foreground: oklch(0.30 0.06 320);
-  --muted: oklch(0.95 0.02 320); /* Light lavender */
-  --muted-foreground: oklch(0.45 0.02 320);
-  --accent: oklch(0.85 0.08 310); /* Light pink accent */
-  --accent-foreground: oklch(0.25 0.02 320);
+  --popover-foreground: oklch(0.18 0.03 320);
+  --secondary: oklch(0.94 0.035 320);
+  --secondary-foreground: oklch(0.28 0.06 320);
+  --muted: oklch(0.96 0.015 320);
+  --muted-foreground: oklch(0.42 0.02 320);
+  --accent: oklch(0.88 0.07 310);
+  --accent-foreground: oklch(0.18 0.03 320);
   --destructive: oklch(0.55 0.22 25);
   --destructive-foreground: oklch(1 0 0);
-  --border: oklch(0.9 0.02 320); /* Light pink border */
-  --input: oklch(0.9 0.02 320);
-  --ring: oklch(0.55 0.22 330); /* Fuchsia focus ring */
+  --border: oklch(0.92 0.015 320); /* Softer card borders */
+  --input: oklch(0.92 0.015 320);
+  --ring: oklch(0.52 0.24 330);
+  --glow: oklch(0.52 0.24 330 / 0.4); /* Reusable glow color */
   --sidebar: oklch(0.98 0.01 320);
   --sidebar-foreground: oklch(0.25 0.02 320);
   --sidebar-accent: oklch(0.95 0.02 320);
@@ -308,19 +309,19 @@
 }
 
 .animate-fade-up {
-  animation: fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: fade-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 .animate-fade-up-delay-1 {
   opacity: 0;
-  animation: fade-up 0.8s 0.15s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: fade-up 0.8s 0.15s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 .animate-fade-up-delay-2 {
   opacity: 0;
-  animation: fade-up 0.8s 0.30s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: fade-up 0.8s 0.30s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 .animate-fade-up-delay-3 {
   opacity: 0;
-  animation: fade-up 0.8s 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: fade-up 0.8s 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Respect reduced motion preferences */
@@ -434,4 +435,83 @@
   );
   background-size: 200% 100%;
   animation: shimmer-gold 2s ease-in-out infinite;
+}
+
+/* ── Premium Design System Utilities ────────────────────── */
+
+/* Glassmorphism card */
+.glass {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.glass-light {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* Glow CTA button */
+.glow-button {
+  position: relative;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glow-button:hover {
+  box-shadow:
+    0 0 20px rgba(192, 38, 211, 0.4),
+    0 0 60px rgba(192, 38, 211, 0.15),
+    0 4px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+/* Card hover with bloom shadow */
+.shadow-bloom {
+  transition: box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.shadow-bloom:hover {
+  box-shadow:
+    0 25px 60px -12px rgba(192, 38, 211, 0.12),
+    0 12px 28px -8px rgba(0, 0, 0, 0.08);
+  transform: translateY(-6px);
+}
+
+/* Animated gradient background */
+@keyframes gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+.animate-gradient-shift {
+  background-size: 200% 200%;
+  animation: gradient-shift 8s ease-in-out infinite;
+}
+
+/* 4th delay tier for staggered animations */
+.animate-fade-up-delay-4 {
+  opacity: 0;
+  animation: fade-up 0.8s 0.60s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Respect reduced motion for new animations */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-up-delay-4 {
+    animation: none !important;
+    opacity: 1 !important;
+  }
+  .shadow-bloom:hover {
+    transform: none !important;
+  }
+  .glow-button:hover {
+    transform: none !important;
+  }
+  .animate-gradient-shift {
+    animation: none !important;
+  }
 }

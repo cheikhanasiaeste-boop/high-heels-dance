@@ -17,6 +17,7 @@ import { ProgressiveAuthModal } from '@/components/ProgressiveAuthModal';
 import { AuthModal } from '@/components/AuthModal';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 // ─── Fallback demo data (shown when database is not yet connected) ────────────
 
@@ -254,23 +255,23 @@ export default function Home() {
       )}
 
       {/* ── Header / Navigation ───────────────────────────────────────────── */}
-      <header className="border-b border-stone-200/60 sticky top-0 z-50 backdrop-blur-xl bg-white/90 shadow-[0_1px_3px_rgba(0,0,0,0.04)]">
-        <div className="container px-4 py-3.5 flex justify-between items-center">
-          <h1 className="text-xl sm:text-2xl font-semibold text-[#831843] tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>High Heels Dance</h1>
+      <header className="border-b border-stone-200/40 sticky top-0 z-50 backdrop-blur-2xl bg-white/80 shadow-[0_1px_8px_rgba(0,0,0,0.04)]">
+        <div className="container px-4 py-4 flex justify-between items-center">
+          <h1 className="text-xl sm:text-2xl lg:text-[1.7rem] font-bold text-[#831843] tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>High Heels Dance</h1>
 
           <MobileNav onSignInClick={() => setShowAuthModal(true)} />
 
           <div className="hidden lg:flex items-center gap-2">
             {isAuthenticated ? (
               <Link href="/dashboard">
-                <button className="px-6 py-2.5 text-sm font-medium text-white bg-[#C026D3] hover:bg-[#A21CAF] shadow-md hover:shadow-lg hover:shadow-[#C026D3]/15 rounded-full transition-all duration-300">
+                <button className="glow-button px-6 py-2.5 text-sm font-semibold text-white bg-[#C026D3] hover:bg-[#A21CAF] shadow-md rounded-full transition-all duration-300">
                   My Studio
                 </button>
               </Link>
             ) : (
               <>
                 <Link href="/book-session">
-                  <button className="px-6 py-2.5 text-sm font-medium text-white bg-[#C026D3] hover:bg-[#A21CAF] shadow-md hover:shadow-lg hover:shadow-[#C026D3]/15 rounded-full transition-all duration-300">
+                  <button className="glow-button px-6 py-2.5 text-sm font-semibold text-white bg-[#C026D3] hover:bg-[#A21CAF] shadow-md rounded-full transition-all duration-300">
                     Book a Session
                   </button>
                 </Link>
@@ -303,7 +304,7 @@ export default function Home() {
       </header>
 
       {/* ── Hero Section ──────────────────────────────────────────────────── */}
-      <section className="relative py-10 md:py-20 overflow-hidden min-h-[540px] md:min-h-[680px] flex items-center bg-[#701A75]">
+      <section className="relative py-14 md:py-28 overflow-hidden min-h-[580px] md:min-h-[750px] flex items-center bg-[#4a044e]">
         {/* Background — video for .mp4/.webm, direct img for everything else */}
         <div className="absolute inset-0 z-0 overflow-hidden">
           {!prefersReducedMotion && isVideoUrl(backgroundUrl) ? (
@@ -350,20 +351,20 @@ export default function Home() {
               }}
             />
           )}
-          {/* Warm cinematic overlay — burgundy tinted, not pure black */}
-          <div className="absolute inset-0 bg-gradient-to-b from-[#701A75]/70 via-[#701A75]/30 to-[#701A75]/80" />
+          {/* Cinematic gradient overlay — deep plum tones */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#2e0033]/85 via-[#4a044e]/40 to-[#2e0033]/90" />
         </div>
 
         <div className="container text-center relative z-10 px-4 md:px-6 w-full">
           {/* Profile picture */}
           <div className="flex justify-center mb-6 md:mb-8 animate-fade-up">
             <div className="relative inline-block">
-              {/* Warm golden glow behind profile pic */}
-              <div className="absolute -inset-2 rounded-full bg-gradient-to-br from-fuchsia-400/40 via-purple-300/30 to-fuchsia-400/40 blur-md" />
+              {/* Warm glow behind profile pic */}
+              <div className="absolute -inset-3 rounded-full bg-gradient-to-br from-fuchsia-400/50 via-purple-300/30 to-fuchsia-400/50 blur-xl" />
               <img
                 src={heroProfilePictureUrl || "/profile.jpg"}
                 alt="Elizabeth Zolotova"
-                className="relative w-28 h-28 md:w-44 md:h-44 rounded-full object-cover shadow-[0_8px_40px_rgba(0,0,0,0.3)] ring-[3px] ring-white/30"
+                className="relative w-32 h-32 md:w-48 md:h-48 rounded-full object-cover shadow-[0_12px_50px_rgba(0,0,0,0.35)] ring-[3px] ring-white/20"
                 onError={(e) => { (e.target as HTMLImageElement).src = '/profile-photo.jpeg'; }}
               />
             </div>
@@ -371,8 +372,8 @@ export default function Home() {
 
           {/* Name */}
           <h2
-            className="text-4xl md:text-7xl font-semibold mb-3 md:mb-4 text-white tracking-tight animate-fade-up-delay-1"
-            style={{ fontFamily: 'var(--font-display)', textShadow: '0 2px 20px rgba(0,0,0,0.3)' }}
+            className="text-5xl md:text-8xl font-bold mb-3 md:mb-5 text-white tracking-[-0.03em] animate-fade-up-delay-1"
+            style={{ fontFamily: 'var(--font-display)', textShadow: '0 4px 30px rgba(0,0,0,0.4)' }}
           >
             {heroTitle || 'Elizabeth Zolotova'}
           </h2>
@@ -386,7 +387,7 @@ export default function Home() {
 
           {/* Tagline */}
           <p
-            className="text-base md:text-xl mb-8 md:mb-11 max-w-lg mx-auto leading-relaxed text-white/75 tracking-wide animate-fade-up-delay-2"
+            className="text-lg md:text-xl mb-8 md:mb-12 max-w-xl mx-auto leading-relaxed text-white/70 tracking-wide animate-fade-up-delay-2"
             style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}
           >
             {heroTagline || "Professional dancer & teacher — fall in love with dance."}
@@ -400,7 +401,7 @@ export default function Home() {
               { href: "https://www.facebook.com/liza.zolotova.399/", Icon: Facebook },
             ].map(({ href, Icon }) => (
               <a key={href} href={href} target="_blank" rel="noopener noreferrer">
-                <span className="inline-flex items-center justify-center w-10 h-10 rounded-full border border-white/20 bg-white/[0.07] text-white/80 hover:bg-white/15 hover:border-white/40 hover:text-white backdrop-blur-sm transition-all duration-300 hover:scale-110">
+                <span className="inline-flex items-center justify-center w-11 h-11 rounded-full border border-white/15 bg-white/[0.06] text-white/75 hover:bg-white/15 hover:border-white/35 hover:text-white backdrop-blur-sm transition-all duration-300 hover:scale-110">
                   <Icon className="h-4 w-4" />
                 </span>
               </a>
@@ -410,13 +411,13 @@ export default function Home() {
           {/* CTA buttons */}
           <div className="flex flex-col sm:flex-row justify-center gap-3 md:gap-4 animate-fade-up-delay-3">
             <Link href="/book-session">
-              <span className="inline-flex items-center gap-2 px-6 sm:px-8 md:px-10 py-3 sm:py-3.5 md:py-4 text-sm md:text-base font-semibold text-white bg-[#C026D3] hover:bg-[#A21CAF] rounded-full shadow-lg hover:shadow-xl hover:shadow-[#C026D3]/25 transition-all duration-300 hover:-translate-y-0.5 tracking-wide cursor-pointer">
+              <span className="glow-button inline-flex items-center gap-2.5 px-8 sm:px-10 md:px-12 py-3.5 sm:py-4 md:py-[18px] text-sm md:text-base font-semibold text-white bg-[#C026D3] hover:bg-[#A21CAF] rounded-full shadow-lg shadow-[#C026D3]/25 tracking-wide cursor-pointer">
                 Book a Dance Session
                 <ArrowRight className="w-4 h-4" />
               </span>
             </Link>
             <Link href="/courses">
-              <span className="inline-flex items-center gap-2 px-6 sm:px-8 md:px-10 py-3 sm:py-3.5 md:py-4 text-sm md:text-base font-medium text-white/90 bg-white/[0.08] hover:bg-white/[0.15] border border-white/20 hover:border-white/35 rounded-full backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 tracking-wide cursor-pointer">
+              <span className="inline-flex items-center gap-2 px-8 sm:px-10 md:px-12 py-3.5 sm:py-4 md:py-[18px] text-sm md:text-base font-medium text-white/85 bg-white/[0.07] hover:bg-white/[0.14] border border-white/15 hover:border-white/30 rounded-full backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 tracking-wide cursor-pointer">
                 Explore Courses
               </span>
             </Link>
@@ -428,7 +429,7 @@ export default function Home() {
       <UpcomingSessionsWidget />
 
       {/* ── Courses Section ───────────────────────────────────────────────── */}
-      <section className="py-10 md:py-20 bg-[#FDF4FF] relative overflow-hidden">
+      <section className="py-14 md:py-28 bg-[#FDF4FF] relative overflow-hidden">
         {/* Subtle warm ambient glow */}
         <div className="absolute inset-0 opacity-[0.03] z-0">
           <div className="absolute top-20 left-10 w-[500px] h-[500px] bg-fuchsia-400 rounded-full blur-[120px]" />
@@ -437,7 +438,7 @@ export default function Home() {
         <div className="container relative z-10">
           <div className="text-center mb-14">
             <p className="text-xs uppercase tracking-[0.3em] text-[#C026D3]/50 font-semibold mb-3" style={{ fontFamily: 'var(--font-body)' }}>Learn with passion</p>
-            <h3 className="text-3xl md:text-5xl font-semibold mb-3 md:mb-4 text-[#831843] tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
+            <h3 className="text-3xl md:text-[3.5rem] font-bold mb-3 md:mb-4 text-[#831843] tracking-[-0.02em]" style={{ fontFamily: 'var(--font-display)' }}>
               {coursesHeading || 'Dance Courses'}
             </h3>
             <div className="flex items-center justify-center gap-3 mb-5">
@@ -501,10 +502,11 @@ export default function Home() {
 
           {filteredCourses.length > 0 ? (
             <div className="relative max-w-7xl mx-auto">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-7 items-stretch">
-                {filteredCourses.slice(0, 6).map(course => (
-                  <Link key={course.id} href={`/course/${course.id}`}>
-                    <Card className="group overflow-hidden hover:shadow-xl hover:shadow-stone-200/60 transition-all duration-500 hover:-translate-y-1.5 border border-stone-200/60 bg-white flex flex-col h-full cursor-pointer">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-8 items-stretch">
+                {filteredCourses.slice(0, 6).map((course, idx) => (
+                  <ScrollReveal key={course.id} delay={idx * 0.08}>
+                  <Link href={`/course/${course.id}`}>
+                    <Card className="group overflow-hidden shadow-bloom border border-stone-200/50 bg-white flex flex-col h-full cursor-pointer">
                       {/* Thumbnail */}
                       <div className="relative">
                         {course.imageUrl ? (
@@ -512,7 +514,7 @@ export default function Home() {
                             <img
                               src={course.imageUrl}
                               alt={course.title}
-                              className="w-full h-52 object-cover rounded-t-lg transition-transform duration-700 group-hover:scale-[1.03]"
+                              className="w-full h-56 object-cover rounded-t-lg transition-transform duration-700 group-hover:scale-[1.04]"
                             />
                             {course.isTopPick && (
                               <div className="absolute top-3 left-3 z-10">
@@ -529,7 +531,7 @@ export default function Home() {
                             )}
                           </>
                         ) : (
-                          <div className="w-full h-52 bg-gradient-to-br from-[#831843] via-[#86198F] to-[#701A75] rounded-t-lg flex items-center justify-center relative overflow-hidden">
+                          <div className="w-full h-56 bg-gradient-to-br from-[#831843] via-[#86198F] to-[#701A75] rounded-t-lg flex items-center justify-center relative overflow-hidden">
                             <div className="absolute inset-0 opacity-30">
                               <div className="absolute top-0 left-1/4 w-40 h-40 bg-[#C026D3] rounded-full blur-3xl" />
                               <div className="absolute bottom-0 right-1/4 w-40 h-40 bg-[#E879F9] rounded-full blur-3xl" />
@@ -590,13 +592,14 @@ export default function Home() {
                       </CardContent>
 
                       <CardFooter className="mt-auto">
-                        <div className="w-full text-sm py-3.5 bg-[#C026D3] hover:bg-[#A21CAF] shadow-sm hover:shadow-md transition-all duration-300 group-hover:shadow-[#C026D3]/15 rounded-md flex items-center justify-center text-white font-medium tracking-wide gap-2">
+                        <div className="glow-button w-full text-sm py-3.5 bg-[#C026D3] hover:bg-[#A21CAF] shadow-sm rounded-lg flex items-center justify-center text-white font-semibold tracking-wide gap-2">
                           <span>Enroll Now</span>
                           <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
                         </div>
                       </CardFooter>
                     </Card>
                   </Link>
+                  </ScrollReveal>
                 ))}
               </div>
 
@@ -631,16 +634,17 @@ export default function Home() {
       </section>
 
       {/* ── Testimonials Section ──────────────────────────────────────────── */}
-      <section className="py-10 md:py-20 bg-[#701A75] relative overflow-hidden">
+      <section className="py-16 md:py-28 bg-gradient-to-b from-[#4a044e] via-[#701A75] to-[#4a044e] relative overflow-hidden">
         {/* Subtle ambient glows */}
         <div className="absolute inset-0 opacity-15">
           <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[#C026D3] rounded-full blur-[150px]" />
           <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-[#E879F9] rounded-full blur-[150px]" />
         </div>
         <div className="container relative z-10">
-          <div className="text-center mb-14">
+          <ScrollReveal>
+          <div className="text-center mb-16">
             <p className="text-xs uppercase tracking-[0.3em] text-[#E879F9]/60 font-semibold mb-3" style={{ fontFamily: 'var(--font-body)' }}>Their words</p>
-            <h3 className="text-3xl md:text-5xl font-semibold mb-3 text-white/95 tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
+            <h3 className="text-3xl md:text-[3.5rem] font-bold mb-3 text-white/95 tracking-[-0.02em]" style={{ fontFamily: 'var(--font-display)' }}>
               {testimonialsHeading || 'Student Success Stories'}
             </h3>
             <div className="flex items-center justify-center gap-4 mb-5">
@@ -648,10 +652,11 @@ export default function Home() {
               <div className="w-1 h-1 rounded-full bg-[#E879F9]/40" />
               <div className="h-px w-12 bg-gradient-to-l from-transparent to-[#E879F9]/30" />
             </div>
-            <p className="text-base md:text-lg text-white/40 max-w-xl mx-auto" style={{ fontFamily: 'var(--font-body)' }}>
+            <p className="text-base md:text-lg text-white/45 max-w-xl mx-auto" style={{ fontFamily: 'var(--font-body)' }}>
               Hear from our students about their transformation
             </p>
           </div>
+          </ScrollReveal>
           <Carousel
             opts={{ align: "start", loop: true }}
             plugins={[Autoplay({ delay: 6000 })]}
@@ -665,7 +670,7 @@ export default function Home() {
                 >
                   {testimonial.type === 'video' && (testimonial as any).videoUrl ? (
                     <Card
-                      className="h-full cursor-pointer hover:shadow-xl transition-all duration-300 group bg-white/[0.06] backdrop-blur-sm border-white/[0.08] hover:bg-white/[0.10] hover:border-white/[0.12]"
+                      className="h-full cursor-pointer hover:shadow-xl transition-all duration-300 group bg-white/[0.07] backdrop-blur-md border-white/[0.10] hover:bg-white/[0.12] hover:border-white/[0.16]"
                       onClick={() => setSelectedVideo(testimonial)}
                     >
                       <div className="relative aspect-video bg-gradient-to-br from-[#831843] to-[#701A75] overflow-hidden">
@@ -701,11 +706,11 @@ export default function Home() {
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-sm text-white/40 line-clamp-2 italic" style={{ fontFamily: 'var(--font-display)' }}>"{testimonial.review}"</p>
+                        <p className="text-sm text-white/50 line-clamp-2 italic" style={{ fontFamily: 'var(--font-display)' }}>"{testimonial.review}"</p>
                       </CardContent>
                     </Card>
                   ) : (
-                    <Card className="h-full bg-white/[0.06] backdrop-blur-sm border-white/[0.08] hover:bg-white/[0.10] hover:border-white/[0.12] transition-all duration-300">
+                    <Card className="h-full bg-white/[0.07] backdrop-blur-md border-white/[0.10] hover:bg-white/[0.12] hover:border-white/[0.16] transition-all duration-300">
                       <CardHeader>
                         <div className="flex items-center gap-3 mb-2">
                           <div className="w-11 h-11 rounded-full bg-[#C026D3]/30 flex items-center justify-center font-semibold text-white/60 text-base">
@@ -722,7 +727,7 @@ export default function Home() {
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-sm text-white/45 italic leading-relaxed" style={{ fontFamily: 'var(--font-display)' }}>"{testimonial.review}"</p>
+                        <p className="text-sm text-white/55 italic leading-relaxed" style={{ fontFamily: 'var(--font-display)' }}>"{testimonial.review}"</p>
                       </CardContent>
                     </Card>
                   )}
@@ -736,12 +741,12 @@ export default function Home() {
       </section>
 
       {/* ── Footer ────────────────────────────────────────────────────────── */}
-      <footer className="border-t border-stone-200/50 py-12 bg-[#FDF4FF]">
+      <footer className="border-t border-stone-200/40 py-14 md:py-18 bg-[#FDF4FF]">
         <div className="container px-4">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-8">
             {/* Brand */}
             <div>
-              <h3 className="text-lg font-semibold text-[#831843] mb-2" style={{ fontFamily: 'var(--font-display)' }}>High Heels Dance</h3>
+              <h3 className="text-xl font-bold text-[#831843] mb-2" style={{ fontFamily: 'var(--font-display)' }}>High Heels Dance</h3>
               <p className="text-sm text-stone-500">Professional dance education with Elizabeth Zolotova. Fall in love with dance.</p>
             </div>
             {/* Quick Links */}
@@ -763,7 +768,7 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div className="border-t border-stone-200/50 pt-6 text-center">
+          <div className="border-t border-stone-200/40 pt-8 text-center">
             <p className="text-xs text-stone-400">&copy; 2026 High Heels Dance — Elizabeth Zolotova. All rights reserved.</p>
           </div>
         </div>

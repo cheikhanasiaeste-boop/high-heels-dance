@@ -26,6 +26,7 @@ import { useProgressiveAuth } from "@/hooks/useProgressiveAuth";
 import { ProgressiveAuthModal } from "@/components/ProgressiveAuthModal";
 import { useState, useRef, useEffect } from "react";
 import { CertificateButton } from "@/components/CertificateButton";
+import { motion } from "framer-motion";
 
 function fmt(s: number): string {
   const m = Math.floor(s / 60);
@@ -119,7 +120,7 @@ export default function CourseDetail() {
   if (isLoading) {
     return (
       <div className="min-h-screen">
-        <div className="bg-gradient-to-br from-fuchsia-950 via-purple-950 to-black h-[50vh] animate-pulse" />
+        <div className="bg-gradient-to-br from-[#2e0033] via-fuchsia-950 to-black h-[50vh] animate-pulse" />
         <div className="container max-w-5xl -mt-16 px-4">
           <div className="bg-card rounded-2xl p-8 shadow-xl animate-pulse">
             <div className="h-8 bg-muted rounded w-2/3 mb-4" />
@@ -146,7 +147,7 @@ export default function CourseDetail() {
     const cls = fullWidth ? "w-full" : "";
     if (canAccess) {
       return (
-        <Button asChild size={size} className={`${cls} bg-[#C026D3] hover:bg-[#A21CAF] text-white shadow-lg`}>
+        <Button asChild size={size} className={`${cls} glow-button bg-[#C026D3] hover:bg-[#A21CAF] text-white shadow-lg`}>
           <Link href={`/course/${courseId}/learn`}>
             <Play className="h-5 w-5 mr-2" />
             Access the Course
@@ -156,7 +157,7 @@ export default function CourseDetail() {
     }
     if (course.isFree) {
       return (
-        <Button size={size} className={`${cls} bg-[#C026D3] hover:bg-[#A21CAF] text-white shadow-lg`} onClick={handlePurchase}>
+        <Button size={size} className={`${cls} glow-button bg-[#C026D3] hover:bg-[#A21CAF] text-white shadow-lg`} onClick={handlePurchase}>
           <Sparkles className="h-5 w-5 mr-2" />
           Start Free Course
         </Button>
@@ -165,7 +166,7 @@ export default function CourseDetail() {
     return (
       <Button
         size={size}
-        className={`${cls} bg-[#C026D3] hover:bg-[#A21CAF] text-white shadow-lg`}
+        className={`${cls} glow-button bg-[#C026D3] hover:bg-[#A21CAF] text-white shadow-lg`}
         onClick={handlePurchase}
         disabled={checkoutMutation.isPending}
       >
@@ -177,7 +178,7 @@ export default function CourseDetail() {
   return (
     <div className="min-h-screen bg-background">
       {/* ── Hero Section ────────────────────────── */}
-      <div ref={heroRef} className="relative bg-gradient-to-br from-fuchsia-950 via-purple-950 to-black overflow-hidden">
+      <div ref={heroRef} className="relative bg-gradient-to-br from-[#2e0033] via-fuchsia-950 to-black overflow-hidden">
         {/* Back button */}
         <div className="absolute top-0 left-0 right-0 z-20">
           <div className="container max-w-5xl px-4 py-4">
@@ -197,10 +198,15 @@ export default function CourseDetail() {
           </div>
         )}
 
-        <div className="container max-w-5xl px-4 pt-20 pb-32 relative z-10">
+        <div className="container max-w-5xl px-4 pt-24 pb-36 relative z-10">
           <div className="grid lg:grid-cols-[1fr_380px] gap-8 items-center">
             {/* Left: text */}
-            <div className="text-white">
+            <motion.div
+              className="text-white"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            >
               <div className="flex items-center gap-3 mb-4">
                 {course.isFree ? (
                   <Badge className="bg-emerald-500/90 text-white border-0 text-sm px-3 py-1">Free Course</Badge>
@@ -217,11 +223,11 @@ export default function CourseDetail() {
                 )}
               </div>
 
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight mb-4 tracking-tight">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight mb-5 tracking-[-0.02em]">
                 {course.title}
               </h1>
 
-              <p className="text-lg text-white/70 leading-relaxed mb-6 max-w-xl line-clamp-3">
+              <p className="text-lg text-white/75 leading-relaxed mb-6 max-w-xl line-clamp-3">
                 {course.description}
               </p>
 
@@ -257,11 +263,16 @@ export default function CourseDetail() {
                   </Link>
                 )}
               </div>
-            </div>
+            </motion.div>
 
             {/* Right: preview video or image */}
-            <div className="relative group">
-              <div className="aspect-video rounded-2xl overflow-hidden shadow-2xl ring-1 ring-white/10">
+            <motion.div
+              className="relative group"
+              initial={{ opacity: 0, y: 20, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <div className="aspect-video rounded-2xl overflow-hidden shadow-[0_25px_60px_-12px_rgba(0,0,0,0.5)] ring-1 ring-white/15">
                 {course.previewVideoUrl ? (
                   <video
                     src={course.previewVideoUrl}
@@ -288,13 +299,13 @@ export default function CourseDetail() {
                   </Badge>
                 </div>
               )}
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>
 
       {/* ── Content Area ───────────────────────── */}
-      <div className="container max-w-5xl px-4 -mt-16 relative z-10 pb-24">
+      <div className="container max-w-5xl px-4 -mt-20 relative z-10 pb-28">
         <div className="grid lg:grid-cols-[1fr_340px] gap-8">
 
           {/* ── Left Column ──────────────────────── */}
@@ -320,9 +331,9 @@ export default function CourseDetail() {
 
             {/* What you'll learn */}
             {course.description && (
-              <Card className="shadow-lg">
+              <Card className="shadow-lg shadow-fuchsia-500/[0.03]">
                 <CardContent className="p-6">
-                  <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <h2 className="text-xl lg:text-2xl font-bold mb-4 flex items-center gap-2">
                     <Sparkles className="h-5 w-5 text-[#C026D3]" />
                     About This Course
                   </h2>
@@ -335,9 +346,9 @@ export default function CourseDetail() {
 
             {/* Curriculum */}
             {curriculum && curriculum.length > 0 && (
-              <Card className="shadow-lg">
+              <Card className="shadow-lg shadow-fuchsia-500/[0.03]">
                 <CardContent className="p-6">
-                  <h2 className="text-xl font-bold mb-1 flex items-center gap-2">
+                  <h2 className="text-xl lg:text-2xl font-bold mb-1 flex items-center gap-2">
                     <BookOpen className="h-5 w-5 text-[#C026D3]" />
                     Course Curriculum
                   </h2>
@@ -351,7 +362,7 @@ export default function CourseDetail() {
                       const isExpanded = expandedModules.has(module.id);
                       const moduleDuration = module.lessons.reduce((s: number, l: any) => s + (l.durationSeconds || 0), 0);
                       return (
-                        <div key={module.id} className="rounded-xl border overflow-hidden">
+                        <div key={module.id} className="rounded-xl border hover:border-fuchsia-200/50 overflow-hidden transition-colors">
                           <button
                             onClick={() => {
                               setExpandedModules((prev) => {
@@ -409,9 +420,9 @@ export default function CourseDetail() {
             )}
 
             {/* Instructor */}
-            <Card className="shadow-lg">
+            <Card className="shadow-lg shadow-fuchsia-500/[0.03]">
               <CardContent className="p-6">
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                <h2 className="text-xl lg:text-2xl font-bold mb-4 flex items-center gap-2">
                   <Users className="h-5 w-5 text-[#C026D3]" />
                   Your Instructor
                 </h2>
@@ -434,12 +445,12 @@ export default function CourseDetail() {
           {/* ── Right Column (Desktop sticky CTA) ── */}
           <div className="hidden lg:block">
             <div className="sticky top-8 space-y-4">
-              <Card className="shadow-xl border-2 border-[#C026D3]/15">
+              <Card className="shadow-xl shadow-fuchsia-500/[0.05] border-2 border-[#C026D3]/20">
                 <CardContent className="p-6 space-y-5">
                   {/* Price */}
                   <div>
                     <div className="flex items-baseline gap-2 mb-1">
-                      <span className="text-4xl font-bold">{course.isFree ? "Free" : `€${course.price}`}</span>
+                      <span className="text-5xl font-bold">{course.isFree ? "Free" : `€${course.price}`}</span>
                       {course.originalPrice && Number(course.originalPrice) > Number(course.price) && (
                         <span className="text-xl text-muted-foreground line-through">€{course.originalPrice}</span>
                       )}
@@ -510,7 +521,7 @@ export default function CourseDetail() {
 
       {/* ── Mobile Sticky CTA ──────────────────── */}
       {showMobileCTA && !isMobileCTADismissed && (
-        <div className="fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-md border-t shadow-2xl z-50 lg:hidden animate-in slide-in-from-bottom duration-300">
+        <div className="fixed bottom-0 left-0 right-0 bg-card/90 backdrop-blur-xl border-t shadow-2xl z-50 lg:hidden animate-in slide-in-from-bottom duration-300">
           <div className="container py-3 flex items-center gap-3 px-4">
             <div className="flex-1 min-w-0">
               <span className="text-lg font-bold">{course.isFree ? "Free" : `€${course.price}`}</span>
