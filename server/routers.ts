@@ -153,12 +153,13 @@ export const appRouter = router({
     getDashboardData: protectedProcedure.query(async ({ ctx }) => {
       const userId = ctx.user.id;
 
-      // 1. Get all user's purchases + free courses
-      const [purchases, allCourses, allProgress, upcomingSessions] = await Promise.all([
+      // 1. Get all user's data in parallel
+      const [purchases, allCourses, allProgress, upcomingSessions, bookings] = await Promise.all([
         db.getUserPurchases(userId),
         db.getAllPublishedCourses(),
         db.getAllUserProgress(userId),
         db.getUpcomingLiveSessions(5),
+        db.getUserBookingsWithSlots(userId),
       ]);
 
       const purchasedIds = new Set(
@@ -233,10 +234,18 @@ export const appRouter = router({
         allProgress.reduce((sum: number, p: any) => sum + (p.watchedDuration || 0), 0) / 60
       );
 
+      // Filter upcoming bookings (sessions in the future)
+      const now = new Date();
+      const upcomingBookings = (bookings as any[])
+        .filter((b: any) => b.status !== 'cancelled' && b.slotStartTime && new Date(b.slotStartTime) > now)
+        .sort((a: any, b: any) => new Date(a.slotStartTime).getTime() - new Date(b.slotStartTime).getTime())
+        .slice(0, 5);
+
       return {
         continueWatching,
         courses: courseProgress,
         upcomingSessions,
+        upcomingBookings,
         stats: {
           totalCompleted,
           enrolledCourses: enrolledCourses.length,

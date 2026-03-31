@@ -16,6 +16,8 @@ import {
   GraduationCap,
   Loader2,
   Timer,
+  CalendarCheck,
+  MapPin,
 } from "lucide-react";
 import { CertificateButton } from "@/components/CertificateButton";
 
@@ -73,9 +75,9 @@ export default function StudentDashboard() {
   const cw = data?.continueWatching;
   const courses = data?.courses || [];
   const sessions = data?.upcomingSessions || [];
+  const bookings = data?.upcomingBookings || [];
   const stats = data?.stats || { totalCompleted: 0, enrolledCourses: 0, streakDays: 0, totalWatchMinutes: 0 };
   const hasAnyCourses = courses.length > 0;
-  const hasAnything = hasAnyCourses || cw;
 
   return (
     <div className="min-h-screen bg-background">
@@ -84,7 +86,7 @@ export default function StudentDashboard() {
         <div className="container max-w-6xl py-8 px-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-pink-200 text-sm mb-1">Welcome back</p>
+              <p className="text-pink-200 text-sm mb-1">My Studio</p>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
                 {firstName} {stats.streakDays > 0 && <span className="inline-flex items-center align-middle ml-1 text-lg"><Flame className="h-5 w-5 text-amber-300 inline" /><span className="text-amber-200 text-base font-semibold">{stats.streakDays}</span></span>}
               </h1>
@@ -248,6 +250,65 @@ export default function StudentDashboard() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {courses.map((course: any) => (
                     <CourseCard key={course.id} course={course} />
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* ── My Booked Sessions ──────────────── */}
+            <section>
+              <div className="flex items-center justify-between mb-3">
+                <SectionHeading icon={<CalendarCheck className="h-5 w-5" />} title="My Sessions" />
+                <Link href="/my-bookings">
+                  <Button variant="ghost" size="sm" className="text-[#C026D3] hover:text-[#A21CAF] hover:bg-fuchsia-50 gap-1">
+                    View All <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+
+              {bookings.length === 0 ? (
+                <Card className="border-dashed border-2">
+                  <CardContent className="py-10 text-center">
+                    <CalendarCheck className="h-8 w-8 mx-auto mb-3 text-muted-foreground/30" />
+                    <p className="text-muted-foreground text-sm mb-4">No upcoming sessions booked.</p>
+                    <Link href="/book-session">
+                      <Button size="sm" variant="outline">Book a Session</Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="grid gap-3">
+                  {bookings.map((booking: any) => (
+                    <Link key={booking.id} href={`/session/${booking.id}`}>
+                      <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer group">
+                        <div className="flex items-center gap-4 p-4">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-pink-100 to-fuchsia-100 dark:from-pink-900/30 dark:to-fuchsia-900/30 flex-shrink-0">
+                            <CalendarCheck className="h-5 w-5 text-[#C026D3]" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-sm truncate group-hover:text-[#C026D3] transition-colors">
+                              {booking.slotTitle || booking.sessionType || "Dance Session"}
+                            </h3>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <span>
+                                {booking.slotStartTime
+                                  ? new Date(booking.slotStartTime).toLocaleDateString(undefined, {
+                                      weekday: "short", month: "short", day: "numeric",
+                                      hour: "2-digit", minute: "2-digit",
+                                    })
+                                  : "Date TBD"}
+                              </span>
+                              {booking.slotEventType === "in-person" && (
+                                <span className="flex items-center gap-0.5">
+                                  <MapPin className="h-3 w-3" /> In-person
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-[#C026D3] transition-colors flex-shrink-0" />
+                        </div>
+                      </Card>
+                    </Link>
                   ))}
                 </div>
               )}

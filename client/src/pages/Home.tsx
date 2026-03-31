@@ -264,7 +264,7 @@ export default function Home() {
             {isAuthenticated ? (
               <Link href="/dashboard">
                 <button className="px-6 py-2.5 text-sm font-medium text-white bg-[#C026D3] hover:bg-[#A21CAF] shadow-md hover:shadow-lg hover:shadow-[#C026D3]/15 rounded-full transition-all duration-300">
-                  My Dashboard
+                  My Studio
                 </button>
               </Link>
             ) : (

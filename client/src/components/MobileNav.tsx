@@ -110,7 +110,7 @@ export function MobileNav({ onSignInClick }: MobileNavProps) {
           {isAuthenticated ? (
             <Button variant="default" className="w-full justify-start" size="lg" asChild>
               <Link href="/dashboard" onClick={closeMenu}>
-                My Dashboard
+                My Studio
               </Link>
             </Button>
           ) : (
