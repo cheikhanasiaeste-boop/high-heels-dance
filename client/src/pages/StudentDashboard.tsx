@@ -11,6 +11,8 @@ import {
   Trophy,
   Clock,
   ArrowRight,
+  ArrowLeft,
+  Home,
   Flame,
   GraduationCap,
   Loader2,
@@ -18,6 +20,7 @@ import {
   CalendarCheck,
   MapPin,
   Sparkles,
+  Star,
 } from "lucide-react";
 import { CertificateButton } from "@/components/CertificateButton";
 
@@ -84,10 +87,13 @@ export default function StudentDashboard() {
     <div className="min-h-screen bg-background">
       {/* ── Header ── */}
       <div className="bg-gradient-to-r from-fuchsia-600 via-pink-500 to-purple-600 text-white">
-        <div className="container max-w-6xl py-8 px-4">
+        <div className="container max-w-6xl px-4 py-8">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-pink-200 text-sm mb-1">My Studio</p>
+            {/* Left spacer for centering */}
+            <div className="w-24" />
+            {/* Centered title */}
+            <div className="text-center">
+              <p className="text-pink-200 text-xs uppercase tracking-widest mb-1">My Studio</p>
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
                 {firstName}
                 {stats.streakDays > 0 && (
@@ -98,8 +104,12 @@ export default function StudentDashboard() {
                 )}
               </h1>
             </div>
+            {/* Home button — right side */}
             <Link href="/">
-              <Button variant="ghost" className="text-white/80 hover:text-white hover:bg-white/10">Home</Button>
+              <Button variant="ghost" size="sm" className="text-white/70 hover:text-white hover:bg-white/10">
+                <Home className="h-4 w-4 mr-1.5" />
+                Home
+              </Button>
             </Link>
           </div>
         </div>
@@ -218,28 +228,62 @@ export default function StudentDashboard() {
                 {/* Recommended For You */}
                 {recommended.length > 0 && (
                   <section>
-                    <Heading icon={<Sparkles className="h-5 w-5" />} title="Recommended For You" />
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="flex items-center justify-between mb-4">
+                      <Heading icon={<Sparkles className="h-5 w-5" />} title="Recommended For You" />
+                      <Link href="/courses">
+                        <Button variant="ghost" size="sm" className="text-[#C026D3] hover:text-[#A21CAF] hover:bg-fuchsia-50 gap-1">
+                          See All <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </Link>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                       {recommended.map((course: any) => (
                         <Link key={course.id} href={`/course/${course.id}`}>
-                          <Card className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer group flex flex-row h-28">
-                            <div className="w-28 flex-shrink-0 bg-gradient-to-br from-pink-100 to-purple-100 overflow-hidden">
+                          <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group border-0 shadow-md">
+                            {/* Large image */}
+                            <div className="relative h-44 bg-gradient-to-br from-fuchsia-200 via-pink-100 to-purple-200 overflow-hidden">
                               {course.imageUrl ? (
-                                <img src={course.imageUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                <img src={course.imageUrl} alt={course.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                               ) : (
-                                <div className="w-full h-full flex items-center justify-center"><span className="text-3xl">💃</span></div>
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <span className="text-6xl group-hover:scale-110 transition-transform duration-300">💃</span>
+                                </div>
                               )}
-                            </div>
-                            <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
-                              <div>
-                                <h3 className="font-semibold text-sm line-clamp-2 group-hover:text-[#C026D3] transition-colors">{course.title}</h3>
-                                <p className="text-xs text-muted-foreground line-clamp-1 mt-1">{course.description}</p>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm font-bold text-[#C026D3]">
+                              {/* Gradient overlay */}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                              {/* Price badge */}
+                              <div className="absolute top-3 right-3">
+                                <span className={`px-3 py-1.5 rounded-full text-sm font-bold shadow-lg ${
+                                  course.isFree
+                                    ? "bg-emerald-500 text-white"
+                                    : "bg-white text-[#C026D3]"
+                                }`}>
                                   {course.isFree ? "Free" : `€${course.price}`}
                                 </span>
-                                <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-[#C026D3] transition-colors" />
+                              </div>
+                              {/* Title overlay on image */}
+                              <div className="absolute bottom-0 left-0 right-0 p-4">
+                                <h3 className="text-white font-bold text-lg leading-tight line-clamp-2 drop-shadow-lg">
+                                  {course.title}
+                                </h3>
+                              </div>
+                            </div>
+                            {/* Description + CTA */}
+                            <div className="p-4">
+                              <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
+                                {course.description || "Learn new moves and boost your confidence with Elizabeth."}
+                              </p>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-1 text-amber-500">
+                                  <Star className="h-4 w-4 fill-current" />
+                                  <Star className="h-4 w-4 fill-current" />
+                                  <Star className="h-4 w-4 fill-current" />
+                                  <Star className="h-4 w-4 fill-current" />
+                                  <Star className="h-4 w-4 fill-current" />
+                                </div>
+                                <span className="flex items-center gap-1 text-sm font-semibold text-[#C026D3] group-hover:gap-2 transition-all">
+                                  View Course <ArrowRight className="h-4 w-4" />
+                                </span>
                               </div>
                             </div>
                           </Card>
