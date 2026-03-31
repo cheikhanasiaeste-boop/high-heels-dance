@@ -108,7 +108,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     body: JSON.stringify({
       systemInstruction: systemInstruction.trim() ? { parts: [{ text: systemInstruction.trim() }] } : undefined,
       contents,
-      generationConfig: { maxOutputTokens: 150 },
+      generationConfig: { maxOutputTokens: 1024 },
     }),
   });
 
