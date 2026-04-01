@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+import { RRule, Weekday } from "rrule";
 import { AdminLayout } from "@/components/AdminLayout";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,26 @@ import { Plus, Calendar, Users, MapPin, Video, ExternalLink, Edit, Trash2, Eye, 
 // ── Types & defaults ──────────────────────────────────────
 
 type EventType = "online" | "in-person";
+
+interface RecurrenceData {
+  enabled: boolean;
+  frequency: "weekly" | "monthly";
+  weeklyDays: number[]; // 0=Mon, 1=Tue, ..., 6=Sun (RRule weekday indices)
+  monthlyMode: "sameDay" | "sameWeekday";
+  endMode: "count" | "date" | "never";
+  endCount: number;
+  endDate: string;
+}
+
+const defaultRecurrence: RecurrenceData = {
+  enabled: false,
+  frequency: "weekly",
+  weeklyDays: [],
+  monthlyMode: "sameDay",
+  endMode: "count",
+  endCount: 12,
+  endDate: "",
+};
 
 interface SessionFormData {
   title: string;
@@ -47,6 +68,64 @@ const defaultForm: SessionFormData = {
   capacity: 20,
   allowDiscountCodes: false,
 };
+
+const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+const RRULE_WEEKDAYS = [RRule.MO, RRule.TU, RRule.WE, RRule.TH, RRule.FR, RRule.SA, RRule.SU];
+
+function getWeekdayIndex(date: Date): number {
+  // JS getDay: 0=Sun, convert to 0=Mon
+  const d = date.getDay();
+  return d === 0 ? 6 : d - 1;
+}
+
+function getWeekOfMonth(date: Date): number {
+  return Math.ceil(date.getDate() / 7);
+}
+
+function ordinal(n: number): string {
+  const s = ["th", "st", "nd", "rd"];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+}
+
+function generateRecurrenceDates(startTime: string, recurrence: RecurrenceData): Date[] {
+  if (!recurrence.enabled || !startTime) return [];
+  const dtstart = new Date(startTime);
+  if (isNaN(dtstart.getTime())) return [];
+
+  try {
+    const ruleOpts: any = {
+      dtstart,
+      freq: recurrence.frequency === "weekly" ? RRule.WEEKLY : RRule.MONTHLY,
+    };
+
+    if (recurrence.frequency === "weekly") {
+      const days = recurrence.weeklyDays.length > 0
+        ? recurrence.weeklyDays.map(i => RRULE_WEEKDAYS[i])
+        : [RRULE_WEEKDAYS[getWeekdayIndex(dtstart)]];
+      ruleOpts.byweekday = days;
+    } else if (recurrence.monthlyMode === "sameWeekday") {
+      const weekNum = getWeekOfMonth(dtstart);
+      const weekday = RRULE_WEEKDAYS[getWeekdayIndex(dtstart)];
+      ruleOpts.byweekday = [weekday.nth(weekNum)];
+    }
+    // sameDay monthly: RRule defaults to same day-of-month, no extra config needed
+
+    if (recurrence.endMode === "count") {
+      ruleOpts.count = Math.min(recurrence.endCount, 52);
+    } else if (recurrence.endMode === "date" && recurrence.endDate) {
+      ruleOpts.until = new Date(recurrence.endDate);
+    } else {
+      // "never" — cap at 52 for safety
+      ruleOpts.count = 52;
+    }
+
+    const rule = new RRule(ruleOpts);
+    return rule.all();
+  } catch {
+    return [];
+  }
+}
 
 function fmtLocal(dateString: string): string {
   const d = new Date(dateString);
@@ -79,7 +158,14 @@ export default function AdminSessions() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingSession, setEditingSession] = useState<any>(null);
   const [form, setForm] = useState<SessionFormData>(defaultForm);
+  const [recurrence, setRecurrence] = useState<RecurrenceData>(defaultRecurrence);
   const [isCreatingZoom, setIsCreatingZoom] = useState(false);
+
+  // Recurrence preview dates
+  const recurrenceDates = useMemo(
+    () => generateRecurrenceDates(form.startTime, recurrence),
+    [form.startTime, recurrence]
+  );
 
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -158,6 +244,7 @@ export default function AdminSessions() {
     setDialogOpen(false);
     setEditingSession(null);
     setForm(defaultForm);
+    setRecurrence(defaultRecurrence);
     setIsCreatingZoom(false);
   };
 
@@ -194,6 +281,20 @@ export default function AdminSessions() {
       toast.error("Location is required for in-person sessions");
       return;
     }
+    if (recurrence.enabled) {
+      if (recurrence.frequency === "weekly" && recurrence.weeklyDays.length === 0) {
+        toast.error("Select at least one day for weekly recurrence");
+        return;
+      }
+      if (recurrence.endMode === "date" && !recurrence.endDate) {
+        toast.error("Select an end date for the recurrence");
+        return;
+      }
+      if (recurrence.endMode === "date" && new Date(recurrence.endDate) <= new Date(form.startTime)) {
+        toast.error("Recurrence end date must be after start date");
+        return;
+      }
+    }
 
     if (editingSession) {
       // Update existing
@@ -225,8 +326,33 @@ export default function AdminSessions() {
           allowDiscountCodes: form.eventType === "in-person" && !form.isFree ? form.allowDiscountCodes : false,
         });
       }
+    } else if (recurrence.enabled && recurrenceDates.length > 1) {
+      // Create multiple sessions from recurrence
+      const startDate = new Date(form.startTime);
+      const endDate = new Date(form.endTime);
+      const durationMs = endDate.getTime() - startDate.getTime();
+
+      let created = 0;
+      for (const occDate of recurrenceDates) {
+        const occStart = new Date(occDate);
+        // Preserve the original time-of-day
+        occStart.setHours(startDate.getHours(), startDate.getMinutes(), 0, 0);
+        const occEnd = new Date(occStart.getTime() + durationMs);
+
+        createLiveMut.mutate({
+          title: form.title,
+          description: form.description || undefined,
+          startTime: occStart.toISOString(),
+          endTime: occEnd.toISOString(),
+          isFree: form.isFree,
+          price: form.isFree ? undefined : form.price || undefined,
+          capacity: Number(form.capacity),
+        });
+        created++;
+      }
+      toast.success(`Creating ${created} recurrent sessions...`);
     } else {
-      // Create new — always use liveSessions table (unified)
+      // Create single session
       createLiveMut.mutate({
         title: form.title,
         description: form.description || undefined,
@@ -597,6 +723,182 @@ export default function AdminSessions() {
                   </Select>
                 </div>
               </div>
+
+              {/* ── Recurrence Section ── */}
+              {!editingSession && (
+                <>
+                  <div className="flex items-center justify-between rounded-lg border p-3">
+                    <div>
+                      <Label className="font-medium">Recurrent Session</Label>
+                      <p className="text-xs text-muted-foreground">Create multiple sessions on a schedule</p>
+                    </div>
+                    <Switch
+                      checked={recurrence.enabled}
+                      onCheckedChange={(c) => {
+                        const updated = { ...recurrence, enabled: c };
+                        // Auto-select the start date's weekday
+                        if (c && form.startTime && updated.weeklyDays.length === 0) {
+                          updated.weeklyDays = [getWeekdayIndex(new Date(form.startTime))];
+                        }
+                        setRecurrence(updated);
+                      }}
+                    />
+                  </div>
+
+                  {recurrence.enabled && (
+                    <div className="space-y-4 rounded-lg border border-[#C026D3]/20 bg-[#C026D3]/[0.03] p-4">
+                      {/* Frequency */}
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-medium">Frequency</Label>
+                        <Select
+                          value={recurrence.frequency}
+                          onValueChange={(v: "weekly" | "monthly") => setRecurrence({ ...recurrence, frequency: v })}
+                        >
+                          <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Weekly: day checkboxes */}
+                      {recurrence.frequency === "weekly" && (
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-medium">Repeat on</Label>
+                          <div className="flex gap-1.5">
+                            {WEEKDAY_LABELS.map((day, idx) => (
+                              <button
+                                key={day}
+                                type="button"
+                                onClick={() => {
+                                  const days = recurrence.weeklyDays.includes(idx)
+                                    ? recurrence.weeklyDays.filter(d => d !== idx)
+                                    : [...recurrence.weeklyDays, idx];
+                                  setRecurrence({ ...recurrence, weeklyDays: days });
+                                }}
+                                className={`w-10 h-10 rounded-lg text-xs font-semibold transition-colors ${
+                                  recurrence.weeklyDays.includes(idx)
+                                    ? "bg-[#C026D3] text-white"
+                                    : "bg-muted hover:bg-muted/80"
+                                }`}
+                              >
+                                {day}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Monthly: same day vs same weekday */}
+                      {recurrence.frequency === "monthly" && form.startTime && (
+                        <div className="space-y-2">
+                          <Label className="text-xs font-medium">Repeat on</Label>
+                          <div className="space-y-2">
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="monthlyMode"
+                                checked={recurrence.monthlyMode === "sameDay"}
+                                onChange={() => setRecurrence({ ...recurrence, monthlyMode: "sameDay" })}
+                                className="accent-[#C026D3]"
+                              />
+                              <span className="text-sm">
+                                Same day — every {ordinal(new Date(form.startTime).getDate())}
+                              </span>
+                            </label>
+                            <label className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="monthlyMode"
+                                checked={recurrence.monthlyMode === "sameWeekday"}
+                                onChange={() => setRecurrence({ ...recurrence, monthlyMode: "sameWeekday" })}
+                                className="accent-[#C026D3]"
+                              />
+                              <span className="text-sm">
+                                Same weekday — every {ordinal(getWeekOfMonth(new Date(form.startTime)))} {WEEKDAY_LABELS[getWeekdayIndex(new Date(form.startTime))]}
+                              </span>
+                            </label>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* End condition */}
+                      <div className="space-y-2">
+                        <Label className="text-xs font-medium">Ends</Label>
+                        <div className="space-y-2">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="endMode"
+                              checked={recurrence.endMode === "count"}
+                              onChange={() => setRecurrence({ ...recurrence, endMode: "count" })}
+                              className="accent-[#C026D3]"
+                            />
+                            <span className="text-sm">After</span>
+                            <Input
+                              type="number"
+                              min={2}
+                              max={52}
+                              value={recurrence.endCount}
+                              onChange={(e) => setRecurrence({ ...recurrence, endCount: Math.min(52, parseInt(e.target.value) || 2) })}
+                              className="w-20 h-8 text-sm"
+                              disabled={recurrence.endMode !== "count"}
+                            />
+                            <span className="text-sm">occurrences</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="endMode"
+                              checked={recurrence.endMode === "date"}
+                              onChange={() => setRecurrence({ ...recurrence, endMode: "date" })}
+                              className="accent-[#C026D3]"
+                            />
+                            <span className="text-sm">On date</span>
+                            <Input
+                              type="date"
+                              value={recurrence.endDate}
+                              onChange={(e) => setRecurrence({ ...recurrence, endDate: e.target.value })}
+                              className="w-40 h-8 text-sm"
+                              disabled={recurrence.endMode !== "date"}
+                            />
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="endMode"
+                              checked={recurrence.endMode === "never"}
+                              onChange={() => setRecurrence({ ...recurrence, endMode: "never" })}
+                              className="accent-[#C026D3]"
+                            />
+                            <span className="text-sm">Never (max 52 sessions)</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {/* Preview */}
+                      {recurrenceDates.length > 0 && (
+                        <div className="rounded-lg bg-muted/50 p-3 space-y-1.5">
+                          <p className="text-xs font-medium text-[#E879F9]">
+                            This series will create {recurrenceDates.length} session{recurrenceDates.length !== 1 ? "s" : ""}:
+                          </p>
+                          <div className="text-xs text-muted-foreground space-y-0.5">
+                            {recurrenceDates.slice(0, 5).map((d, i) => (
+                              <p key={i}>
+                                {new Date(d).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                              </p>
+                            ))}
+                            {recurrenceDates.length > 5 && (
+                              <p className="text-[#E879F9]/70">...and {recurrenceDates.length - 5} more</p>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
 
               {/* Free / Paid */}
               <div className="flex items-center justify-between rounded-lg border p-3">
