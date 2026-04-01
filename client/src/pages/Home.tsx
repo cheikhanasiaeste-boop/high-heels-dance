@@ -16,6 +16,7 @@ import { AuthModal } from '@/components/AuthModal';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, CarouselDots } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { motion } from "framer-motion";
 
 // ─── Fallback demo data (shown when database is not yet connected) ────────────
 
@@ -347,66 +348,52 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#0d0010]/50 via-[#0d0010]/20 to-[#0d0010]" />
         </div>
 
-        {/* Hero content — pushed down to leave room for transparent nav */}
+        {/* Hero content */}
         <div className="flex-1 flex items-center relative z-10">
-          <div className="container px-4 md:px-6 w-full py-32 md:py-40">
-            <div className="flex flex-col items-center text-center">
-              {/* Profile photo — centered above text */}
-              <div className="mb-8 md:mb-10 animate-fade-up">
-                <div className="relative group overflow-hidden rounded-2xl">
-                  <img
-                    src={heroProfilePictureUrl || "/profile.jpg"}
-                    alt="Elizabeth Zolotova"
-                    className="w-40 h-52 md:w-56 md:h-72 object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).src = '/profile-photo.jpeg'; }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#2e0033]/95 via-[#2e0033]/60 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-4">
-                    <p className="text-white font-bold text-sm mb-0.5 translate-y-3 group-hover:translate-y-0 transition-transform duration-500" style={{ fontFamily: 'var(--font-display)' }}>Elizabeth Zolotova</p>
-                    <p className="text-[#E879F9] text-xs font-medium translate-y-3 group-hover:translate-y-0 transition-transform duration-500 delay-75">High Heels Dance Instructor</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Text content — centered */}
-              <div className="animate-fade-up">
-                {/* Label */}
-                <p className="text-xs uppercase tracking-[0.3em] text-[#E879F9]/60 font-semibold mb-4 animate-fade-up" style={{ fontFamily: 'var(--font-body)' }}>
+          <div className="container px-4 md:px-6 w-full py-28 md:py-36 lg:py-40">
+            <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+              {/* Left: Text + CTAs */}
+              <motion.div
+                className="text-center lg:text-left order-2 lg:order-1"
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <p className="text-xs uppercase tracking-[0.3em] text-[#E879F9]/60 font-semibold mb-4" style={{ fontFamily: 'var(--font-body)' }}>
                   Professional Dance Education
                 </p>
 
-                {/* Name */}
                 <h2
-                  className="text-5xl md:text-7xl lg:text-8xl font-bold mb-5 md:mb-6 text-white tracking-[-0.03em] animate-fade-up-delay-1"
+                  className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-5 md:mb-6 text-white tracking-[-0.03em]"
                   style={{ fontFamily: 'var(--font-display)', textShadow: '0 4px 40px rgba(0,0,0,0.5)' }}
                 >
                   {heroTitle || 'Elizabeth Zolotova'}
                 </h2>
 
-                {/* Tagline */}
                 <p
-                  className="text-lg md:text-xl mb-8 md:mb-10 max-w-xl mx-auto leading-relaxed text-white/60 animate-fade-up-delay-2"
+                  className="text-lg md:text-xl mb-10 md:mb-12 max-w-lg mx-auto lg:mx-0 leading-relaxed text-white/55"
                   style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}
                 >
                   {heroTagline || "Professional dancer & teacher — fall in love with dance."}
                 </p>
 
-                {/* CTA buttons */}
-                <div className="flex flex-col sm:flex-row justify-center gap-3 md:gap-4 mb-8 animate-fade-up-delay-3">
+                {/* CTA buttons — large & prominent */}
+                <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 mb-10">
                   <Link href="/book-session">
-                    <span className="glow-button inline-flex items-center gap-2.5 px-8 sm:px-10 py-4 text-sm font-semibold text-[#0d0010] bg-white hover:bg-white/90 rounded-full shadow-lg tracking-wide cursor-pointer uppercase">
+                    <span className="glow-button inline-flex items-center justify-center gap-3 w-full sm:w-auto px-10 md:px-12 py-5 text-base font-bold text-[#0d0010] bg-white hover:bg-white/90 rounded-full shadow-xl shadow-white/10 tracking-wide cursor-pointer uppercase">
                       Book a Session
-                      <ArrowRight className="w-4 h-4" />
+                      <ArrowRight className="w-5 h-5" />
                     </span>
                   </Link>
                   <Link href="/courses">
-                    <span className="inline-flex items-center gap-2 px-8 sm:px-10 py-4 text-sm font-medium text-white/80 bg-white/[0.07] hover:bg-white/[0.14] border border-white/15 hover:border-white/30 rounded-full backdrop-blur-sm transition-all duration-300 tracking-wide cursor-pointer uppercase">
+                    <span className="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-10 md:px-12 py-5 text-base font-semibold text-white bg-white/[0.08] hover:bg-white/[0.15] border border-white/15 hover:border-white/30 rounded-full backdrop-blur-sm transition-all duration-300 tracking-wide cursor-pointer uppercase">
                       Explore Courses
                     </span>
                   </Link>
                 </div>
 
                 {/* Social links */}
-                <div className="flex justify-center gap-3 animate-fade-up-delay-3">
+                <div className="flex justify-center lg:justify-start gap-3">
                   {[
                     { href: "https://www.instagram.com/elizabeth_zolotova/", Icon: Instagram },
                     { href: "https://www.youtube.com/@HighHeelsTutorials", Icon: Youtube },
@@ -419,7 +406,44 @@ export default function Home() {
                     </a>
                   ))}
                 </div>
-              </div>
+              </motion.div>
+
+              {/* Right: Profile photo with Framer Motion hover zoom */}
+              <motion.div
+                className="flex justify-center lg:justify-end order-1 lg:order-2"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.9, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <div className="relative">
+                  {/* Ambient fuchsia glow */}
+                  <div className="absolute -inset-8 bg-gradient-to-br from-fuchsia-500/15 via-purple-500/10 to-transparent rounded-3xl blur-2xl" />
+
+                  {/* Photo with hover zoom */}
+                  <motion.div
+                    className="relative overflow-hidden rounded-2xl cursor-pointer group"
+                    whileHover={{ scale: 1.04 }}
+                    transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    {/* Border frame */}
+                    <div className="absolute inset-0 rounded-2xl border border-white/10 z-10 pointer-events-none" />
+
+                    <img
+                      src={heroProfilePictureUrl || "/profile.jpg"}
+                      alt="Elizabeth Zolotova"
+                      className="w-64 h-80 sm:w-72 sm:h-96 lg:w-80 lg:h-[440px] object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/profile-photo.jpeg'; }}
+                    />
+
+                    {/* Hover overlay with bio */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#1a0a20]/95 via-[#1a0a20]/50 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-6 z-20">
+                      <p className="text-white font-bold text-lg mb-1" style={{ fontFamily: 'var(--font-display)' }}>Elizabeth Zolotova</p>
+                      <p className="text-[#E879F9] text-sm font-medium mb-2">High Heels Dance Instructor</p>
+                      <p className="text-white/50 text-sm leading-relaxed">Passionate about empowering women through dance. Transforming confidence, one step at a time.</p>
+                    </div>
+                  </motion.div>
+                </div>
+              </motion.div>
 
             </div>
           </div>
