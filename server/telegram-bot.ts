@@ -1,5 +1,5 @@
 import TelegramBot from "node-telegram-bot-api";
-import { db as drizzleDb } from "./db";
+import { getDb } from "./db";
 import { sessionDiscountCodes, users, availabilitySlots } from "../drizzle/schema";
 import { eq, and, sql, desc } from "drizzle-orm";
 import { randomBytes } from "crypto";
@@ -66,7 +66,7 @@ export function setupTelegramBot() {
     const packageGroup = type === "package" ? `pkg-${Date.now()}` : null;
 
     // Get admin user ID
-    const admins = await drizzleDb
+    const admins = await (await getDb())
       .select()
       .from(users)
       .where(eq(users.role, "admin"))
@@ -76,7 +76,7 @@ export function setupTelegramBot() {
     const codes: string[] = [];
     for (let i = 0; i < count; i++) {
       const code = generateCode();
-      await drizzleDb.insert(sessionDiscountCodes).values({
+      await (await getDb()).insert(sessionDiscountCodes).values({
         code,
         type,
         packageGroup,
@@ -102,7 +102,7 @@ export function setupTelegramBot() {
   bot.onText(/\/list/, async (msg) => {
     if (!isAdminChat(msg.chat.id)) return;
 
-    const codes = await drizzleDb
+    const codes = await (await getDb())
       .select()
       .from(sessionDiscountCodes)
       .orderBy(desc(sessionDiscountCodes.createdAt))
@@ -127,7 +127,7 @@ export function setupTelegramBot() {
   bot.onText(/\/revoke\s+(\S+)/, async (msg, match) => {
     if (!isAdminChat(msg.chat.id)) return;
     const code = match![1].toUpperCase();
-    await drizzleDb
+    await (await getDb())
       .update(sessionDiscountCodes)
       .set({ isActive: false })
       .where(eq(sessionDiscountCodes.code, code));
@@ -138,7 +138,7 @@ export function setupTelegramBot() {
   bot.onText(/\/sessions/, async (msg) => {
     if (!isAdminChat(msg.chat.id)) return;
 
-    const sessions = await drizzleDb
+    const sessions = await (await getDb())
       .select()
       .from(availabilitySlots)
       .where(

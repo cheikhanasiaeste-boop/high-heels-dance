@@ -1,7 +1,7 @@
 import { router, protectedProcedure, adminProcedure } from "./_core/trpc";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { db as drizzleDb } from "./db";
+import { getDb } from "./db";
 import { sessionDiscountCodes, availabilitySlots } from "../drizzle/schema";
 import { eq, and, isNull, sql } from "drizzle-orm";
 import { randomBytes } from "crypto";
@@ -28,7 +28,7 @@ export const sessionDiscountRouter = router({
     }))
     .query(async ({ input }) => {
       // Check session allows discount codes
-      const sessions = await drizzleDb
+      const sessions = await (await getDb())
         .select()
         .from(availabilitySlots)
         .where(eq(availabilitySlots.id, input.sessionId))
@@ -48,7 +48,7 @@ export const sessionDiscountRouter = router({
       }
 
       // Check code validity
-      const result = await drizzleDb
+      const result = await (await getDb())
         .select()
         .from(sessionDiscountCodes)
         .where(eq(sessionDiscountCodes.code, input.code.toUpperCase()))
@@ -86,7 +86,7 @@ export const sessionDiscountRouter = router({
       const code = input.code.toUpperCase();
 
       // Verify session allows discount codes
-      const sessions = await drizzleDb
+      const sessions = await (await getDb())
         .select()
         .from(availabilitySlots)
         .where(eq(availabilitySlots.id, input.sessionId))
@@ -97,7 +97,7 @@ export const sessionDiscountRouter = router({
       }
 
       // Find unused code
-      const result = await drizzleDb
+      const result = await (await getDb())
         .select()
         .from(sessionDiscountCodes)
         .where(
@@ -119,7 +119,7 @@ export const sessionDiscountRouter = router({
       }
 
       // Atomic mark as used
-      await drizzleDb
+      await (await getDb())
         .update(sessionDiscountCodes)
         .set({ usedByUserId: ctx.user.id, usedAt: new Date() })
         .where(
@@ -145,7 +145,7 @@ export const sessionDiscountRouter = router({
 
       for (let i = 0; i < count; i++) {
         const code = generateCode();
-        await drizzleDb.insert(sessionDiscountCodes).values({
+        await (await getDb()).insert(sessionDiscountCodes).values({
           code,
           type: input.type,
           packageGroup,
@@ -159,7 +159,7 @@ export const sessionDiscountRouter = router({
     }),
 
   list: adminProcedure.query(async () => {
-    return await drizzleDb
+    return await (await getDb())
       .select()
       .from(sessionDiscountCodes)
       .orderBy(sql`${sessionDiscountCodes.createdAt} DESC`)
@@ -169,7 +169,7 @@ export const sessionDiscountRouter = router({
   revoke: adminProcedure
     .input(z.object({ code: z.string() }))
     .mutation(async ({ input }) => {
-      await drizzleDb
+      await (await getDb())
         .update(sessionDiscountCodes)
         .set({ isActive: false })
         .where(eq(sessionDiscountCodes.code, input.code.toUpperCase()));
