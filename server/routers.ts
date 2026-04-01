@@ -1900,6 +1900,23 @@ Never be pushy. Be genuinely helpful and make people feel welcome.`;
           }
         }
 
+        // 6. If "courses" was mentioned but no link was injected, append a helpful link footer
+        const hasCoursesLink = assistantMessage.includes('[Courses]') || assistantMessage.includes('(/courses)');
+        const hasBookingLink = assistantMessage.includes('[Book') || assistantMessage.includes('(/book-session)');
+        const mentionsCourses = /\bcourses?\b/i.test(assistantMessage);
+        const mentionsBooking = /\bbook|session|class\b/i.test(assistantMessage);
+
+        const footerLinks: string[] = [];
+        if (mentionsCourses && !hasCoursesLink) {
+          footerLinks.push('[Browse Courses](/courses)');
+        }
+        if (mentionsBooking && !hasBookingLink) {
+          footerLinks.push('[Book a Session](/book-session)');
+        }
+        if (footerLinks.length > 0) {
+          assistantMessage += '\n\n' + footerLinks.join(' · ');
+        }
+
         // Save assistant message (non-blocking)
         db.createChatMessage({ userId, role: 'assistant', content: assistantMessage }).catch(() => {});
 

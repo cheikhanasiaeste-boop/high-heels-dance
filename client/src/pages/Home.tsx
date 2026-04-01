@@ -13,7 +13,7 @@ import { MobileNav } from "@/components/MobileNav";
 import { useProgressiveAuth } from '@/hooks/useProgressiveAuth';
 import { ProgressiveAuthModal } from '@/components/ProgressiveAuthModal';
 import { AuthModal } from '@/components/AuthModal';
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, CarouselDots } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
@@ -653,6 +653,7 @@ export default function Home() {
             </CarouselContent>
             <CarouselPrevious className="hidden md:flex -left-4 lg:-left-12 border-white/10 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white" />
             <CarouselNext className="hidden md:flex -right-4 lg:-right-12 border-white/10 bg-white/5 text-white/50 hover:bg-white/10 hover:text-white" />
+            <CarouselDots />
           </Carousel>
         </div>
       </section>
