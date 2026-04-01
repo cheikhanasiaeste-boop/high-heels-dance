@@ -97,9 +97,9 @@ async function startServer() {
     handleStripeWebhook
   );
 
-  // Body parser — 50MB limit (videos use Bunny.net direct upload, not JSON body)
-  app.use(express.json({ limit: "50mb" }));
-  app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  // Body parser — 275MB limit to support 200MB file uploads via base64 (200MB raw ≈ 267MB base64 + JSON overhead)
+  app.use(express.json({ limit: "275mb" }));
+  app.use(express.urlencoded({ limit: "275mb", extended: true }));
   // SSE endpoint for admin notifications (requires admin auth via tRPC context)
   app.get("/api/admin/notifications/stream", async (req, res) => {
     const authHeader = req.headers.authorization;

@@ -1939,8 +1939,8 @@ Never be pushy. Be genuinely helpful and make people feel welcome.`;
         const buffer = Buffer.from(input.fileData, 'base64');
 
         // Max 50MB
-        if (buffer.length > 50 * 1024 * 1024) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'File must be under 50MB' });
+        if (buffer.length > 200 * 1024 * 1024) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'File must be under 200MB' });
         }
 
         const timestamp = Date.now();
@@ -2058,8 +2058,8 @@ Never be pushy. Be genuinely helpful and make people feel welcome.`;
 
         // Decode and validate size (50MB max)
         const buffer = Buffer.from(input.data, 'base64');
-        if (buffer.length > 50 * 1024 * 1024) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'File must be under 50MB' });
+        if (buffer.length > 200 * 1024 * 1024) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'File must be under 200MB' });
         }
 
         // Validate content type
