@@ -3,6 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { useParams, useLocation, Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import DOMPurify from "dompurify";
 import { Progress } from "@/components/ui/progress";
 import { ChevronDown, ChevronUp, Check, Home, Play, Lock, CheckCircle, Loader2, List, X, RefreshCw } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
@@ -382,7 +383,7 @@ export default function CourseLearn() {
                 {/* Lesson Content */}
                 {currentLesson.content && (
                   <div className="prose max-w-none mb-6">
-                    <div dangerouslySetInnerHTML={{ __html: currentLesson.content }} />
+                    <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(currentLesson.content) }} />
                   </div>
                 )}
                 

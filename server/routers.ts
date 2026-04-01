@@ -70,20 +70,28 @@ export const appRouter = router({
             message: "No active Supabase session",
           });
         }
-        return db.syncUser({
+        const user = await db.syncUser({
           supabaseId: ctx.supabaseUid,
           name: input.name || null,
           email: input.email,
         });
+        // Strip sensitive fields before returning to client
+        const { supabaseId, stripeSubscriptionId, lastViewedByAdmin, ...safeUser } = user;
+        return safeUser;
       }),
   }),
 
   // Public course procedures
   courses: router({
     list: publicProcedure.query(async () => {
-      return await db.getAllPublishedCourses();
+      const courses = await db.getAllPublishedCourses();
+      // Strip internal storage keys from public response
+      return courses.map((c: any) => {
+        const { imageKey, previewVideoKey, ...safe } = c;
+        return safe;
+      });
     }),
-    
+
     getById: publicProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
@@ -91,7 +99,8 @@ export const appRouter = router({
         if (!course) {
           throw new TRPCError({ code: 'NOT_FOUND', message: 'Course not found' });
         }
-        return course;
+        const { imageKey, previewVideoKey, ...safe } = course as any;
+        return safe;
       }),
     
     // Check if user has access to a course
@@ -127,7 +136,15 @@ export const appRouter = router({
           const hasAccess = await db.userHasCourseAccess(ctx.user.id, input.courseId);
           if (!hasAccess) throw new TRPCError({ code: "FORBIDDEN", message: "You do not have access to this course" });
         }
-        return await db.getCourseModulesWithLessons(input.courseId);
+        const modules = await db.getCourseModulesWithLessons(input.courseId);
+        // Strip raw video URLs — clients must use getVideoPlaybackUrl for signed URLs
+        return modules.map((m: any) => ({
+          ...m,
+          lessons: (m.lessons || []).map((l: any) => {
+            const { videoUrl, videoKey, bunnyVideoId, ...safeLes } = l;
+            return { ...safeLes, hasVideo: !!(videoUrl || bunnyVideoId) };
+          }),
+        }));
       }),
 
     // Public curriculum overview — shows module/lesson titles + metadata but no video URLs
@@ -487,7 +504,12 @@ export const appRouter = router({
   // User purchase procedures
   purchases: router({
     myPurchases: protectedProcedure.query(async ({ ctx }) => {
-      return await db.getUserPurchases(ctx.user.id);
+      const purchases = await db.getUserPurchases(ctx.user.id);
+      // Strip Stripe internal IDs from client response
+      return purchases.map((p: any) => {
+        const { stripePaymentId, ...safe } = p;
+        return safe;
+      });
     }),
     
     createCheckoutSession: protectedProcedure
@@ -1223,6 +1245,14 @@ export const appRouter = router({
       get: publicProcedure
         .input(z.object({ key: z.string() }))
         .query(async ({ input }) => {
+          // Only allow reading public display content (headings, text)
+          const publicContentKeys = [
+            'hero_title', 'hero_tagline', 'courses_heading', 'testimonials_heading',
+            'about_text', 'footer_text',
+          ];
+          if (!publicContentKeys.includes(input.key)) {
+            throw new TRPCError({ code: 'FORBIDDEN', message: 'Content key not publicly accessible' });
+          }
           return await db.getSetting(input.key);
         }),
 
@@ -1577,9 +1607,13 @@ export const appRouter = router({
           slots = slots.filter(slot => slot.sessionType === input.sessionType);
         }
         
-        return slots;
+        // Strip sensitive fields from public response
+        return slots.map((slot: any) => {
+          const { sessionLink, meetLink, zoomMeetingId, ...safe } = slot;
+          return safe;
+        });
       }),
-    
+
     // Create a booking (free sessions, or paid sessions with valid discount code)
     create: protectedProcedure
       .input(z.object({

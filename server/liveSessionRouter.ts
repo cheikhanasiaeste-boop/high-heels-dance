@@ -12,25 +12,34 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
 });
 
 export const liveSessionRouter = router({
-  // Public: get session by ID
+  // Public: get session by ID (strip sensitive Zoom data)
   getById: publicProcedure
     .input(z.object({ id: z.number() }))
     .query(async ({ input }) => {
       const session = await db.getLiveSessionById(input.id);
       if (!session) throw new TRPCError({ code: "NOT_FOUND", message: "Session not found" });
-      return session;
+      const { zoomMeetingId, zoomMeetingNumber, zoomPassword, recordingUrl, ...safe } = session as any;
+      return { ...safe, hasZoom: !!zoomMeetingId };
     }),
 
-  // Public: list upcoming sessions
+  // Public: list upcoming sessions (strip sensitive Zoom data)
   upcoming: publicProcedure
     .input(z.object({ limit: z.number().optional() }).optional())
     .query(async ({ input }) => {
-      return await db.getUpcomingLiveSessions(input?.limit ?? 10);
+      const sessions = await db.getUpcomingLiveSessions(input?.limit ?? 10);
+      return sessions.map((s: any) => {
+        const { zoomMeetingId, zoomMeetingNumber, zoomPassword, recordingUrl, ...safe } = s;
+        return { ...safe, hasZoom: !!zoomMeetingId };
+      });
     }),
 
-  // Public: list all sessions
+  // Public: list all sessions (strip sensitive Zoom data)
   list: publicProcedure.query(async () => {
-    return await db.getAllLiveSessions();
+    const sessions = await db.getAllLiveSessions();
+    return sessions.map((s: any) => {
+      const { zoomMeetingId, zoomMeetingNumber, zoomPassword, recordingUrl, ...safe } = s;
+      return { ...safe, hasZoom: !!zoomMeetingId };
+    });
   }),
 
   // Protected: join a live session (get Zoom SDK credentials)
