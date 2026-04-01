@@ -437,6 +437,58 @@ export default function BookSession() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Recommended Sessions */}
+            {availableSlots && availableSlots.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-sm font-semibold text-[#E879F9]/70 uppercase tracking-[0.15em] mb-3" style={{ fontFamily: 'var(--font-body)' }}>
+                  <Sparkles className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
+                  Recommended
+                </h3>
+                <div className="space-y-3">
+                  {availableSlots
+                    .filter(s => new Date(s.startTime) > new Date())
+                    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
+                    .slice(0, 3)
+                    .map((slot: any) => (
+                      <div
+                        key={`rec-${slot.id}`}
+                        className="group relative overflow-hidden rounded-xl border border-white/[0.08] bg-gradient-to-br from-fuchsia-500/[0.06] to-purple-500/[0.06] hover:from-fuchsia-500/[0.12] hover:to-purple-500/[0.12] transition-all duration-300 cursor-pointer p-3.5"
+                        onClick={() => {
+                          setSelectedDate(startOfDay(new Date(slot.startTime)));
+                          setSelectedSlot(slot);
+                          setBookingDialogOpen(true);
+                        }}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+                            slot.eventType === 'online'
+                              ? 'bg-blue-500/15 text-blue-400'
+                              : 'bg-purple-500/15 text-purple-400'
+                          }`}>
+                            {slot.eventType === 'online' ? 'Online' : 'In-Person'}
+                          </span>
+                          {(!slot.price || Number(slot.price) === 0) && (
+                            <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400">Free</span>
+                          )}
+                        </div>
+                        <p className="text-sm font-semibold text-white mb-1 line-clamp-1">{slot.title}</p>
+                        <p className="text-xs text-white/40">
+                          {format(new Date(slot.startTime), 'MMM d')} at {format(new Date(slot.startTime), 'h:mm a')}
+                        </p>
+                        <div className="mt-2 flex items-center justify-between">
+                          <span className="text-xs font-bold text-white/70">
+                            {!slot.price || Number(slot.price) === 0 ? 'Free' : `€${slot.price}`}
+                          </span>
+                          <span className="text-[10px] text-[#E879F9] font-medium opacity-0 group-hover:opacity-100 transition-opacity uppercase tracking-wider">
+                            Book →
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Timeline View */}
