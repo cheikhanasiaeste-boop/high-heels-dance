@@ -47,7 +47,7 @@ export function setupTelegramBot() {
       msg.chat.id,
       `🩰 *High Heels Dance Admin Bot*\n\nCommands:\n\n` +
         `/generate single — Create 1 discount code\n` +
-        `/generate package — Create 4 discount codes (monthly pack)\n` +
+        `/generate monthly — Create 4 discount codes (monthly pack)\n` +
         `/list — Show recent codes\n` +
         `/revoke <code> — Deactivate a code\n` +
         `/sessions — List in-person sessions with discount codes enabled\n\n` +
@@ -56,11 +56,12 @@ export function setupTelegramBot() {
     );
   });
 
-  // ── /generate single|package ──
-  bot.onText(/\/generate\s+(single|package)/, async (msg, match) => {
+  // ── /generate single|monthly ──
+  bot.onText(/\/generate\s+(single|monthly)/, async (msg, match) => {
     if (!isAdminChat(msg.chat.id)) return;
 
-    const type = match![1] as "single" | "package";
+    const inputType = match![1];
+    const type: "single" | "package" = inputType === "monthly" ? "package" : "single";
     const count = type === "package" ? 4 : 1;
     const packageGroup = type === "package" ? `pkg-${Date.now()}` : null;
 
