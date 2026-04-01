@@ -21,21 +21,6 @@ export const MEMBERSHIP_PRODUCTS = {
   },
 };
 
-// In-Person credit packs (one-time purchases, not subscriptions)
-export const IN_PERSON_CREDIT_PACKS = {
-  PACK_5: {
-    name: '5 In-Person Sessions',
-    description: '5 in-person dance session credits',
-    credits: 5,
-    priceInCents: 12500, // $125 ($25/session)
-  },
-  PACK_10: {
-    name: '10 In-Person Sessions',
-    description: '10 in-person dance session credits — best value',
-    credits: 10,
-    priceInCents: 20000, // $200 ($20/session — save $50)
-  },
-};
 
 /**
  * Membership access levels

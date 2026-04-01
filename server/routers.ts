@@ -4,6 +4,7 @@ import { liveSessionRouter } from "./liveSessionRouter";
 import { membershipRouter } from "./membershipRouter";
 import { membershipManagementRouter } from "./membershipManagementRouter";
 import { discountRouter } from "./discountRouter";
+import { sessionDiscountRouter } from "./sessionDiscountRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -34,6 +35,7 @@ export const appRouter = router({
   membership: membershipRouter,
   membershipManagement: membershipManagementRouter,
   discount: discountRouter,
+  sessionDiscount: sessionDiscountRouter,
   
   auth: router({
     /** Returns safe user profile data, or null if not authenticated. */
@@ -1578,11 +1580,12 @@ export const appRouter = router({
         return slots;
       }),
     
-    // Create a booking (free sessions only)
+    // Create a booking (free sessions, or paid sessions with valid discount code)
     create: protectedProcedure
       .input(z.object({
         slotId: z.number(),
         notes: z.string().optional(),
+        discountCode: z.string().max(20).optional(),
       }))
       .mutation(async ({ ctx, input }) => {
         // Check if slot exists and is available
@@ -1590,8 +1593,45 @@ export const appRouter = router({
         if (!slot) {
           throw new TRPCError({ code: 'NOT_FOUND', message: 'Time slot not found' });
         }
-        if (!slot.isFree) {
-          throw new TRPCError({ code: 'BAD_REQUEST', message: 'This session requires payment. Use the payment flow instead.' });
+
+        // If session is paid, check for valid discount code
+        let usedDiscountCode = false;
+        if (!slot.isFree && input.discountCode) {
+          // Validate and redeem the code in one step
+          const { sessionDiscountCodes } = await import("../drizzle/schema");
+          const { eq, and, isNull } = await import("drizzle-orm");
+          const { db: drizzleDb } = await import("./db");
+          const code = input.discountCode.toUpperCase();
+          const codeRows = await drizzleDb
+            .select()
+            .from(sessionDiscountCodes)
+            .where(and(
+              eq(sessionDiscountCodes.code, code),
+              eq(sessionDiscountCodes.isActive, true),
+              isNull(sessionDiscountCodes.usedByUserId),
+            ))
+            .limit(1);
+
+          if (codeRows.length === 0) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'Invalid, expired, or already used discount code' });
+          }
+          const discount = codeRows[0];
+          if (discount.expiresAt && new Date() > discount.expiresAt) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'Discount code has expired' });
+          }
+          if (discount.sessionId !== null && discount.sessionId !== input.slotId) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'Discount code is not valid for this session' });
+          }
+
+          // Redeem the code (atomic: only updates if still unused)
+          await drizzleDb
+            .update(sessionDiscountCodes)
+            .set({ usedByUserId: ctx.user.id, usedAt: new Date() })
+            .where(and(eq(sessionDiscountCodes.id, discount.id), isNull(sessionDiscountCodes.usedByUserId)));
+
+          usedDiscountCode = true;
+        } else if (!slot.isFree && !input.discountCode) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'This session requires payment. Use the payment flow or enter a discount code.' });
         }
         
         // Check capacity for group sessions

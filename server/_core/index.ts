@@ -12,6 +12,7 @@ import { handleStripeWebhook } from "../stripe-webhook";
 import { setupSSE } from "../sse";
 import { setupCronJobs } from "../jobs/setupCron";
 import { checkSupabaseHealth, ensureAdminUser } from "../lib/supabase";
+import { setupTelegramBot } from "../telegram-bot";
 
 // Prevent unhandled promise rejections (e.g. from postgres connection errors) from crashing the server
 process.on("unhandledRejection", (reason) => {
@@ -150,6 +151,9 @@ async function startServer() {
 
     // Setup scheduled jobs
     setupCronJobs();
+
+    // Start Telegram bot (if configured)
+    setupTelegramBot();
   });
 }
 

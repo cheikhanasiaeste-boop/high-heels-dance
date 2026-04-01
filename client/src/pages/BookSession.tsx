@@ -22,6 +22,9 @@ export default function BookSession() {
   const [selectedSlot, setSelectedSlot] = useState<any>(null);
   const [bookingDialogOpen, setBookingDialogOpen] = useState(false);
   const [notes, setNotes] = useState("");
+  const [sessionDiscountCode, setSessionDiscountCode] = useState("");
+  const [discountValid, setDiscountValid] = useState<boolean | null>(null);
+  const [discountMessage, setDiscountMessage] = useState("");
   const [eventFilter, setEventFilter] = useState<"all" | "online" | "in-person">("all");
   const [sessionTypeFilter, setSessionTypeFilter] = useState<"all" | "private" | "group">("all");
   const [priceFilter, setPriceFilter] = useState<"all" | "free" | "premium">("all");
@@ -46,6 +49,9 @@ export default function BookSession() {
       setBookingDialogOpen(false);
       setSelectedSlot(null);
       setNotes("");
+      setSessionDiscountCode("");
+      setDiscountValid(null);
+      setDiscountMessage("");
     },
     onError: (error) => {
       toast.error(error.message || "Failed to book session");
@@ -60,6 +66,9 @@ export default function BookSession() {
         setBookingDialogOpen(false);
         setSelectedSlot(null);
         setNotes("");
+        setSessionDiscountCode("");
+        setDiscountValid(null);
+        setDiscountMessage("");
       }
     },
     onError: (error) => {
@@ -173,16 +182,20 @@ export default function BookSession() {
     await requireAuth("booking");
 
     const isPaid = selectedSlot.price && Number(selectedSlot.price) > 0;
+    const hasValidDiscount = discountValid === true && sessionDiscountCode.trim();
 
-    if (isPaid) {
+    if (isPaid && !hasValidDiscount) {
+      // Paid session without discount → go to Stripe checkout
       checkoutMutation.mutate({
         slotId: selectedSlot.id,
         notes: notes.trim() || undefined,
       });
     } else {
+      // Free session, or paid with valid discount code → book directly
       bookMutation.mutate({
         slotId: selectedSlot.id,
         notes: notes.trim() || undefined,
+        discountCode: hasValidDiscount ? sessionDiscountCode.trim() : undefined,
       });
     }
   };
@@ -627,8 +640,55 @@ export default function BookSession() {
               />
             </div>
 
+            {/* Discount code input — for paid in-person sessions */}
+            {selectedSlot && selectedSlot.price && Number(selectedSlot.price) > 0 && selectedSlot.eventType === "in-person" && (
+              <div className="space-y-2 pt-2 border-t border-white/10">
+                <Label htmlFor="discount">Discount Code</Label>
+                <div className="flex gap-2">
+                  <input
+                    id="discount"
+                    type="text"
+                    placeholder="e.g. HHD-ABC123"
+                    value={sessionDiscountCode}
+                    onChange={(e) => {
+                      setSessionDiscountCode(e.target.value.toUpperCase());
+                      setDiscountValid(null);
+                      setDiscountMessage("");
+                    }}
+                    className="flex-1 px-3 py-2 rounded-md bg-white/[0.06] border border-white/10 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-fuchsia-500"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={!sessionDiscountCode.trim()}
+                    onClick={async () => {
+                      try {
+                        const result = await fetch(`/api/trpc/sessionDiscount.validate?input=${encodeURIComponent(JSON.stringify({ json: { code: sessionDiscountCode.trim(), sessionId: selectedSlot.id } }))}`);
+                        const data = await result.json();
+                        const res = data?.result?.data?.json;
+                        setDiscountValid(res?.valid ?? false);
+                        setDiscountMessage(res?.reason ?? "");
+                      } catch {
+                        setDiscountValid(false);
+                        setDiscountMessage("Failed to validate code");
+                      }
+                    }}
+                  >
+                    Apply
+                  </Button>
+                </div>
+                {discountValid === true && (
+                  <p className="text-xs text-emerald-400">{discountMessage}</p>
+                )}
+                {discountValid === false && (
+                  <p className="text-xs text-red-400">{discountMessage}</p>
+                )}
+              </div>
+            )}
+
             {/* Membership CTA - Show only for paid sessions when user is authenticated */}
-            {selectedSlot && selectedSlot.price && Number(selectedSlot.price) > 0 && isAuthenticated && (
+            {selectedSlot && selectedSlot.price && Number(selectedSlot.price) > 0 && isAuthenticated && !(discountValid === true) && (
               <div className="pt-4 border-t">
                 <p className="text-sm text-muted-foreground mb-3 text-center">
                   Or get unlimited access to all sessions with membership

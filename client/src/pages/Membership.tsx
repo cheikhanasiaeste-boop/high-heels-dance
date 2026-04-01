@@ -1,26 +1,27 @@
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, Crown, Sparkles, ArrowLeft, Loader2, MapPin, Zap } from "lucide-react";
+import { Check, Crown, Sparkles, ArrowLeft, Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
 export default function Membership() {
   const { data: membershipStatus, isLoading: statusLoading } = trpc.membership.getStatus.useQuery();
   const { data: pricing, isLoading: pricingLoading } = trpc.membership.getPricing.useQuery();
-  const { data: inPersonPricing } = trpc.membership.getInPersonPricing.useQuery();
 
   const [isLoading, setIsLoading] = useState("");
 
   const createCheckout = trpc.membership.createSubscriptionCheckout.useMutation();
-  const purchaseCredits = trpc.membership.purchaseInPersonCredits.useMutation();
 
   // Check for payment success in URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('success')) {
+      toast.success("Membership activated! Welcome aboard.");
       window.history.replaceState({}, '', '/membership');
-    } else if (params.get('credits_success')) {
+    } else if (params.get('canceled')) {
+      toast.info("Checkout cancelled.");
       window.history.replaceState({}, '', '/membership');
     }
   }, []);
@@ -30,20 +31,8 @@ export default function Membership() {
       setIsLoading(plan);
       const { url } = await createCheckout.mutateAsync({ plan });
       if (url) window.location.href = url;
-    } catch (error) {
-      console.error('Checkout error:', error);
-    } finally {
-      setIsLoading("");
-    }
-  };
-
-  const handleBuyCredits = async (pack: "pack5" | "pack10") => {
-    try {
-      setIsLoading(pack);
-      const { url } = await purchaseCredits.mutateAsync({ pack });
-      if (url) window.location.href = url;
-    } catch (error) {
-      console.error('Credit purchase error:', error);
+    } catch (error: any) {
+      toast.error(error.message || "Failed to create checkout session");
     } finally {
       setIsLoading("");
     }
@@ -58,7 +47,6 @@ export default function Membership() {
   }
 
   const isActiveMember = membershipStatus?.isActive;
-  const inPersonCredits = membershipStatus?.inPersonCredits ?? 0;
 
   return (
     <div className="min-h-screen bg-[#0d0010]">
@@ -73,24 +61,13 @@ export default function Membership() {
             Back
           </button>
 
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.25em] text-[#E879F9]/50 mb-2" style={{ fontFamily: 'var(--font-body)' }}>Membership</p>
-              <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
-                Choose Your Plan
-              </h1>
-              <p className="text-white/40 mt-2">Unlock unlimited access to courses, classes, and exclusive content</p>
-            </div>
-
-            {/* Credits display */}
-            {inPersonCredits > 0 && (
-              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20">
-                <MapPin className="h-4 w-4 text-purple-400" />
-                <span className="text-sm text-white/70">In-Person Credits:</span>
-                <span className="text-lg font-bold text-purple-400">{inPersonCredits}</span>
-              </div>
-            )}
-          </div>
+          <p className="text-[11px] uppercase tracking-[0.25em] text-[#E879F9]/50 mb-2" style={{ fontFamily: 'var(--font-body)' }}>Membership</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
+            Choose Your Plan
+          </h1>
+          <p className="text-white/40 mt-2 max-w-lg">
+            Get unlimited access to all online courses, sessions, and exclusive content. Discount codes for in-person sessions can be applied at booking.
+          </p>
         </div>
       </div>
 
@@ -114,14 +91,8 @@ export default function Membership() {
           </ScrollReveal>
         )}
 
-        {/* ── Online Membership Plans ── */}
-        <ScrollReveal>
-          <h2 className="text-xs uppercase tracking-[0.2em] text-[#E879F9]/50 font-semibold mb-6" style={{ fontFamily: 'var(--font-body)' }}>
-            Online Membership
-          </h2>
-        </ScrollReveal>
-
-        <div className="grid md:grid-cols-2 gap-6 mb-16">
+        {/* Pricing Cards */}
+        <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto mb-16">
           {/* Monthly Plan */}
           <ScrollReveal delay={0.05}>
             <div className="relative group rounded-2xl border border-white/[0.08] bg-[#141118] p-6 hover:border-white/[0.15] transition-all duration-300 h-full flex flex-col">
@@ -129,15 +100,15 @@ export default function Membership() {
                 <Sparkles className="h-5 w-5 text-[#E879F9]" />
                 <h3 className="text-lg font-bold text-white">Monthly</h3>
               </div>
-              <p className="text-sm text-white/40 mb-6">Full access to all online courses and classes</p>
+              <p className="text-sm text-white/40 mb-6">Full access to all online courses and sessions</p>
 
               <div className="mb-6">
-                <span className="text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>${pricing?.monthly.price}</span>
+                <span className="text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>€{pricing?.monthly.price}</span>
                 <span className="text-white/40 text-sm">/month</span>
               </div>
 
               <ul className="space-y-3 mb-8 flex-1">
-                {['Unlimited online courses', 'All group classes', 'Premium video content', 'Cancel anytime'].map((item) => (
+                {['Unlimited online courses', 'All online group sessions', 'Premium video content', 'Cancel anytime'].map((item) => (
                   <li key={item} className="flex items-center gap-2.5 text-sm text-white/60">
                     <Check className="h-4 w-4 text-emerald-400 flex-shrink-0" />
                     {item}
@@ -167,13 +138,13 @@ export default function Membership() {
               <p className="text-sm text-white/40 mb-6">Save more with yearly commitment</p>
 
               <div className="mb-2">
-                <span className="text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>${pricing?.annual.price}</span>
+                <span className="text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>€{pricing?.annual.price}</span>
                 <span className="text-white/40 text-sm">/month</span>
               </div>
-              <p className="text-sm text-emerald-400 font-medium mb-6">Save ${pricing?.annual.savingsPerYear}/year</p>
+              <p className="text-sm text-emerald-400 font-medium mb-6">Save €{pricing?.annual.savingsPerYear}/year</p>
 
               <ul className="space-y-3 mb-8 flex-1">
-                {['Unlimited online courses', 'All group classes', 'Premium video content', 'Priority support', 'Cancel anytime'].map((item) => (
+                {['Unlimited online courses', 'All online group sessions', 'Premium video content', 'Priority support', 'Cancel anytime'].map((item) => (
                   <li key={item} className="flex items-center gap-2.5 text-sm text-white/60">
                     <Check className="h-4 w-4 text-emerald-400 flex-shrink-0" />
                     {item}
@@ -192,97 +163,15 @@ export default function Membership() {
           </ScrollReveal>
         </div>
 
-        {/* ── In-Person Credit Packs ── */}
-        <ScrollReveal>
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-xs uppercase tracking-[0.2em] text-[#E879F9]/50 font-semibold" style={{ fontFamily: 'var(--font-body)' }}>
-              In-Person Sessions
-            </h2>
-            {inPersonCredits > 0 && (
-              <span className="text-sm text-purple-400 font-medium">
-                {inPersonCredits} credit{inPersonCredits !== 1 ? 's' : ''} remaining
-              </span>
-            )}
-          </div>
-        </ScrollReveal>
-
-        <div className="grid md:grid-cols-2 gap-6 mb-16">
-          {/* 5-pack */}
-          <ScrollReveal delay={0.05}>
-            <div className="rounded-2xl border border-white/[0.08] bg-[#141118] p-6 hover:border-white/[0.15] transition-all duration-300 h-full flex flex-col">
-              <div className="flex items-center gap-2 mb-4">
-                <MapPin className="h-5 w-5 text-purple-400" />
-                <h3 className="text-lg font-bold text-white">5 Sessions</h3>
-              </div>
-              <p className="text-sm text-white/40 mb-6">Perfect for trying in-person classes</p>
-
-              <div className="mb-2">
-                <span className="text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>${inPersonPricing?.pack5.price}</span>
-              </div>
-              <p className="text-sm text-white/30 mb-6">${inPersonPricing?.pack5.pricePerSession} per session</p>
-
-              <ul className="space-y-3 mb-8 flex-1">
-                {['5 in-person session credits', 'Use at your own pace', 'All class types included', 'Never expires'].map((item) => (
-                  <li key={item} className="flex items-center gap-2.5 text-sm text-white/60">
-                    <Check className="h-4 w-4 text-purple-400 flex-shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-
-              <Button
-                variant="outline"
-                className="w-full border-purple-500/30 text-purple-400 hover:bg-purple-500/10 hover:border-purple-500/50"
-                onClick={() => handleBuyCredits("pack5")}
-                disabled={!!isLoading}
-              >
-                {isLoading === "pack5" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buy 5 Credits"}
-              </Button>
-            </div>
-          </ScrollReveal>
-
-          {/* 10-pack */}
-          <ScrollReveal delay={0.1}>
-            <div className="relative rounded-2xl border-2 border-purple-500/25 bg-[#141118] p-6 hover:border-purple-500/40 transition-all duration-300 h-full flex flex-col">
-              <Badge className="absolute -top-3 left-6 bg-purple-600 text-white border-0">Save $50</Badge>
-
-              <div className="flex items-center gap-2 mb-4">
-                <Zap className="h-5 w-5 text-purple-400" />
-                <h3 className="text-lg font-bold text-white">10 Sessions</h3>
-              </div>
-              <p className="text-sm text-white/40 mb-6">Best value for regular attendees</p>
-
-              <div className="mb-2">
-                <span className="text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>${inPersonPricing?.pack10.price}</span>
-              </div>
-              <p className="text-sm text-emerald-400 font-medium mb-6">${inPersonPricing?.pack10.pricePerSession} per session</p>
-
-              <ul className="space-y-3 mb-8 flex-1">
-                {['10 in-person session credits', 'Use at your own pace', 'All class types included', 'Never expires', 'Best per-session price'].map((item) => (
-                  <li key={item} className="flex items-center gap-2.5 text-sm text-white/60">
-                    <Check className="h-4 w-4 text-purple-400 flex-shrink-0" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-
-              <Button
-                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
-                onClick={() => handleBuyCredits("pack10")}
-                disabled={!!isLoading}
-              >
-                {isLoading === "pack10" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buy 10 Credits"}
-              </Button>
-            </div>
-          </ScrollReveal>
+        {/* Info note */}
+        <div className="text-center space-y-2 max-w-lg mx-auto">
+          <p className="text-white/30 text-sm">
+            You can also purchase individual courses and sessions without a membership.
+          </p>
+          <p className="text-white/30 text-sm">
+            Have an in-person discount code? Apply it when booking the session.
+          </p>
         </div>
-
-        {/* Free account note */}
-        {!isActiveMember && (
-          <div className="text-center text-white/30 text-sm">
-            You can also purchase courses individually without a membership.
-          </div>
-        )}
       </div>
     </div>
   );
