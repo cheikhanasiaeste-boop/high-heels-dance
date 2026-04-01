@@ -57,14 +57,19 @@ export default function ChatWidget({ onClose }: ChatWidgetProps) {
   };
 
   return (
-    <div className="bg-card border rounded-lg shadow-xl flex flex-col h-[500px]">
-      <div className="flex items-center justify-between p-4 border-b">
+    <div className="relative bg-card border rounded-lg shadow-xl flex flex-col h-[500px] overflow-hidden">
+      {/* Elizabeth profile photo as chat background */}
+      <div className="absolute inset-0 z-0">
+        <img src="/profile.jpg" alt="" className="w-full h-full object-cover opacity-[0.07]" />
+      </div>
+      <div className="relative z-10 flex items-center justify-between p-4 border-b bg-card/80 backdrop-blur-sm">
         <h3 className="font-semibold">Chat Support</h3>
         <Button variant="ghost" size="icon" onClick={onClose}>
           <X className="h-4 w-4" />
         </Button>
       </div>
       <AIChatBox
+        className="relative z-10"
         messages={messages}
         onSendMessage={handleSend}
         isLoading={chatMutation.isPending}
