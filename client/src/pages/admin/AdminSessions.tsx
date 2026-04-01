@@ -327,7 +327,7 @@ export default function AdminSessions() {
         });
       }
     } else if (recurrence.enabled && recurrenceDates.length > 1) {
-      // Create multiple sessions from recurrence
+      // Create multiple sessions from recurrence — use sessions.create (availabilitySlots) for payment support
       const startDate = new Date(form.startTime);
       const endDate = new Date(form.endTime);
       const durationMs = endDate.getTime() - startDate.getTime();
@@ -335,32 +335,39 @@ export default function AdminSessions() {
       let created = 0;
       for (const occDate of recurrenceDates) {
         const occStart = new Date(occDate);
-        // Preserve the original time-of-day
         occStart.setHours(startDate.getHours(), startDate.getMinutes(), 0, 0);
         const occEnd = new Date(occStart.getTime() + durationMs);
 
-        createLiveMut.mutate({
+        createMut.mutate({
           title: form.title,
-          description: form.description || undefined,
-          startTime: occStart.toISOString(),
-          endTime: occEnd.toISOString(),
+          description: form.description,
+          startTime: occStart,
+          endTime: occEnd,
+          eventType: form.eventType,
+          location: form.eventType === "in-person" ? form.location : "",
           isFree: form.isFree,
-          price: form.isFree ? undefined : form.price || undefined,
+          price: form.isFree ? "" : form.price,
+          sessionType: form.sessionType,
           capacity: Number(form.capacity),
+          allowDiscountCodes: form.eventType === "in-person" && !form.isFree ? form.allowDiscountCodes : false,
         });
         created++;
       }
       toast.success(`Creating ${created} recurrent sessions...`);
     } else {
-      // Create single session
-      createLiveMut.mutate({
+      // Create single session — use sessions.create (availabilitySlots) for payment support
+      createMut.mutate({
         title: form.title,
-        description: form.description || undefined,
-        startTime: form.startTime,
-        endTime: form.endTime,
+        description: form.description,
+        startTime: new Date(form.startTime),
+        endTime: new Date(form.endTime),
+        eventType: form.eventType,
+        location: form.eventType === "in-person" ? form.location : "",
         isFree: form.isFree,
-        price: form.isFree ? undefined : form.price || undefined,
+        price: form.isFree ? "" : form.price,
+        sessionType: form.sessionType,
         capacity: Number(form.capacity),
+        allowDiscountCodes: form.eventType === "in-person" && !form.isFree ? form.allowDiscountCodes : false,
       });
     }
   };

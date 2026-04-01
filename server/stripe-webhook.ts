@@ -103,8 +103,14 @@ export async function handleStripeWebhook(req: Request, res: Response) {
             amountPaid: ((session.amount_total || 0) / 100).toString(),
           });
           
-          // Mark slot as booked
-          await db.updateAvailabilitySlot(Number(slotId), { isBooked: true });
+          // Update slot booking status (increment for groups, mark booked for private)
+          if (slot.sessionType === 'group') {
+            await db.updateAvailabilitySlot(Number(slotId), {
+              currentBookings: slot.currentBookings + 1,
+            });
+          } else {
+            await db.updateAvailabilitySlot(Number(slotId), { isBooked: true });
+          }
           
           console.log('[Webhook] Session booking completed:', { userId, slotId });
         }

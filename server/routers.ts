@@ -1739,7 +1739,7 @@ export const appRouter = router({
           ],
           mode: 'payment',
           success_url: `${origin}/book-session?success=true`,
-          cancel_url: `${origin}/book-session?cancelled=true`,
+          cancel_url: `${origin}/book-session?canceled=true`,
           client_reference_id: ctx.user.id.toString(),
           customer_email: ctx.user.email || undefined,
           metadata: {
@@ -2242,7 +2242,8 @@ Never be pushy. Be genuinely helpful and make people feel welcome.`;
         price: z.string().optional(),
         sessionType: z.enum(["private", "group"]).default("private"),
         capacity: z.number().int().min(1).default(1),
-        status: z.enum(["draft", "published"]).default("draft"),
+        status: z.enum(["draft", "published"]).default("published"),
+        allowDiscountCodes: z.boolean().default(false),
       }))
       .mutation(async ({ input }) => {
         // Auto-generate Google Meet link if empty for online sessions
