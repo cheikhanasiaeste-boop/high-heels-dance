@@ -1,283 +1,287 @@
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Check, Crown, Sparkles, ArrowLeft, Loader2, AlertCircle } from "lucide-react";
-import { useLocation } from "wouter";
-import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-
+import { Check, Crown, Sparkles, ArrowLeft, Loader2, MapPin, Zap } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 export default function Membership() {
-  const [, navigate] = useLocation();
   const { data: membershipStatus, isLoading: statusLoading } = trpc.membership.getStatus.useQuery();
   const { data: pricing, isLoading: pricingLoading } = trpc.membership.getPricing.useQuery();
+  const { data: inPersonPricing } = trpc.membership.getInPersonPricing.useQuery();
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [discountCode, setDiscountCode] = useState("");
-  const [discountError, setDiscountError] = useState("");
-  const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
-  
+  const [isLoading, setIsLoading] = useState("");
+
   const createCheckout = trpc.membership.createSubscriptionCheckout.useMutation();
+  const purchaseCredits = trpc.membership.purchaseInPersonCredits.useMutation();
 
-  const handleApplyDiscount = async () => {
-    if (!discountCode.trim()) {
-      setDiscountError("Please enter a discount code");
-      return;
+  // Check for payment success in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('success')) {
+      window.history.replaceState({}, '', '/membership');
+    } else if (params.get('credits_success')) {
+      window.history.replaceState({}, '', '/membership');
     }
-    setAppliedDiscount({ code: discountCode });
-    setDiscountError("");
-  };
+  }, []);
 
   const handleUpgrade = async (plan: "monthly" | "annual") => {
     try {
-      setIsLoading(true);
-      const { url } = await createCheckout.mutateAsync({ 
-        plan,
-        discountCode: appliedDiscount?.code,
-      });
-      if (url) {
-        window.location.href = url;
-      }
+      setIsLoading(plan);
+      const { url } = await createCheckout.mutateAsync({ plan });
+      if (url) window.location.href = url;
     } catch (error) {
       console.error('Checkout error:', error);
-      alert('Failed to create checkout session. Please try again.');
     } finally {
-      setIsLoading(false);
+      setIsLoading("");
+    }
+  };
+
+  const handleBuyCredits = async (pack: "pack5" | "pack10") => {
+    try {
+      setIsLoading(pack);
+      const { url } = await purchaseCredits.mutateAsync({ pack });
+      if (url) window.location.href = url;
+    } catch (error) {
+      console.error('Credit purchase error:', error);
+    } finally {
+      setIsLoading("");
     }
   };
 
   if (statusLoading || pricingLoading) {
     return (
-      <div className="container mx-auto py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-muted rounded w-1/3"></div>
-          <div className="h-32 bg-muted rounded"></div>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="h-96 bg-muted rounded"></div>
-            <div className="h-96 bg-muted rounded"></div>
-          </div>
-        </div>
+      <div className="min-h-screen bg-[#0d0010] flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-[#C026D3]" />
       </div>
     );
   }
 
   const isActiveMember = membershipStatus?.isActive;
-  const currentPlan = membershipStatus?.membershipStatus;
+  const inPersonCredits = membershipStatus?.inPersonCredits ?? 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-purple-800 to-pink-900 py-12">
-      <div className="container mx-auto px-4">
-        {/* Back Button */}
-        <button
-          onClick={() => window.history.back()}
-          className="flex items-center gap-2 text-white mb-8 hover:opacity-80 transition"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </button>
+    <div className="min-h-screen bg-[#0d0010]">
+      {/* Header */}
+      <div className="border-b border-white/[0.06]">
+        <div className="container mx-auto px-4 py-8">
+          <button
+            onClick={() => window.history.back()}
+            className="flex items-center gap-2 text-white/50 hover:text-white mb-6 transition-colors text-sm"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </button>
 
-        {/* Header */}
-        <div className="mb-12">
-          <h1 className="text-4xl font-bold text-white mb-2">Membership</h1>
-          <p className="text-purple-100">Manage your subscription and access all courses and classes</p>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.25em] text-[#E879F9]/50 mb-2" style={{ fontFamily: 'var(--font-body)' }}>Membership</p>
+              <h1 className="text-3xl md:text-4xl font-bold text-white tracking-tight" style={{ fontFamily: 'var(--font-display)' }}>
+                Choose Your Plan
+              </h1>
+              <p className="text-white/40 mt-2">Unlock unlimited access to courses, classes, and exclusive content</p>
+            </div>
+
+            {/* Credits display */}
+            {inPersonCredits > 0 && (
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                <MapPin className="h-4 w-4 text-purple-400" />
+                <span className="text-sm text-white/70">In-Person Credits:</span>
+                <span className="text-lg font-bold text-purple-400">{inPersonCredits}</span>
+              </div>
+            )}
+          </div>
         </div>
+      </div>
 
-        {/* Current Plan */}
+      <div className="container mx-auto px-4 py-10">
+        {/* Current plan banner */}
         {isActiveMember && (
-          <Card className="mb-8 bg-gradient-to-r from-purple-600 to-pink-600 border-0">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Crown className="h-5 w-5" />
-                Current Plan
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-purple-100">
-                You have an active {currentPlan} membership until {membershipStatus?.membershipEndDate ? new Date(membershipStatus.membershipEndDate).toLocaleDateString() : 'N/A'}
-              </p>
-            </CardContent>
-          </Card>
+          <ScrollReveal>
+            <div className="mb-10 p-5 rounded-2xl bg-gradient-to-r from-fuchsia-500/10 to-purple-500/10 border border-fuchsia-500/20">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-fuchsia-500/20">
+                  <Crown className="h-5 w-5 text-[#E879F9]" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">Active {membershipStatus?.membershipStatus} membership</p>
+                  <p className="text-xs text-white/40">
+                    Valid until {membershipStatus?.membershipEndDate ? new Date(membershipStatus.membershipEndDate).toLocaleDateString() : 'N/A'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </ScrollReveal>
         )}
 
-        {/* Discount Code Section */}
-        <Card className="mb-8 bg-white">
-          <CardHeader>
-            <CardTitle>Have a Discount Code?</CardTitle>
-            <CardDescription>Apply a discount code to get savings on your membership</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-2">
-              <Input
-                placeholder="Enter discount code"
-                value={discountCode}
-                onChange={(e) => {
-                  setDiscountCode(e.target.value.toUpperCase());
-                  setDiscountError("");
-                }}
-                disabled={!!appliedDiscount}
-              />
-              {!appliedDiscount ? (
-                <Button onClick={handleApplyDiscount}>Apply</Button>
-              ) : (
-                <Button 
-                  variant="outline"
-                  onClick={() => {
-                    setAppliedDiscount(null);
-                    setDiscountCode("");
-                  }}
-                >
-                  Remove
-                </Button>
-              )}
-            </div>
-            {discountError && (
-              <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{discountError}</AlertDescription>
-              </Alert>
-            )}
-            {appliedDiscount && (
-              <Alert className="bg-green-50 border-green-200">
-                <Check className="h-4 w-4 text-green-600" />
-                <AlertDescription className="text-green-800">
-                  Discount code "{appliedDiscount.code}" applied!
-                </AlertDescription>
-              </Alert>
-            )}
-          </CardContent>
-        </Card>
+        {/* ── Online Membership Plans ── */}
+        <ScrollReveal>
+          <h2 className="text-xs uppercase tracking-[0.2em] text-[#E879F9]/50 font-semibold mb-6" style={{ fontFamily: 'var(--font-body)' }}>
+            Online Membership
+          </h2>
+        </ScrollReveal>
 
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
+        <div className="grid md:grid-cols-2 gap-6 mb-16">
           {/* Monthly Plan */}
-          <Card className="flex flex-col bg-white">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-purple-600" />
-                  Monthly Membership
-                </CardTitle>
+          <ScrollReveal delay={0.05}>
+            <div className="relative group rounded-2xl border border-white/[0.08] bg-[#141118] p-6 hover:border-white/[0.15] transition-all duration-300 h-full flex flex-col">
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles className="h-5 w-5 text-[#E879F9]" />
+                <h3 className="text-lg font-bold text-white">Monthly</h3>
               </div>
-              <CardDescription>Full access to all courses and classes for 1 month</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1">
+              <p className="text-sm text-white/40 mb-6">Full access to all online courses and classes</p>
+
               <div className="mb-6">
-                <p className="text-3xl font-bold text-purple-600">${pricing?.monthly.price}</p>
-                <p className="text-sm text-muted-foreground">/month</p>
+                <span className="text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>${pricing?.monthly.price}</span>
+                <span className="text-white/40 text-sm">/month</span>
               </div>
-              <ul className="space-y-3">
-                <li className="flex items-center gap-2 text-sm">
-                  <Check className="h-4 w-4 text-green-600" />
-                  Unlimited access to all courses
-                </li>
-                <li className="flex items-center gap-2 text-sm">
-                  <Check className="h-4 w-4 text-green-600" />
-                  Join all group and private classes
-                </li>
-                <li className="flex items-center gap-2 text-sm">
-                  <Check className="h-4 w-4 text-green-600" />
-                  Access to premium content
-                </li>
-                <li className="flex items-center gap-2 text-sm">
-                  <Check className="h-4 w-4 text-green-600" />
-                  Cancel anytime
-                </li>
+
+              <ul className="space-y-3 mb-8 flex-1">
+                {['Unlimited online courses', 'All group classes', 'Premium video content', 'Cancel anytime'].map((item) => (
+                  <li key={item} className="flex items-center gap-2.5 text-sm text-white/60">
+                    <Check className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
               </ul>
-            </CardContent>
-            <CardFooter>
+
               <Button
-                className="w-full bg-purple-600 hover:bg-purple-700"
+                className="w-full glow-button bg-[#C026D3] hover:bg-[#A21CAF] text-white"
                 onClick={() => handleUpgrade("monthly")}
-                disabled={isLoading || isActiveMember}
+                disabled={!!isLoading || !!isActiveMember}
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  "Subscribe Monthly"
-                )}
+                {isLoading === "monthly" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Subscribe Monthly"}
               </Button>
-            </CardFooter>
-          </Card>
+            </div>
+          </ScrollReveal>
 
           {/* Annual Plan */}
-          <Card className="flex flex-col bg-white border-2 border-purple-600 relative">
-            <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-purple-600">
-              Best Value
-            </Badge>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="flex items-center gap-2">
-                  <Crown className="h-5 w-5 text-purple-600" />
-                  Annual Membership
-                </CardTitle>
+          <ScrollReveal delay={0.1}>
+            <div className="relative group rounded-2xl border-2 border-[#C026D3]/30 bg-[#141118] p-6 hover:border-[#C026D3]/50 transition-all duration-300 h-full flex flex-col">
+              <Badge className="absolute -top-3 left-6 bg-[#C026D3] text-white border-0">Best Value</Badge>
+
+              <div className="flex items-center gap-2 mb-4">
+                <Crown className="h-5 w-5 text-[#E879F9]" />
+                <h3 className="text-lg font-bold text-white">Annual</h3>
               </div>
-              <CardDescription>Full access to all courses and classes for 12 months</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1">
-              <div className="mb-6">
-                <p className="text-3xl font-bold text-purple-600">${pricing?.annual.price}</p>
-                <p className="text-sm text-muted-foreground">/month billed monthly</p>
-                <p className="text-sm text-green-600 font-semibold mt-2">Save ${pricing?.annual.savingsPerYear} per year</p>
+              <p className="text-sm text-white/40 mb-6">Save more with yearly commitment</p>
+
+              <div className="mb-2">
+                <span className="text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>${pricing?.annual.price}</span>
+                <span className="text-white/40 text-sm">/month</span>
               </div>
-              <ul className="space-y-3">
-                <li className="flex items-center gap-2 text-sm">
-                  <Check className="h-4 w-4 text-green-600" />
-                  Unlimited access to all courses
-                </li>
-                <li className="flex items-center gap-2 text-sm">
-                  <Check className="h-4 w-4 text-green-600" />
-                  Join all group and private classes
-                </li>
-                <li className="flex items-center gap-2 text-sm">
-                  <Check className="h-4 w-4 text-green-600" />
-                  Access to premium content
-                </li>
-                <li className="flex items-center gap-2 text-sm">
-                  <Check className="h-4 w-4 text-green-600" />
-                  Priority support
-                </li>
-                <li className="flex items-center gap-2 text-sm">
-                  <Check className="h-4 w-4 text-green-600" />
-                  Cancel anytime
-                </li>
+              <p className="text-sm text-emerald-400 font-medium mb-6">Save ${pricing?.annual.savingsPerYear}/year</p>
+
+              <ul className="space-y-3 mb-8 flex-1">
+                {['Unlimited online courses', 'All group classes', 'Premium video content', 'Priority support', 'Cancel anytime'].map((item) => (
+                  <li key={item} className="flex items-center gap-2.5 text-sm text-white/60">
+                    <Check className="h-4 w-4 text-emerald-400 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
               </ul>
-            </CardContent>
-            <CardFooter>
+
               <Button
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90"
+                className="w-full glow-button bg-gradient-to-r from-[#C026D3] to-purple-600 hover:opacity-90 text-white"
                 onClick={() => handleUpgrade("annual")}
-                disabled={isLoading || isActiveMember}
+                disabled={!!isLoading || !!isActiveMember}
               >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  "Subscribe Annually"
-                )}
+                {isLoading === "annual" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Subscribe Annually"}
               </Button>
-            </CardFooter>
-          </Card>
+            </div>
+          </ScrollReveal>
         </div>
 
-        {/* Free Account Info */}
+        {/* ── In-Person Credit Packs ── */}
+        <ScrollReveal>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xs uppercase tracking-[0.2em] text-[#E879F9]/50 font-semibold" style={{ fontFamily: 'var(--font-body)' }}>
+              In-Person Sessions
+            </h2>
+            {inPersonCredits > 0 && (
+              <span className="text-sm text-purple-400 font-medium">
+                {inPersonCredits} credit{inPersonCredits !== 1 ? 's' : ''} remaining
+              </span>
+            )}
+          </div>
+        </ScrollReveal>
+
+        <div className="grid md:grid-cols-2 gap-6 mb-16">
+          {/* 5-pack */}
+          <ScrollReveal delay={0.05}>
+            <div className="rounded-2xl border border-white/[0.08] bg-[#141118] p-6 hover:border-white/[0.15] transition-all duration-300 h-full flex flex-col">
+              <div className="flex items-center gap-2 mb-4">
+                <MapPin className="h-5 w-5 text-purple-400" />
+                <h3 className="text-lg font-bold text-white">5 Sessions</h3>
+              </div>
+              <p className="text-sm text-white/40 mb-6">Perfect for trying in-person classes</p>
+
+              <div className="mb-2">
+                <span className="text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>${inPersonPricing?.pack5.price}</span>
+              </div>
+              <p className="text-sm text-white/30 mb-6">${inPersonPricing?.pack5.pricePerSession} per session</p>
+
+              <ul className="space-y-3 mb-8 flex-1">
+                {['5 in-person session credits', 'Use at your own pace', 'All class types included', 'Never expires'].map((item) => (
+                  <li key={item} className="flex items-center gap-2.5 text-sm text-white/60">
+                    <Check className="h-4 w-4 text-purple-400 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <Button
+                variant="outline"
+                className="w-full border-purple-500/30 text-purple-400 hover:bg-purple-500/10 hover:border-purple-500/50"
+                onClick={() => handleBuyCredits("pack5")}
+                disabled={!!isLoading}
+              >
+                {isLoading === "pack5" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buy 5 Credits"}
+              </Button>
+            </div>
+          </ScrollReveal>
+
+          {/* 10-pack */}
+          <ScrollReveal delay={0.1}>
+            <div className="relative rounded-2xl border-2 border-purple-500/25 bg-[#141118] p-6 hover:border-purple-500/40 transition-all duration-300 h-full flex flex-col">
+              <Badge className="absolute -top-3 left-6 bg-purple-600 text-white border-0">Save $50</Badge>
+
+              <div className="flex items-center gap-2 mb-4">
+                <Zap className="h-5 w-5 text-purple-400" />
+                <h3 className="text-lg font-bold text-white">10 Sessions</h3>
+              </div>
+              <p className="text-sm text-white/40 mb-6">Best value for regular attendees</p>
+
+              <div className="mb-2">
+                <span className="text-4xl font-bold text-white" style={{ fontFamily: 'var(--font-display)' }}>${inPersonPricing?.pack10.price}</span>
+              </div>
+              <p className="text-sm text-emerald-400 font-medium mb-6">${inPersonPricing?.pack10.pricePerSession} per session</p>
+
+              <ul className="space-y-3 mb-8 flex-1">
+                {['10 in-person session credits', 'Use at your own pace', 'All class types included', 'Never expires', 'Best per-session price'].map((item) => (
+                  <li key={item} className="flex items-center gap-2.5 text-sm text-white/60">
+                    <Check className="h-4 w-4 text-purple-400 flex-shrink-0" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <Button
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white"
+                onClick={() => handleBuyCredits("pack10")}
+                disabled={!!isLoading}
+              >
+                {isLoading === "pack10" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Buy 10 Credits"}
+              </Button>
+            </div>
+          </ScrollReveal>
+        </div>
+
+        {/* Free account note */}
         {!isActiveMember && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Free Account</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-muted-foreground">
-                Purchase courses individually or upgrade to a membership for full access to all courses and classes
-              </p>
-            </CardContent>
-          </Card>
+          <div className="text-center text-white/30 text-sm">
+            You can also purchase courses individually without a membership.
+          </div>
         )}
       </div>
     </div>

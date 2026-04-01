@@ -30,6 +30,8 @@ export const users = pgTable("users", {
   membershipStartDate: timestamp("membershipStartDate"),
   membershipEndDate: timestamp("membershipEndDate"),
   stripeSubscriptionId: varchar("stripeSubscriptionId", { length: 255 }),
+  // In-person session credits (separate from online membership)
+  inPersonCredits: integer("inPersonCredits").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),

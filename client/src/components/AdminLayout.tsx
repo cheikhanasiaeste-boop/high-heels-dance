@@ -42,12 +42,33 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <>
       <AdminNotifications />
-      <div className="min-h-screen bg-background flex">
+      {/* Admin uses a light color override to stand out from the dark public site */}
+      <div
+        className="min-h-screen flex"
+        style={{
+          '--background': 'oklch(0.97 0.01 280)',
+          '--foreground': 'oklch(0.20 0.02 280)',
+          '--card': 'oklch(1 0 0)',
+          '--card-foreground': 'oklch(0.20 0.02 280)',
+          '--popover': 'oklch(1 0 0)',
+          '--popover-foreground': 'oklch(0.20 0.02 280)',
+          '--muted': 'oklch(0.95 0.01 280)',
+          '--muted-foreground': 'oklch(0.45 0.02 280)',
+          '--border': 'oklch(0.91 0.01 280)',
+          '--input': 'oklch(0.91 0.01 280)',
+          '--secondary': 'oklch(0.95 0.02 310)',
+          '--secondary-foreground': 'oklch(0.25 0.03 310)',
+          '--accent': 'oklch(0.93 0.04 320)',
+          '--accent-foreground': 'oklch(0.20 0.02 280)',
+          backgroundColor: 'oklch(0.97 0.01 280)',
+          color: 'oklch(0.20 0.02 280)',
+        } as React.CSSProperties}
+      >
       {/* Side Menu */}
-      <aside className="w-64 bg-card border-r border-border flex flex-col fixed left-0 top-0 h-screen">
+      <aside className="w-64 bg-white border-r border-gray-200 flex flex-col fixed left-0 top-0 h-screen">
         {/* Header */}
-        <div className="p-6 border-b border-border">
-          <Link href="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+        <div className="p-6 border-b border-gray-200">
+          <Link href="/" className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors">
             <ArrowLeft className="h-4 w-4" />
             Back to Home
           </Link>
@@ -62,16 +83,16 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = location === item.path;
-              
+
               return (
                 <li key={item.path}>
-                  <Link 
+                  <Link
                     href={item.path}
                     className={cn(
                       "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors relative",
                       isActive
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                        ? "bg-[#C026D3] text-white"
+                        : "text-gray-600 hover:bg-fuchsia-50 hover:text-gray-900"
                     )}
                   >
                     <Icon className="h-5 w-5" />
@@ -94,8 +115,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-border">
-          <p className="text-xs text-muted-foreground text-center">
+        <div className="p-4 border-t border-gray-200">
+          <p className="text-xs text-gray-400 text-center">
             High Heels Dance Admin
           </p>
         </div>
