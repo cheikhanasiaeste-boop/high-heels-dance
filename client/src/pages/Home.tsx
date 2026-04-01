@@ -350,9 +350,25 @@ export default function Home() {
         {/* Hero content — pushed down to leave room for transparent nav */}
         <div className="flex-1 flex items-center relative z-10">
           <div className="container px-4 md:px-6 w-full py-32 md:py-40">
-            <div className="grid lg:grid-cols-[1fr_auto] gap-10 lg:gap-16 items-center">
-              {/* Left: Text content */}
-              <div className="text-center lg:text-left animate-fade-up">
+            <div className="flex flex-col items-center text-center">
+              {/* Profile photo — centered above text */}
+              <div className="mb-8 md:mb-10 animate-fade-up">
+                <div className="relative group overflow-hidden rounded-2xl">
+                  <img
+                    src={heroProfilePictureUrl || "/profile.jpg"}
+                    alt="Elizabeth Zolotova"
+                    className="w-40 h-52 md:w-56 md:h-72 object-cover"
+                    onError={(e) => { (e.target as HTMLImageElement).src = '/profile-photo.jpeg'; }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#2e0033]/95 via-[#2e0033]/60 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-4">
+                    <p className="text-white font-bold text-sm mb-0.5 translate-y-3 group-hover:translate-y-0 transition-transform duration-500" style={{ fontFamily: 'var(--font-display)' }}>Elizabeth Zolotova</p>
+                    <p className="text-[#E879F9] text-xs font-medium translate-y-3 group-hover:translate-y-0 transition-transform duration-500 delay-75">High Heels Dance Instructor</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Text content — centered */}
+              <div className="animate-fade-up">
                 {/* Label */}
                 <p className="text-xs uppercase tracking-[0.3em] text-[#E879F9]/60 font-semibold mb-4 animate-fade-up" style={{ fontFamily: 'var(--font-body)' }}>
                   Professional Dance Education
@@ -368,14 +384,14 @@ export default function Home() {
 
                 {/* Tagline */}
                 <p
-                  className="text-lg md:text-xl mb-8 md:mb-10 max-w-lg mx-auto lg:mx-0 leading-relaxed text-white/60 animate-fade-up-delay-2"
+                  className="text-lg md:text-xl mb-8 md:mb-10 max-w-xl mx-auto leading-relaxed text-white/60 animate-fade-up-delay-2"
                   style={{ fontFamily: 'var(--font-body)', fontWeight: 300 }}
                 >
                   {heroTagline || "Professional dancer & teacher — fall in love with dance."}
                 </p>
 
                 {/* CTA buttons */}
-                <div className="flex flex-col sm:flex-row justify-center lg:justify-start gap-3 md:gap-4 mb-8 animate-fade-up-delay-3">
+                <div className="flex flex-col sm:flex-row justify-center gap-3 md:gap-4 mb-8 animate-fade-up-delay-3">
                   <Link href="/book-session">
                     <span className="glow-button inline-flex items-center gap-2.5 px-8 sm:px-10 py-4 text-sm font-semibold text-[#0d0010] bg-white hover:bg-white/90 rounded-full shadow-lg tracking-wide cursor-pointer uppercase">
                       Book a Session
@@ -390,7 +406,7 @@ export default function Home() {
                 </div>
 
                 {/* Social links */}
-                <div className="flex justify-center lg:justify-start gap-3 animate-fade-up-delay-3">
+                <div className="flex justify-center gap-3 animate-fade-up-delay-3">
                   {[
                     { href: "https://www.instagram.com/elizabeth_zolotova/", Icon: Instagram },
                     { href: "https://www.youtube.com/@HighHeelsTutorials", Icon: Youtube },
@@ -405,35 +421,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Right: Editorial profile photo */}
-              <div className="hidden lg:block animate-fade-up-delay-2">
-                <div className="relative group overflow-hidden rounded-lg">
-                  <img
-                    src={heroProfilePictureUrl || "/profile.jpg"}
-                    alt="Elizabeth Zolotova"
-                    className="w-[340px] h-[440px] object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).src = '/profile-photo.jpeg'; }}
-                  />
-                  {/* Hover overlay — bio presentation */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#2e0033]/95 via-[#2e0033]/70 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-6">
-                    <p className="text-white font-bold text-lg mb-1 translate-y-4 group-hover:translate-y-0 transition-transform duration-500" style={{ fontFamily: 'var(--font-display)' }}>Elizabeth Zolotova</p>
-                    <p className="text-[#E879F9] text-sm font-medium mb-3 translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-75">High Heels Dance Instructor</p>
-                    <p className="text-white/60 text-sm leading-relaxed translate-y-4 group-hover:translate-y-0 transition-transform duration-500 delay-150">Passionate about empowering women through dance. Transforming confidence, one step at a time.</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mobile: profile photo below CTAs */}
-              <div className="lg:hidden flex justify-center animate-fade-up-delay-3">
-                <div className="relative overflow-hidden rounded-lg">
-                  <img
-                    src={heroProfilePictureUrl || "/profile.jpg"}
-                    alt="Elizabeth Zolotova"
-                    className="w-52 h-68 object-cover"
-                    onError={(e) => { (e.target as HTMLImageElement).src = '/profile-photo.jpeg'; }}
-                  />
-                </div>
-              </div>
             </div>
           </div>
         </div>
