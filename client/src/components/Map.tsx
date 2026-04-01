@@ -86,21 +86,30 @@ declare global {
   }
 }
 
-const API_KEY = import.meta.env.VITE_FRONTEND_FORGE_API_KEY;
-const FORGE_BASE_URL =
-  import.meta.env.VITE_FRONTEND_FORGE_API_URL ||
-  "https://forge.butterfly-effect.dev";
-const MAPS_PROXY_URL = `${FORGE_BASE_URL}/v1/maps/proxy`;
+let mapScriptUrlCache: string | null = null;
+
+async function getMapScriptUrl(): Promise<string> {
+  if (mapScriptUrlCache) return mapScriptUrlCache;
+  const res = await fetch("/api/maps/script-url");
+  const data = await res.json();
+  mapScriptUrlCache = data.scriptUrlFull;
+  return mapScriptUrlCache!;
+}
 
 function loadMapScript() {
-  return new Promise(resolve => {
+  return new Promise(async (resolve) => {
+    if (window.google?.maps) {
+      resolve(null);
+      return;
+    }
+    const scriptUrl = await getMapScriptUrl();
     const script = document.createElement("script");
-    script.src = `${MAPS_PROXY_URL}/maps/api/js?key=${API_KEY}&v=weekly&libraries=marker,places,geocoding,geometry`;
+    script.src = scriptUrl;
     script.async = true;
     script.crossOrigin = "anonymous";
     script.onload = () => {
       resolve(null);
-      script.remove(); // Clean up immediately
+      script.remove();
     };
     script.onerror = () => {
       console.error("Failed to load Google Maps script");

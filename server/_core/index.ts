@@ -90,6 +90,20 @@ async function startServer() {
     legacyHeaders: false,
   }));
 
+  // ── Maps proxy — keeps Forge API key server-side ──────────────────
+  app.get("/api/maps/script-url", (_req, res) => {
+    const forgeKey = process.env.BUILT_IN_FORGE_API_KEY || process.env.VITE_FRONTEND_FORGE_API_KEY;
+    const forgeBase = process.env.FORGE_API_URL || "https://forge.butterfly-effect.dev";
+    if (!forgeKey) {
+      return res.status(500).json({ error: "Maps not configured" });
+    }
+    // Return the script URL with key — the key stays server-side, only the URL is returned
+    res.json({
+      scriptUrl: `${forgeBase}/v1/maps/proxy/maps/api/js?key=${forgeKey}&v=weekly&libraries=places`,
+      scriptUrlFull: `${forgeBase}/v1/maps/proxy/maps/api/js?key=${forgeKey}&v=weekly&libraries=marker,places,geocoding,geometry`,
+    });
+  });
+
   // Stripe webhook MUST be registered BEFORE express.json() middleware
   // This is required for webhook signature verification
   app.post(

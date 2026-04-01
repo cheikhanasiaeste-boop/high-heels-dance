@@ -7,21 +7,26 @@ declare global {
   }
 }
 
-const API_KEY = import.meta.env.VITE_FRONTEND_FORGE_API_KEY;
-const FORGE_BASE_URL =
-  import.meta.env.VITE_FRONTEND_FORGE_API_URL ||
-  "https://forge.butterfly-effect.dev";
-const MAPS_PROXY_URL = `${FORGE_BASE_URL}/v1/maps/proxy`;
+let scriptUrlCache: string | null = null;
+
+async function getMapScriptUrl(): Promise<string> {
+  if (scriptUrlCache) return scriptUrlCache;
+  const res = await fetch("/api/maps/script-url");
+  const data = await res.json();
+  scriptUrlCache = data.scriptUrl;
+  return scriptUrlCache!;
+}
 
 function loadMapScript() {
-  return new Promise((resolve) => {
+  return new Promise(async (resolve) => {
     if (window.google?.maps) {
       resolve(window.google);
       return;
     }
 
+    const scriptUrl = await getMapScriptUrl();
     const script = document.createElement("script");
-    script.src = `${MAPS_PROXY_URL}/maps/api/js?key=${API_KEY}&v=weekly&libraries=places`;
+    script.src = scriptUrl;
     script.async = true;
     script.crossOrigin = "anonymous";
     script.onload = () => resolve(window.google);
@@ -53,7 +58,6 @@ export function AddressAutocomplete({
     loadMapScript().then(() => {
       if (!mounted || !inputRef.current || !window.google) return;
 
-      // Initialize autocomplete
       autocompleteRef.current = new window.google.maps.places.Autocomplete(
         inputRef.current,
         {
@@ -62,7 +66,6 @@ export function AddressAutocomplete({
         }
       );
 
-      // Listen for place selection
       autocompleteRef.current.addListener("place_changed", () => {
         const place = autocompleteRef.current?.getPlace();
         if (place?.formatted_address) {
