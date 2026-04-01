@@ -140,7 +140,9 @@ export const sessionDiscountRouter = router({
           packageGroup,
           sessionId: input.sessionId,
           createdByAdminId: ctx.user.id,
-          expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
+          expiresAt: input.expiresAt
+            ? new Date(input.expiresAt)
+            : new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // default: 3 months
         });
         codes.push(code);
       }

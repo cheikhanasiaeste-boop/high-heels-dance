@@ -111,16 +111,18 @@ export function setupTelegramBot() {
         packageGroup,
         sessionId,
         createdByAdminId: adminId,
+        expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 3 months
       });
       codes.push(code);
     }
 
     const sessionLabel = sessionId !== null ? `session #${sessionId}` : "any in-person session";
     const codeList = codes.map((c) => `\`${c}\``).join("\n");
+    const expiryDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 
     bot.sendMessage(
       msg.chat.id,
-      `✅ Generated ${count} code${count > 1 ? "s" : ""} for ${sessionLabel}:\n\n${codeList}`,
+      `✅ Generated ${count} code${count > 1 ? "s" : ""} for ${sessionLabel}:\n\n${codeList}\n\n_Valid until ${expiryDate}_`,
       { parse_mode: "Markdown" }
     );
   });
