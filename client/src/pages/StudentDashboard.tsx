@@ -12,7 +12,6 @@ import {
   Clock,
   ArrowRight,
   ArrowLeft,
-  Home,
   Flame,
   GraduationCap,
   Loader2,
@@ -86,12 +85,21 @@ export default function StudentDashboard() {
   return (
     <div className="min-h-screen bg-background">
       {/* ── Header ── */}
-      <div className="bg-gradient-to-r from-fuchsia-700 via-pink-600 to-purple-700 text-white">
-        <div className="container max-w-6xl px-4 py-10">
+      <div className="bg-gradient-to-r from-[#1a0a20] via-[#2e0033] to-[#1a0a20] border-b border-white/[0.06] text-white">
+        <div className="container max-w-6xl px-4 py-8">
+          {/* Top row: Home button on left */}
+          <div className="mb-4">
+            <Link href="/">
+              <button className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.06] hover:bg-white/[0.12] text-white/70 hover:text-white text-sm font-medium transition-all border border-white/10 hover:border-white/20">
+                <ArrowLeft className="h-4 w-4" />
+                Home
+              </button>
+            </Link>
+          </div>
+          {/* Title row */}
           <div className="flex items-center justify-between">
-            {/* Left: My Studio + Welcome */}
             <div>
-              <p className="text-pink-200/80 text-[11px] uppercase tracking-[0.25em] mb-1.5">My Studio</p>
+              <p className="text-[#E879F9]/60 text-[11px] uppercase tracking-[0.25em] mb-1.5" style={{ fontFamily: 'var(--font-body)' }}>My Studio</p>
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
                 Welcome back, {firstName}
                 {stats.streakDays > 0 && (
@@ -102,13 +110,6 @@ export default function StudentDashboard() {
                 )}
               </h1>
             </div>
-            {/* Right: Home button — clearly clickable */}
-            <Link href="/">
-              <button className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-sm text-white text-sm font-medium transition-all border border-white/20 hover:border-white/40">
-                <Home className="h-4 w-4" />
-                Home
-              </button>
-            </Link>
           </div>
         </div>
       </div>
@@ -194,7 +195,7 @@ export default function StudentDashboard() {
                   <div className="flex items-center justify-between mb-3">
                     <Heading icon={<BookOpen className="h-5 w-5" />} title="My Courses" />
                     <Link href="/courses">
-                      <Button variant="ghost" size="sm" className="text-[#C026D3] hover:text-[#A21CAF] hover:bg-fuchsia-50 gap-1">
+                      <Button variant="ghost" size="sm" className="text-[#C026D3] hover:text-[#A21CAF] hover:bg-fuchsia-500/10 gap-1">
                         Browse All <ArrowRight className="h-4 w-4" />
                       </Button>
                     </Link>
@@ -229,7 +230,7 @@ export default function StudentDashboard() {
                     <div className="flex items-center justify-between mb-4">
                       <Heading icon={<Sparkles className="h-5 w-5" />} title="Recommended For You" />
                       <Link href="/courses">
-                        <Button variant="ghost" size="sm" className="text-[#C026D3] hover:text-[#A21CAF] hover:bg-fuchsia-50 gap-1">
+                        <Button variant="ghost" size="sm" className="text-[#C026D3] hover:text-[#A21CAF] hover:bg-fuchsia-500/10 gap-1">
                           See All <ArrowRight className="h-4 w-4" />
                         </Button>
                       </Link>
@@ -254,7 +255,7 @@ export default function StudentDashboard() {
                                 <span className={`px-3 py-1.5 rounded-full text-sm font-bold shadow-lg ${
                                   course.isFree
                                     ? "bg-emerald-500 text-white"
-                                    : "bg-white text-[#C026D3]"
+                                    : "bg-[#141118] text-[#E879F9]"
                                 }`}>
                                   {course.isFree ? "Free" : `€${course.price}`}
                                 </span>
@@ -309,7 +310,7 @@ export default function StudentDashboard() {
                           return (
                             <Link key={session.id} href={`/live-session/${session.id}`}>
                               <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group">
-                                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-fuchsia-50 dark:bg-fuchsia-900/20 flex-shrink-0">
+                                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-fuchsia-500/10 flex-shrink-0">
                                   <Video className="h-4 w-4 text-[#C026D3]" />
                                 </div>
                                 <div className="flex-1 min-w-0">
@@ -360,7 +361,7 @@ export default function StudentDashboard() {
                         {bookings.map((booking: any) => (
                           <Link key={booking.id} href={`/session/${booking.id}`}>
                             <div className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer group">
-                              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-pink-50 dark:bg-pink-900/20 flex-shrink-0">
+                              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-pink-500/10 flex-shrink-0">
                                 <CalendarCheck className="h-4 w-4 text-[#C026D3]" />
                               </div>
                               <div className="flex-1 min-w-0">
@@ -414,9 +415,9 @@ function Heading({ icon, title }: { icon: React.ReactNode; title: string }) {
 
 function StatCard({ icon, label, value, accent }: { icon: React.ReactNode; label: string; value: string | number; accent?: boolean }) {
   return (
-    <Card className={`shadow-md transition-all hover:shadow-lg border-t-2 ${accent ? "border-t-orange-300 ring-2 ring-orange-200 dark:ring-orange-800" : "border-t-fuchsia-200/50"}`}>
+    <Card className={`shadow-md shadow-fuchsia-500/5 transition-all hover:shadow-lg border-t-2 ${accent ? "border-t-orange-400 ring-1 ring-orange-400/20" : "border-t-fuchsia-500/30"}`}>
       <CardContent className="p-4 flex items-center gap-3">
-        <div className={`flex h-11 w-11 items-center justify-center rounded-xl flex-shrink-0 ${accent ? "bg-orange-50 dark:bg-orange-950/30" : "bg-muted"}`}>
+        <div className={`flex h-11 w-11 items-center justify-center rounded-xl flex-shrink-0 ${accent ? "bg-orange-500/10" : "bg-fuchsia-500/10"}`}>
           {icon}
         </div>
         <div>
@@ -452,8 +453,8 @@ function CourseCard({ course }: { course: any }) {
           </div>
         )}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-          <div className="h-10 w-10 rounded-full bg-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
-            <Play className="h-4 w-4 text-[#C026D3] ml-0.5" />
+          <div className="h-10 w-10 rounded-full bg-[#C026D3] flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg">
+            <Play className="h-4 w-4 text-white ml-0.5" />
           </div>
         </div>
       </Link>
