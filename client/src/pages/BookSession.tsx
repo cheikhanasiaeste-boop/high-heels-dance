@@ -640,8 +640,8 @@ export default function BookSession() {
               />
             </div>
 
-            {/* Discount code input — for paid in-person sessions */}
-            {selectedSlot && selectedSlot.price && Number(selectedSlot.price) > 0 && selectedSlot.eventType === "in-person" && (
+            {/* Discount code input — only for paid in-person sessions with allowDiscountCodes enabled */}
+            {selectedSlot && selectedSlot.price && Number(selectedSlot.price) > 0 && selectedSlot.eventType === "in-person" && selectedSlot.allowDiscountCodes && (
               <div className="space-y-2 pt-2 border-t border-white/10">
                 <Label htmlFor="discount">Discount Code</Label>
                 <div className="flex gap-2">

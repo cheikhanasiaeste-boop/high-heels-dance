@@ -1597,7 +1597,15 @@ export const appRouter = router({
         // If session is paid, check for valid discount code
         let usedDiscountCode = false;
         if (!slot.isFree && input.discountCode) {
-          // Validate and redeem the code in one step
+          // Session must have allowDiscountCodes enabled
+          if (!(slot as any).allowDiscountCodes) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'This session does not accept discount codes' });
+          }
+          if (slot.eventType !== 'in-person') {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'Discount codes are only for in-person sessions' });
+          }
+
+          // Validate and redeem the code
           const { sessionDiscountCodes } = await import("../drizzle/schema");
           const { eq, and, isNull } = await import("drizzle-orm");
           const { db: drizzleDb } = await import("./db");
@@ -1619,11 +1627,8 @@ export const appRouter = router({
           if (discount.expiresAt && new Date() > discount.expiresAt) {
             throw new TRPCError({ code: 'BAD_REQUEST', message: 'Discount code has expired' });
           }
-          if (discount.sessionId !== null && discount.sessionId !== input.slotId) {
-            throw new TRPCError({ code: 'BAD_REQUEST', message: 'Discount code is not valid for this session' });
-          }
 
-          // Redeem the code (atomic: only updates if still unused)
+          // Atomic redeem
           await drizzleDb
             .update(sessionDiscountCodes)
             .set({ usedByUserId: ctx.user.id, usedAt: new Date() })

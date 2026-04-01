@@ -133,6 +133,7 @@ export const availabilitySlots = pgTable("availabilitySlots", {
   currentBookings: integer("currentBookings").default(0).notNull(),
   isBooked: boolean("isBooked").default(false).notNull(),
   status: text("status").$type<"draft" | "published">().default("published").notNull(),
+  allowDiscountCodes: boolean("allowDiscountCodes").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
@@ -454,7 +455,6 @@ export const sessionDiscountCodes = pgTable("sessionDiscountCodes", {
   code: varchar("code", { length: 20 }).notNull().unique(),
   type: text("type").$type<"single" | "package">().notNull(),
   packageGroup: varchar("packageGroup", { length: 40 }), // groups codes from same /generate package call
-  sessionId: integer("sessionId"), // null = any in-person session; specific ID = only that session
   usedByUserId: integer("usedByUserId").references(() => users.id),
   usedAt: timestamp("usedAt"),
   createdByAdminId: integer("createdByAdminId").notNull().references(() => users.id),
@@ -463,7 +463,6 @@ export const sessionDiscountCodes = pgTable("sessionDiscountCodes", {
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => ({
   codeIdx: index("sessionDiscountCodes_code_idx").on(table.code),
-  sessionIdx: index("sessionDiscountCodes_session_idx").on(table.sessionId),
 }));
 
 export type SessionDiscountCode = typeof sessionDiscountCodes.$inferSelect;

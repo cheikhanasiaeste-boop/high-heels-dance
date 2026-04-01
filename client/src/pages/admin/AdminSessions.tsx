@@ -31,6 +31,7 @@ interface SessionFormData {
   price: string;
   sessionType: "private" | "group";
   capacity: number;
+  allowDiscountCodes: boolean;
 }
 
 const defaultForm: SessionFormData = {
@@ -44,6 +45,7 @@ const defaultForm: SessionFormData = {
   price: "",
   sessionType: "group",
   capacity: 20,
+  allowDiscountCodes: false,
 };
 
 function fmtLocal(dateString: string): string {
@@ -178,6 +180,7 @@ export default function AdminSessions() {
       price: session.price || "",
       sessionType: session.sessionType || "group",
       capacity: session.capacity || 20,
+      allowDiscountCodes: session.allowDiscountCodes || false,
     });
     setDialogOpen(true);
   };
@@ -219,6 +222,7 @@ export default function AdminSessions() {
           price: form.price,
           sessionType: form.sessionType,
           capacity: Number(form.capacity),
+          allowDiscountCodes: form.eventType === "in-person" && !form.isFree ? form.allowDiscountCodes : false,
         });
       }
     } else {
@@ -607,6 +611,17 @@ export default function AdminSessions() {
                 <div className="space-y-1.5">
                   <Label>Price</Label>
                   <Input value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="e.g., €25" />
+                </div>
+              )}
+
+              {/* Allow Discount Codes — only for paid in-person sessions */}
+              {!form.isFree && form.eventType === "in-person" && (
+                <div className="flex items-center justify-between rounded-lg border p-3">
+                  <div>
+                    <Label className="font-medium">Allow Discount Codes</Label>
+                    <p className="text-xs text-muted-foreground">Students can use admin-generated codes to attend for free</p>
+                  </div>
+                  <Switch checked={form.allowDiscountCodes} onCheckedChange={(c) => setForm({ ...form, allowDiscountCodes: c })} />
                 </div>
               )}
             </div>

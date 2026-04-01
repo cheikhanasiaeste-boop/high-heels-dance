@@ -1,7 +1,7 @@
 import TelegramBot from "node-telegram-bot-api";
 import { db as drizzleDb } from "./db";
 import { sessionDiscountCodes, users, availabilitySlots } from "../drizzle/schema";
-import { eq, and, isNull, sql, desc } from "drizzle-orm";
+import { eq, and, sql, desc } from "drizzle-orm";
 import { randomBytes } from "crypto";
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
@@ -29,7 +29,6 @@ export function setupTelegramBot() {
     console.log("[Telegram] No TELEGRAM_BOT_TOKEN set — bot disabled");
     return;
   }
-
   if (TELEGRAM_ADMIN_CHAT_IDS.length === 0) {
     console.log("[Telegram] No TELEGRAM_ADMIN_CHAT_IDS set — bot disabled");
     return;
@@ -46,52 +45,26 @@ export function setupTelegramBot() {
     }
     bot.sendMessage(
       msg.chat.id,
-      `🩰 *High Heels Dance Admin Bot*\n\nAvailable commands:\n\n` +
-        `/generate single <session_id> — Create 1 discount code\n` +
-        `/generate single any — Create 1 code for any in-person session\n` +
-        `/generate package <session_id> — Create 4 discount codes\n` +
-        `/generate package any — Create 4 codes for any session\n` +
-        `/list — Show recent discount codes\n` +
+      `🩰 *High Heels Dance Admin Bot*\n\nCommands:\n\n` +
+        `/generate single — Create 1 discount code\n` +
+        `/generate package — Create 4 discount codes (monthly pack)\n` +
+        `/list — Show recent codes\n` +
         `/revoke <code> — Deactivate a code\n` +
-        `/sessions — List upcoming in-person sessions`,
+        `/sessions — List in-person sessions with discount codes enabled\n\n` +
+        `_Codes work on any in-person session where "Allow Discount Codes" is enabled in the admin panel._`,
       { parse_mode: "Markdown" }
     );
   });
 
-  // ── /generate single|package <session_id|any> ──
-  bot.onText(/\/generate\s+(single|package)\s+(\S+)/, async (msg, match) => {
+  // ── /generate single|package ──
+  bot.onText(/\/generate\s+(single|package)/, async (msg, match) => {
     if (!isAdminChat(msg.chat.id)) return;
 
     const type = match![1] as "single" | "package";
-    const sessionArg = match![2];
-    const sessionId = sessionArg === "any" ? null : parseInt(sessionArg, 10);
+    const count = type === "package" ? 4 : 1;
+    const packageGroup = type === "package" ? `pkg-${Date.now()}` : null;
 
-    if (sessionArg !== "any" && isNaN(sessionId as number)) {
-      bot.sendMessage(msg.chat.id, "Invalid session ID. Use a number or 'any'.");
-      return;
-    }
-
-    // Verify session exists if specific
-    if (sessionId !== null) {
-      const sessions = await drizzleDb
-        .select()
-        .from(availabilitySlots)
-        .where(eq(availabilitySlots.id, sessionId))
-        .limit(1);
-
-      if (sessions.length === 0) {
-        bot.sendMessage(msg.chat.id, `Session #${sessionId} not found.`);
-        return;
-      }
-
-      const session = sessions[0];
-      if (session.eventType !== "in-person") {
-        bot.sendMessage(msg.chat.id, `Session #${sessionId} is an online session. Discount codes are for in-person only.`);
-        return;
-      }
-    }
-
-    // Get admin user ID (use first admin from DB)
+    // Get admin user ID
     const admins = await drizzleDb
       .select()
       .from(users)
@@ -99,30 +72,27 @@ export function setupTelegramBot() {
       .limit(1);
     const adminId = admins[0]?.id || 1;
 
-    const count = type === "package" ? 4 : 1;
-    const packageGroup = type === "package" ? `pkg-${Date.now()}` : null;
     const codes: string[] = [];
-
     for (let i = 0; i < count; i++) {
       const code = generateCode();
       await drizzleDb.insert(sessionDiscountCodes).values({
         code,
         type,
         packageGroup,
-        sessionId,
         createdByAdminId: adminId,
         expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 3 months
       });
       codes.push(code);
     }
 
-    const sessionLabel = sessionId !== null ? `session #${sessionId}` : "any in-person session";
     const codeList = codes.map((c) => `\`${c}\``).join("\n");
-    const expiryDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    const expiryDate = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toLocaleDateString("en-US", {
+      month: "short", day: "numeric", year: "numeric",
+    });
 
     bot.sendMessage(
       msg.chat.id,
-      `✅ Generated ${count} code${count > 1 ? "s" : ""} for ${sessionLabel}:\n\n${codeList}\n\n_Valid until ${expiryDate}_`,
+      `✅ Generated ${count} code${count > 1 ? "s" : ""}:\n\n${codeList}\n\n_Valid for any in-person session with discount codes enabled. Expires ${expiryDate}_`,
       { parse_mode: "Markdown" }
     );
   });
@@ -143,13 +113,8 @@ export function setupTelegramBot() {
     }
 
     const lines = codes.map((c) => {
-      const status = !c.isActive
-        ? "🚫 Revoked"
-        : c.usedByUserId
-        ? `✅ Used`
-        : "🟢 Active";
-      const session = c.sessionId ? `#${c.sessionId}` : "any";
-      return `\`${c.code}\` — ${status} — session: ${session}`;
+      const status = !c.isActive ? "🚫 Revoked" : c.usedByUserId ? "✅ Used" : "🟢 Active";
+      return `\`${c.code}\` — ${status}`;
     });
 
     bot.sendMessage(msg.chat.id, `📋 *Recent Codes:*\n\n${lines.join("\n")}`, {
@@ -160,19 +125,15 @@ export function setupTelegramBot() {
   // ── /revoke <code> ──
   bot.onText(/\/revoke\s+(\S+)/, async (msg, match) => {
     if (!isAdminChat(msg.chat.id)) return;
-
     const code = match![1].toUpperCase();
-    const result = await drizzleDb
+    await drizzleDb
       .update(sessionDiscountCodes)
       .set({ isActive: false })
       .where(eq(sessionDiscountCodes.code, code));
-
-    bot.sendMessage(msg.chat.id, `🚫 Code \`${code}\` has been revoked.`, {
-      parse_mode: "Markdown",
-    });
+    bot.sendMessage(msg.chat.id, `🚫 Code \`${code}\` has been revoked.`, { parse_mode: "Markdown" });
   });
 
-  // ── /sessions ──
+  // ── /sessions — show in-person sessions with discount codes enabled ──
   bot.onText(/\/sessions/, async (msg) => {
     if (!isAdminChat(msg.chat.id)) return;
 
@@ -193,22 +154,17 @@ export function setupTelegramBot() {
       return;
     }
 
-    const lines = sessions.map((s) => {
+    const lines = sessions.map((s: any) => {
       const date = new Date(s.startTime).toLocaleDateString("en-US", {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
+        weekday: "short", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit",
       });
-      return `#${s.id} — ${s.title} — ${date} — €${s.price || "Free"}`;
+      const discountFlag = s.allowDiscountCodes ? "✅ Codes ON" : "❌ Codes OFF";
+      return `#${s.id} — ${s.title} — ${date} — €${s.price || "Free"} — ${discountFlag}`;
     });
 
-    bot.sendMessage(
-      msg.chat.id,
-      `📍 *Upcoming In-Person Sessions:*\n\n${lines.join("\n")}`,
-      { parse_mode: "Markdown" }
-    );
+    bot.sendMessage(msg.chat.id, `📍 *Upcoming In-Person Sessions:*\n\n${lines.join("\n")}`, {
+      parse_mode: "Markdown",
+    });
   });
 
   return bot;
