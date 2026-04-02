@@ -233,9 +233,15 @@ export default function BookSession() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0d0010] to-[#141118]">
+    <div className="min-h-screen bg-gradient-to-b from-[#1a0525] via-[#200a35] to-[#150020] relative overflow-hidden">
+      {/* Ambient glows */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute top-20 left-10 w-[500px] h-[500px] bg-fuchsia-500 rounded-full blur-[150px] opacity-[0.08]" />
+        <div className="absolute bottom-40 right-10 w-[400px] h-[400px] bg-purple-400 rounded-full blur-[150px] opacity-[0.08]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-600 rounded-full blur-[200px] opacity-[0.05]" />
+      </div>
       {/* Header */}
-      <div className="border-b border-white/10 bg-[#0d0010]/80 backdrop-blur-sm sticky top-0 z-10">
+      <div className="border-b border-[#E879F9]/10 bg-white/[0.03] backdrop-blur-sm sticky top-0 z-10">
         <div className="container mx-auto px-4 sm:px-6 py-4">
           <Link href="/">
             <Button variant="ghost" size="sm" className="mb-4">
@@ -255,7 +261,7 @@ export default function BookSession() {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 sm:px-6 py-8">
+      <div className="container mx-auto px-4 sm:px-6 py-8 relative z-10">
         {/* Filter Bar */}
         <div className="mb-8">
           <div className="bg-[#141118]/90 backdrop-blur-md rounded-2xl lg:rounded-full shadow-sm hover:shadow-md transition-shadow px-4 py-3 lg:px-6 lg:py-4 border border-white/10">

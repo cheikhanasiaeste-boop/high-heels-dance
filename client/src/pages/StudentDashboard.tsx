@@ -83,9 +83,15 @@ export default function StudentDashboard() {
   const hasUpcoming = bookings.length > 0 || sessions.length > 0;
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-[#1a0525] via-[#200a35] to-[#150020] relative overflow-hidden">
+      {/* Ambient glows */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute top-20 left-10 w-[500px] h-[500px] bg-fuchsia-500 rounded-full blur-[150px] opacity-[0.08]" />
+        <div className="absolute bottom-40 right-10 w-[400px] h-[400px] bg-purple-400 rounded-full blur-[150px] opacity-[0.08]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-600 rounded-full blur-[200px] opacity-[0.05]" />
+      </div>
       {/* ── Header ── */}
-      <div className="bg-gradient-to-r from-[#1a0a20] via-[#2e0033] to-[#1a0a20] border-b border-white/[0.06] text-white">
+      <div className="bg-gradient-to-r from-[#1a0a20] via-[#2e0033] to-[#1a0a20] border-b border-[#E879F9]/10 text-white relative z-10">
         <div className="container max-w-6xl px-4 py-8">
           {/* Top row: Home button on left */}
           <div className="mb-4">
@@ -114,7 +120,7 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      <div className="container max-w-6xl px-4 -mt-6">
+      <div className="container max-w-6xl px-4 -mt-6 relative z-10">
         {isLoading ? (
           <div className="flex items-center justify-center py-24">
             <Loader2 className="h-8 w-8 animate-spin text-[#C026D3]" />
