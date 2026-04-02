@@ -156,12 +156,15 @@ export default function Home() {
   const { data: bgVideoUrl } = trpc.admin.settings.get.useQuery({ key: "backgroundVideoUrl" });
   const { data: heroProfilePictureUrl } = trpc.admin.settings.get.useQuery({ key: "heroProfilePictureUrl" });
 
-  // Background: DB value → local static fallback (filter out empty/whitespace strings)
-  const backgroundUrl = [heroBackgroundUrl, bgAnimationUrl, bgVideoUrl].find(u => u && u.trim()) || '/hero-bg.webp';
+  // Background: DB value → local static fallback (filter out empty/whitespace/placeholder strings)
+  const isValidBgUrl = (u: string | null | undefined): u is string =>
+    !!u && u.trim() !== '' && (u.startsWith('/') || u.startsWith('http://') || u.startsWith('https://'));
+  const backgroundUrl = [heroBackgroundUrl, bgAnimationUrl, bgVideoUrl].find(isValidBgUrl) || '/hero-bg.webp';
 
   const [prefersReducedMotion] = useState(() =>
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
   );
+  const [heroVideoReady, setHeroVideoReady] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
@@ -305,27 +308,50 @@ export default function Home() {
 
       {/* ── Hero Section ──────────────────────────────────────────────────── */}
       <section className="relative overflow-hidden min-h-[100vh] flex flex-col bg-[#0d0010]">
-        {/* Background — static image fallback loads instantly, video upgrades on desktop */}
+        {/* Background — static poster loads instantly, video replaces it */}
         <div className="absolute inset-0 z-0 overflow-hidden">
-          {/* Always render the image first for instant paint (especially mobile) */}
-          <img
-            src="/hero-bg.webp"
-            alt=""
-            loading="eager"
-            decoding="async"
-            className="absolute inset-0 w-full h-full object-cover opacity-40"
-          />
-          {/* On desktop with video URL, layer video on top after it loads */}
-          {!prefersReducedMotion && isVideoUrl(backgroundUrl) && (
+          {/* Static poster — visible until video is playing, then hidden */}
+          {!heroVideoReady && (
+            <img
+              src="/hero-poster.webp"
+              alt=""
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
+              className="absolute inset-0 w-full h-full object-cover opacity-40"
+            />
+          )}
+          {/* Default local video — hidden until ready, then replaces poster */}
+          {!prefersReducedMotion && backgroundUrl === '/hero-bg.webp' && (
+            <video
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="auto"
+              className={`absolute inset-0 w-full h-full object-cover opacity-40 transition-opacity duration-500 ${heroVideoReady ? '' : 'opacity-0'}`}
+              style={{ transform: 'translate3d(0, 0, 0)' }}
+              onPlaying={() => setHeroVideoReady(true)}
+              onError={(e) => {
+                (e.currentTarget as HTMLVideoElement).style.display = 'none';
+              }}
+            >
+              <source src="/hero-bg.webm" type="video/webm" />
+              <source src="/hero-bg.mp4" type="video/mp4" />
+            </video>
+          )}
+          {/* Admin custom video URL */}
+          {!prefersReducedMotion && backgroundUrl !== '/hero-bg.webp' && isVideoUrl(backgroundUrl) && (
             <video
               key={backgroundUrl}
               autoPlay
               loop
               muted
               playsInline
-              preload="metadata"
-              poster="/hero-bg.webp"
-              className="absolute inset-0 w-full h-full object-cover opacity-40 hidden md:block"
+              preload="auto"
+              className={`absolute inset-0 w-full h-full object-cover opacity-40 transition-opacity duration-500 ${heroVideoReady ? '' : 'opacity-0'}`}
+              style={{ transform: 'translate3d(0, 0, 0)' }}
+              onPlaying={() => setHeroVideoReady(true)}
               onError={(e) => {
                 (e.currentTarget as HTMLVideoElement).style.display = 'none';
               }}
@@ -333,7 +359,7 @@ export default function Home() {
               <source src={backgroundUrl} />
             </video>
           )}
-          {/* If admin set a custom image (not video), use it */}
+          {/* Admin custom image (not video) */}
           {backgroundUrl !== '/hero-bg.webp' && !isVideoUrl(backgroundUrl) && (
             <img
               src={backgroundUrl}
