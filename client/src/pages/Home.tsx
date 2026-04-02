@@ -480,11 +480,12 @@ export default function Home() {
       <UpcomingSessionsWidget />
 
       {/* ── Courses Section ───────────────────────────────────────────────── */}
-      <section className="py-16 md:py-28 bg-[#0d0010] relative overflow-hidden">
-        {/* Subtle ambient glow */}
-        <div className="absolute inset-0 opacity-[0.06] z-0">
-          <div className="absolute top-20 left-10 w-[500px] h-[500px] bg-fuchsia-500 rounded-full blur-[150px]" />
-          <div className="absolute bottom-20 right-10 w-[400px] h-[400px] bg-purple-400 rounded-full blur-[150px]" />
+      <section className="py-16 md:py-28 bg-gradient-to-b from-[#1a0525] via-[#200a35] to-[#150020] relative overflow-hidden">
+        {/* Ambient glows */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute top-20 left-10 w-[500px] h-[500px] bg-fuchsia-500 rounded-full blur-[150px] opacity-[0.10]" />
+          <div className="absolute bottom-20 right-10 w-[400px] h-[400px] bg-purple-400 rounded-full blur-[150px] opacity-[0.10]" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-600 rounded-full blur-[200px] opacity-[0.07]" />
         </div>
         <div className="container relative z-10">
           <div className="text-center mb-14">
@@ -557,7 +558,7 @@ export default function Home() {
                 {filteredCourses.slice(0, 6).map((course, idx) => (
                   <ScrollReveal key={course.id} delay={idx * 0.08}>
                   <Link href={`/course/${course.id}`}>
-                    <div className="group cursor-pointer">
+                    <div className="group cursor-pointer bg-white/[0.04] backdrop-blur-sm rounded-2xl p-3 border border-[#E879F9]/10 hover:border-[#E879F9]/25 hover:shadow-[0_0_30px_rgba(232,121,249,0.08)] transition-all duration-500">
                       {/* Large image */}
                       <div className="relative overflow-hidden rounded-xl mb-4">
                         {course.imageUrl ? (

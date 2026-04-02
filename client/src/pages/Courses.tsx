@@ -29,7 +29,7 @@ export default function Courses() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-[#1a0525] via-[#200a35] to-[#150020] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading courses...</p>
@@ -39,9 +39,16 @@ export default function Courses() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-b from-[#1a0525] via-[#200a35] to-[#150020] relative overflow-hidden">
+      {/* Ambient glows */}
+      <div className="absolute inset-0 z-0 pointer-events-none">
+        <div className="absolute top-20 left-10 w-[500px] h-[500px] bg-fuchsia-500 rounded-full blur-[150px] opacity-[0.08]" />
+        <div className="absolute bottom-40 right-10 w-[400px] h-[400px] bg-purple-400 rounded-full blur-[150px] opacity-[0.08]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-600 rounded-full blur-[200px] opacity-[0.05]" />
+      </div>
+
       {/* Header */}
-      <div className="border-b bg-card">
+      <div className="border-b border-[#E879F9]/10 bg-white/[0.03] backdrop-blur-sm relative z-10">
         <div className="container py-6">
           <div className="flex items-center gap-4 mb-4">
             <Link href="/">
@@ -52,14 +59,14 @@ export default function Courses() {
             </Link>
           </div>
           <h1 className="text-4xl font-bold mb-2">Dance Courses</h1>
-          <p className="text-muted-foreground">
+          <p className="text-white/50">
             Transform your dance skills with professionally designed courses for all levels
           </p>
         </div>
       </div>
 
       {/* Main Content */}
-      <div className="container py-8">
+      <div className="container py-8 relative z-10">
         {/* Filter Buttons */}
         <div className="flex gap-2 mb-8 flex-wrap">
           <Button
@@ -90,7 +97,7 @@ export default function Courses() {
 
         {/* Courses Grid */}
         {filteredCourses.length === 0 ? (
-          <Card className="text-center py-12">
+          <Card className="text-center py-12 bg-white/[0.04] backdrop-blur-sm border-[#E879F9]/10">
             <CardContent>
               <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
               <p className="text-lg text-muted-foreground">
@@ -104,7 +111,7 @@ export default function Courses() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
             {filteredCourses.map((course) => (
-              <Card key={course.id} className="flex flex-col h-full hover:shadow-lg transition-shadow">
+              <Card key={course.id} className="flex flex-col h-full bg-white/[0.04] backdrop-blur-sm border-[#E879F9]/10 hover:border-[#E879F9]/25 hover:shadow-[0_0_30px_rgba(232,121,249,0.08)] transition-all duration-500">
                 <div className="relative">
                   {course.imageUrl ? (
                     <>
