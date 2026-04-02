@@ -133,7 +133,7 @@ const FALLBACK_BANNER = "🎉 Special offer: 50% off all courses this week! Use 
 const isVideoUrl = (url: string) => /\.(mp4|webm|mov|ogg)(\?.*)?$/i.test(url);
 
 export default function Home() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, initializing: authInitializing } = useAuth();
   const { isAuthModalOpen, authContext, authContextDetails, closeAuthModal } = useProgressiveAuth();
 
   const { data: courses } = trpc.courses.list.useQuery();
@@ -269,8 +269,11 @@ export default function Home() {
             </Link>
           </nav>
 
-          <div className="hidden lg:flex items-center gap-3">
-            {isAuthenticated ? (
+          <div className="hidden lg:flex items-center gap-3 min-w-[200px] justify-end">
+            {authInitializing ? (
+              /* Brief placeholder while reading session from localStorage */
+              <div className="px-6 py-2.5 rounded-full bg-white/10 animate-pulse w-[120px] h-[40px]" />
+            ) : isAuthenticated ? (
               <>
                 <Link href="/dashboard">
                   <button className="px-6 py-2.5 text-sm font-semibold text-[#1a0a1e] bg-white hover:bg-white/90 rounded-full transition-all duration-300 uppercase tracking-[0.08em]">

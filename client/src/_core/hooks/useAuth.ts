@@ -213,6 +213,8 @@ export function useAuth(options?: UseAuthOptions) {
     user: meQuery.data ?? null,
     isAuthenticated,
     loading,
+    /** True only while reading session from localStorage — resolves almost instantly */
+    initializing: sessionLoading,
     error: meQuery.error ?? syncUserMutation.error ?? null,
     logout,
     refresh,
