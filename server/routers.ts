@@ -5,6 +5,7 @@ import { membershipRouter } from "./membershipRouter";
 import { membershipManagementRouter } from "./membershipManagementRouter";
 import { discountRouter } from "./discountRouter";
 import { sessionDiscountRouter } from "./sessionDiscountRouter";
+import { blogRouter, newsletterRouter, adminBlogRouter } from "./blogRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -2432,6 +2433,10 @@ Never be pushy. Be genuinely helpful and make people feel welcome.`;
         return { success: true };
       }),
   }),
+
+  blog: blogRouter,
+  newsletter: newsletterRouter,
+  adminBlog: adminBlogRouter,
 });
 
 export type AppRouter = typeof appRouter;
