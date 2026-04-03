@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import { Resend } from "resend";
 import { ENV } from "./env";
 
@@ -222,6 +223,103 @@ export function getMessageNotificationEmail(params: {
     </html>
   `;
 }
+
+// ─── Newsletter helpers ────────────────────────────────────────────────────
+
+const NEWSLETTER_SECRET = process.env.NEWSLETTER_SECRET || "default-newsletter-secret";
+const SITE_URL = process.env.VITE_SITE_URL || "https://www.elizabeth-zolotova.com";
+
+/**
+ * Generate an HMAC-SHA256 unsubscribe token for the given email address.
+ */
+export function generateUnsubscribeToken(email: string): string {
+  return crypto
+    .createHmac("sha256", NEWSLETTER_SECRET)
+    .update(email.toLowerCase())
+    .digest("hex");
+}
+
+/**
+ * Verify an unsubscribe token using a timing-safe comparison.
+ */
+export function verifyUnsubscribeToken(email: string, token: string): boolean {
+  const expected = generateUnsubscribeToken(email);
+  try {
+    return crypto.timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(token, "hex"));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Build the HTML body for a newsletter email.
+ */
+export function getNewsletterEmailHtml(params: {
+  title: string;
+  excerpt: string;
+  thumbnailUrl: string;
+  slug: string;
+  recipientEmail: string;
+}): string {
+  const { title, excerpt, thumbnailUrl, slug, recipientEmail } = params;
+  const postUrl = `${SITE_URL}/blog/${slug}`;
+  const token = generateUnsubscribeToken(recipientEmail);
+  const unsubscribeUrl = `${SITE_URL}/unsubscribe?email=${encodeURIComponent(recipientEmail)}&token=${token}`;
+
+  return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${title}</title>
+  </head>
+  <body style="margin:0;padding:0;background-color:#f5f0f7;font-family:Arial,Helvetica,sans-serif;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f5f0f7;padding:32px 0;">
+      <tr>
+        <td align="center">
+          <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+
+            <!-- Thumbnail -->
+            <tr>
+              <td style="padding:0;">
+                <img src="${thumbnailUrl}" alt="" width="600" style="display:block;width:100%;height:auto;border:0;" />
+              </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+              <td style="padding:36px 40px 28px;">
+                <h1 style="margin:0 0 16px;font-size:26px;line-height:1.3;color:#1a0525;">${title}</h1>
+                <p style="margin:0 0 28px;font-size:16px;line-height:1.7;color:#555555;">${excerpt}</p>
+                <table role="presentation" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td style="border-radius:999px;background-color:#C026D3;">
+                      <a href="${postUrl}" target="_blank" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:999px;">Read Full Post</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+              <td style="padding:20px 40px 32px;border-top:1px solid #f0e8f5;">
+                <p style="margin:0;font-size:13px;color:#888888;line-height:1.6;text-align:center;">
+                  You received this because you subscribed to the High Heels Dance newsletter.<br />
+                  <a href="${unsubscribeUrl}" style="color:#C026D3;text-decoration:underline;">Unsubscribe</a>
+                </p>
+              </td>
+            </tr>
+
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>`;
+}
+
+// ─── Course completion ─────────────────────────────────────────────────────
 
 /**
  * Email template for course completion congratulations
