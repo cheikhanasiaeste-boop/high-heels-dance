@@ -490,3 +490,45 @@ export const liveSessions = pgTable("live_sessions", {
 
 export type LiveSession = typeof liveSessions.$inferSelect;
 export type InsertLiveSession = typeof liveSessions.$inferInsert;
+
+/**
+ * Blog posts generated from YouTube videos
+ */
+export const blogPosts = pgTable("blog_posts", {
+  id: serial("id").primaryKey(),
+  youtubeVideoId: varchar("youtube_video_id", { length: 20 }).unique().notNull(),
+  title: varchar("title", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).unique().notNull(),
+  excerpt: text("excerpt").notNull(),
+  content: text("content").notNull(),
+  thumbnailUrl: text("thumbnail_url").notNull(),
+  youtubeUrl: text("youtube_url").notNull(),
+  publishedAt: timestamp("published_at"),
+  isPublished: boolean("is_published").default(false).notNull(),
+  isNewsletterSent: boolean("is_newsletter_sent").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("blog_posts_slug_idx").on(table.slug),
+  index("blog_posts_published_idx").on(table.isPublished, table.publishedAt),
+]);
+
+export type BlogPost = typeof blogPosts.$inferSelect;
+export type InsertBlogPost = typeof blogPosts.$inferInsert;
+
+/**
+ * Newsletter subscribers — single source of truth for email list
+ */
+export const newsletterSubscribers = pgTable("newsletter_subscribers", {
+  id: serial("id").primaryKey(),
+  email: varchar("email", { length: 255 }).unique().notNull(),
+  source: varchar("source", { length: 20 }).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  subscribedAt: timestamp("subscribed_at").defaultNow().notNull(),
+  unsubscribedAt: timestamp("unsubscribed_at"),
+}, (table) => [
+  index("newsletter_email_idx").on(table.email),
+  index("newsletter_active_idx").on(table.isActive),
+]);
+
+export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect;
+export type InsertNewsletterSubscriber = typeof newsletterSubscribers.$inferInsert;

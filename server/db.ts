@@ -47,7 +47,12 @@ import {
   liveSessions,
   LiveSession,
   InsertLiveSession,
-  Purchase,
+  blogPosts,
+  BlogPost,
+  InsertBlogPost,
+  newsletterSubscribers,
+  NewsletterSubscriber,
+  InsertNewsletterSubscriber,
 } from "../drizzle/schema";
 
 let _db: ReturnType<typeof drizzle> | null = null;
