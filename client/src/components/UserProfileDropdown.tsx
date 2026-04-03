@@ -11,6 +11,7 @@ import {
   ChevronDown,
   LayoutDashboard,
   HelpCircle,
+  Settings,
 } from 'lucide-react';
 import { useAuth } from '@/_core/hooks/useAuth';
 
@@ -234,6 +235,17 @@ export function UserProfileDropdown({ unreadMessagesCount = 0 }: UserProfileDrop
               >
                 <Crown className="w-5 h-5 text-gray-400 group-hover:text-fuchsia-600 group-focus:text-fuchsia-600 transition-colors" />
                 <span>Membership</span>
+              </a>
+            </Link>
+
+            {/* Account Settings */}
+            <Link href="/account" onClick={closeDropdown}>
+              <a
+                role="menuitem"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-stone-700 hover:bg-fuchsia-50 hover:text-fuchsia-700 transition-colors duration-150 focus:outline-none focus:bg-fuchsia-50 focus:text-fuchsia-700 min-h-[44px] group"
+              >
+                <Settings className="w-5 h-5 text-gray-400 group-hover:text-fuchsia-600 group-focus:text-fuchsia-600 transition-colors" />
+                <span>Account Settings</span>
               </a>
             </Link>
 
