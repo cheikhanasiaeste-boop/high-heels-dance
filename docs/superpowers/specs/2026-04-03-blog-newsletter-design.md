@@ -40,28 +40,20 @@ Index on `slug`. Index on `is_published` + `published_at` for listing queries.
 
 ## Newsletter Subscriber Flow
 
-### Source 1: Account Registration
-
-In `AuthModal.tsx`, add a checkbox below the confirm password field:
-
-```
-[x] Subscribe to our newsletter
-```
-
-Checked by default. On successful `signUp()`, if checked, call `newsletter.subscribe` mutation with source='registration'.
-
-### Source 2: Popup Email Submission
+### Source 1: Popup Email Submission
 
 When `popupInteractions` records an `email_submitted` action (existing code in `Home.tsx`), also call `newsletter.subscribe` mutation with source='popup'. This is an upsert — if the email already exists, do nothing.
 
-### Source 3: Account Settings Page
+### Source 2: Account Settings Page
 
 New page at `/account` accessible from `UserProfileDropdown`. Contains:
 
-- "Receive newsletter" checkbox
+- "Subscribe to our newsletter" checkbox (checked by default)
 - Reads current status via `newsletter.status` query
 - Toggle off: calls `newsletter.unsubscribe` (sets `is_active=false`, `unsubscribed_at=now()`)
 - Toggle on: calls `newsletter.subscribe` (sets `is_active=true`, clears `unsubscribed_at`)
+
+This is the primary opt-in mechanism for registered users. No checkbox on the signup form — users manage newsletter preference in Account Settings only.
 
 Add "Account Settings" link in `UserProfileDropdown` menu between "Membership" and "Help & Support".
 
@@ -83,23 +75,22 @@ Environment variable: `YOUTUBE_API_KEY`
 ### Step 2: Generate Blog Content
 
 For each video, call the Claude API (Anthropic SDK) with:
-- System prompt: contents of `BLOG.md`
+- System prompt: full contents of `BLOG.md` (the skill file defines tone, structure, SEO rules, and CTA requirements)
 - User prompt: video title + description + instruction to generate a blog post
 
-Claude returns the full markdown blog post following the BLOG.md structure.
+All generated posts must strictly follow the BLOG.md style and structure: benefit-driven title, hook intro, 5-8 actionable tips, practical tips & common mistakes section, encouraging conclusion with CTA.
+
+Claude returns the full markdown blog post.
 
 Environment variable: `ANTHROPIC_API_KEY`
 
 ### Step 3: Screenshots
 
-YouTube provides built-in thumbnails for every video:
-- `https://img.youtube.com/vi/{videoId}/maxresdefault.jpg` — main high-res thumbnail
-- `https://img.youtube.com/vi/{videoId}/0.jpg` — auto-generated frame (full size)
-- `https://img.youtube.com/vi/{videoId}/1.jpg` — frame at 25%
-- `https://img.youtube.com/vi/{videoId}/2.jpg` — frame at 50%
-- `https://img.youtube.com/vi/{videoId}/3.jpg` — frame at 75%
+For each video, use high-quality thumbnails from YouTube:
+- `https://img.youtube.com/vi/{videoId}/maxresdefault.jpg` — main high-res thumbnail (used as post thumbnail)
+- `https://img.youtube.com/vi/{videoId}/0.jpg` through `/3.jpg` — auto-generated frames at different timestamps
 
-Replace `![Screenshot: ...](<screenshot-placeholder>)` markers in the generated content with these real URLs. Distribute frames 0-3 across the screenshot placeholders. Use `maxresdefault.jpg` as the post thumbnail.
+Replace `![Screenshot: ...](<screenshot-placeholder>)` markers in the generated content with these URLs. Each screenshot must clearly illustrate the specific movement or tip being described. The admin can replace these with manually curated screenshots during review.
 
 ### Step 4: Save as Drafts
 
@@ -108,11 +99,13 @@ For each video:
 2. Insert into `blog_posts` with `is_published=false`
 3. Skip videos that already exist (check `youtube_video_id` unique constraint)
 
-### Rate Limiting
+### Import Limits
 
-- YouTube API: 1 request per second (generous quota)
+- First bulk import: **10-15 videos maximum** to keep it manageable
+- Additional imports can be run later as needed
+- YouTube API: 1 request per second
 - Claude API: sequential calls with 1s delay between
-- Estimated time for 50 videos: ~10-15 minutes
+- Estimated time for 15 videos: ~5 minutes
 
 ## tRPC Routes
 
@@ -267,7 +260,6 @@ client/src/pages/AccountSettings.tsx       — /account settings page
 client/src/pages/admin/Blog.tsx            — admin Manage Blog page
 client/src/pages/Unsubscribe.tsx           — /unsubscribe landing page
 client/src/App.tsx                         — add new routes
-client/src/components/AuthModal.tsx        — add newsletter checkbox
 client/src/components/UserProfileDropdown.tsx — add Account Settings link
 ```
 
