@@ -145,6 +145,7 @@ export default function Home() {
   const { data: popupSettings } = trpc.popup.get.useQuery();
 
   const recordInteractionMutation = trpc.popup.recordInteraction.useMutation();
+  const subscribeNewsletterMutation = trpc.newsletter.subscribe.useMutation();
 
   // Editable content from admin
   const { data: heroTitle } = trpc.admin.content.get.useQuery({ key: 'hero_title' });
@@ -246,6 +247,8 @@ export default function Home() {
           if (popupId !== 9001) {
             recordInteractionMutation.mutate({ popupId, action: 'email_submitted', email });
           }
+          // Also subscribe to newsletter
+          subscribeNewsletterMutation.mutate({ email, source: 'popup' });
         }}
       />
 
@@ -266,6 +269,9 @@ export default function Home() {
             </Link>
             <Link href="/membership">
               <span className="text-sm font-medium text-white/70 uppercase tracking-[0.15em] hover:text-white transition-colors cursor-pointer">Membership</span>
+            </Link>
+            <Link href="/blog">
+              <span className="text-sm font-medium text-white/70 uppercase tracking-[0.15em] hover:text-white transition-colors cursor-pointer">Blog</span>
             </Link>
           </nav>
 

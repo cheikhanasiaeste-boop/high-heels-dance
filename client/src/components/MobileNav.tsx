@@ -130,6 +130,11 @@ export function MobileNav({ onSignInClick }: MobileNavProps) {
                   Browse Courses
                 </Link>
               </Button>
+              <Button variant="ghost" className="w-full justify-start" size="lg" asChild>
+                <Link href="/blog" onClick={closeMenu}>
+                  Blog
+                </Link>
+              </Button>
             </>
           )}
 
@@ -151,6 +156,12 @@ export function MobileNav({ onSignInClick }: MobileNavProps) {
                 <Button variant="ghost" className="w-full justify-start" size="lg" asChild>
                   <Link href="/activity" onClick={closeMenu}>
                     Activity History
+                  </Link>
+                </Button>
+
+                <Button variant="ghost" className="w-full justify-start" size="lg" asChild>
+                  <Link href="/blog" onClick={closeMenu}>
+                    Blog
                   </Link>
                 </Button>
 
