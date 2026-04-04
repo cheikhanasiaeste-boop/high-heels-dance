@@ -53,6 +53,15 @@ import {
   newsletterSubscribers,
   NewsletterSubscriber,
   InsertNewsletterSubscriber,
+  storeProducts,
+  StoreProduct,
+  InsertStoreProduct,
+  storeProductImages,
+  StoreProductImage,
+  InsertStoreProductImage,
+  storeProductVariants,
+  StoreProductVariant,
+  InsertStoreProductVariant,
 } from "../drizzle/schema";
 
 let _db: ReturnType<typeof drizzle> | null = null;

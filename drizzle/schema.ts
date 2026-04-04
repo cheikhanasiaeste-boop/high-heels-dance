@@ -532,3 +532,65 @@ export const newsletterSubscribers = pgTable("newsletter_subscribers", {
 
 export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect;
 export type InsertNewsletterSubscriber = typeof newsletterSubscribers.$inferInsert;
+
+/**
+ * Store products — physical goods (clothes, accessories, shoes)
+ */
+export const storeProducts = pgTable("store_products", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).unique().notNull(),
+  description: text("description").notNull(),
+  category: varchar("category", { length: 50 }).notNull(),
+  subcategory: varchar("subcategory", { length: 50 }),
+  basePrice: numeric("base_price", { precision: 10, scale: 2 }).notNull(),
+  discountPercent: integer("discount_percent"),
+  seoTitle: varchar("seo_title", { length: 255 }),
+  seoDescription: text("seo_description"),
+  isPublished: boolean("is_published").default(false).notNull(),
+  isFeatured: boolean("is_featured").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("store_products_slug_idx").on(table.slug),
+  index("store_products_published_idx").on(table.isPublished),
+  index("store_products_category_idx").on(table.category),
+]);
+
+export type StoreProduct = typeof storeProducts.$inferSelect;
+export type InsertStoreProduct = typeof storeProducts.$inferInsert;
+
+/**
+ * Product images — multiple images per product with ordering
+ */
+export const storeProductImages = pgTable("store_product_images", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull(),
+  imageUrl: text("image_url").notNull(),
+  altText: varchar("alt_text", { length: 255 }),
+  displayOrder: integer("display_order").default(0).notNull(),
+}, (table) => [
+  index("store_images_product_idx").on(table.productId),
+]);
+
+export type StoreProductImage = typeof storeProductImages.$inferSelect;
+export type InsertStoreProductImage = typeof storeProductImages.$inferInsert;
+
+/**
+ * Product variants — color+size combinations with individual stock and price modifier
+ */
+export const storeProductVariants = pgTable("store_product_variants", {
+  id: serial("id").primaryKey(),
+  productId: integer("product_id").notNull(),
+  variantKey: varchar("variant_key", { length: 50 }).notNull(),
+  color: varchar("color", { length: 50 }),
+  size: varchar("size", { length: 20 }),
+  sku: varchar("sku", { length: 50 }).unique(),
+  priceModifier: numeric("price_modifier", { precision: 10, scale: 2 }).default("0").notNull(),
+  stock: integer("stock").default(0).notNull(),
+}, (table) => [
+  index("store_variants_product_idx").on(table.productId),
+  unique("store_variants_product_key").on(table.productId, table.variantKey),
+]);
+
+export type StoreProductVariant = typeof storeProductVariants.$inferSelect;
+export type InsertStoreProductVariant = typeof storeProductVariants.$inferInsert;
