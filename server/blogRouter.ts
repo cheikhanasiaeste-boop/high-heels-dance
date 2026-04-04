@@ -47,11 +47,13 @@ export const newsletterRouter = router({
     .input(
       z.object({
         email: z.string().email(),
-        source: z.string().default("popup"),
+        source: z.string().max(20).default("popup"),
       })
     )
     .mutation(async ({ input }) => {
-      return blogDb.subscribeToNewsletter(input.email, input.source);
+      await blogDb.subscribeToNewsletter(input.email, input.source);
+      // Return only a success flag — never leak subscriber details to public callers
+      return { ok: true as const };
     }),
 
   unsubscribe: protectedProcedure.mutation(async ({ ctx }) => {
@@ -182,7 +184,7 @@ export const adminBlogRouter = router({
   }),
 
   subscribers: adminProcedure
-    .input(z.object({ page: z.number(), limit: z.number() }))
+    .input(z.object({ page: z.number().min(1), limit: z.number().min(1).max(100) }))
     .query(async ({ input }) => {
       return blogDb.getSubscribers(input.page, input.limit);
     }),

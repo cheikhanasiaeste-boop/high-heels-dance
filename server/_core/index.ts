@@ -65,10 +65,10 @@ async function startServer() {
   }));
 
   // ── Rate Limiting ──────────────────────────────────────────────────
-  // Global: 200 requests per minute per IP
+  // Global: 1000 in dev, 200 in prod per minute per IP
   app.use(rateLimit({
     windowMs: 60 * 1000,
-    max: 200,
+    max: process.env.NODE_ENV === 'development' ? 1000 : 200,
     standardHeaders: true,
     legacyHeaders: false,
     message: { error: "Too many requests, please try again later" },
@@ -84,6 +84,14 @@ async function startServer() {
 
   // Stricter limit on chat endpoint (10/min to prevent LLM cost abuse)
   app.use("/api/trpc/chat", rateLimit({
+    windowMs: 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+  }));
+
+  // Stricter limit on newsletter subscribe (10/min to prevent abuse/enumeration)
+  app.use("/api/trpc/newsletter.subscribe", rateLimit({
     windowMs: 60 * 1000,
     max: 10,
     standardHeaders: true,

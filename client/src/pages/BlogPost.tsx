@@ -1,6 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Link, useParams } from "wouter";
-import ReactMarkdown from "react-markdown";
+import { marked } from "marked";
+import DOMPurify from "dompurify";
 import { trpc } from "@/lib/trpc";
 import { ArrowLeft, Share2, Loader2, Calendar, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -138,17 +139,18 @@ export default function BlogPost() {
         <div className="container mx-auto px-4">
 
           {/* YouTube video embed */}
-          {post.youtubeVideoId && (
+          {post.youtubeVideoId && /^[\w-]{1,20}$/.test(post.youtubeVideoId) && (
             <div className="max-w-4xl mx-auto mt-10">
               <div
                 className="relative w-full rounded-2xl overflow-hidden shadow-2xl shadow-black/40 border border-white/[0.06]"
                 style={{ paddingBottom: "56.25%", height: 0 }}
               >
                 <iframe
-                  src={`https://www.youtube.com/embed/${post.youtubeVideoId}`}
+                  src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(post.youtubeVideoId)}?rel=0&origin=${encodeURIComponent(window.location.origin)}`}
                   title={post.title}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
+                  referrerPolicy="strict-origin-when-cross-origin"
                   className="absolute inset-0 w-full h-full"
                 />
               </div>
@@ -157,27 +159,14 @@ export default function BlogPost() {
 
           {/* Markdown content */}
           {post.content && (
-            <div className="max-w-3xl mx-auto mt-12">
-              <ReactMarkdown
-                className={[
-                  "prose prose-invert prose-lg max-w-none",
-                  "prose-headings:font-bold prose-headings:text-white",
-                  "prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4",
-                  "prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3",
-                  "prose-p:text-white/70 prose-p:leading-relaxed",
-                  "prose-li:text-white/70",
-                  "prose-strong:text-white",
-                  "prose-a:text-[#E879F9] prose-a:no-underline hover:prose-a:underline",
-                  "prose-img:rounded-xl prose-img:shadow-lg prose-img:my-6",
-                ].join(" ")}
-              >
-                {post.content}
-              </ReactMarkdown>
-            </div>
+            <div
+              className="max-w-4xl mx-auto mt-12 prose prose-invert prose-lg max-w-none prose-headings:font-bold prose-headings:text-white prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3 prose-p:text-white/70 prose-p:leading-relaxed prose-li:text-white/70 prose-strong:text-white prose-a:text-[#E879F9] prose-a:no-underline hover:prose-a:underline prose-img:rounded-xl prose-img:shadow-2xl prose-img:my-8 prose-img:w-full"
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(marked(post.content) as string) }}
+            />
           )}
 
           {/* CTA Section */}
-          <div className="max-w-3xl mx-auto mt-16">
+          <div className="max-w-4xl mx-auto mt-16">
             <div
               className="relative rounded-2xl overflow-hidden p-8 md:p-12 text-center border border-white/10"
               style={{

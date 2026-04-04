@@ -227,6 +227,12 @@ export function getMessageNotificationEmail(params: {
 // ─── Newsletter helpers ────────────────────────────────────────────────────
 
 const NEWSLETTER_SECRET = process.env.NEWSLETTER_SECRET || "default-newsletter-secret";
+if (!process.env.NEWSLETTER_SECRET) {
+  console.warn(
+    "WARNING: NEWSLETTER_SECRET env var is not set — using insecure default. " +
+    "Unsubscribe tokens are predictable. Set NEWSLETTER_SECRET in production!"
+  );
+}
 const SITE_URL = process.env.VITE_SITE_URL || "https://www.elizabeth-zolotova.com";
 
 /**
