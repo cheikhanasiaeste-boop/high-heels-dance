@@ -135,6 +135,11 @@ export function MobileNav({ onSignInClick }: MobileNavProps) {
                   Blog
                 </Link>
               </Button>
+              <Button variant="ghost" className="w-full justify-start" size="lg" asChild>
+                <Link href="/store" onClick={closeMenu}>
+                  Shop
+                </Link>
+              </Button>
             </>
           )}
 
@@ -162,6 +167,12 @@ export function MobileNav({ onSignInClick }: MobileNavProps) {
                 <Button variant="ghost" className="w-full justify-start" size="lg" asChild>
                   <Link href="/blog" onClick={closeMenu}>
                     Blog
+                  </Link>
+                </Button>
+
+                <Button variant="ghost" className="w-full justify-start" size="lg" asChild>
+                  <Link href="/store" onClick={closeMenu}>
+                    Shop
                   </Link>
                 </Button>
 

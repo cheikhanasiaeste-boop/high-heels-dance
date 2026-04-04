@@ -137,6 +137,7 @@ export default function Home() {
   const { isAuthModalOpen, authContext, authContextDetails, closeAuthModal } = useProgressiveAuth();
 
   const { data: courses } = trpc.courses.list.useQuery();
+  const { data: featuredProducts } = trpc.store.featured.useQuery();
   const { data: myPurchases } = trpc.purchases.myPurchases.useQuery(undefined, { enabled: isAuthenticated });
   const { data: unreadCount } = trpc.messages.unreadCount.useQuery(undefined, { enabled: isAuthenticated });
   const { data: banner, isLoading: bannerLoading } = trpc.banner.get.useQuery();
@@ -272,6 +273,9 @@ export default function Home() {
             </Link>
             <Link href="/blog">
               <span className="text-sm font-medium text-white/70 uppercase tracking-[0.15em] hover:text-white transition-colors cursor-pointer">Blog</span>
+            </Link>
+            <Link href="/store">
+              <span className="text-sm font-medium text-white/70 uppercase tracking-[0.15em] hover:text-white transition-colors cursor-pointer">Shop</span>
             </Link>
           </nav>
 
@@ -652,6 +656,75 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* ── Shop Section ──────────────────────────────────────────────── */}
+      {featuredProducts && featuredProducts.length > 0 && (
+        <section className="py-16 md:py-28 bg-gradient-to-b from-[#150020] via-[#1a0525] to-[#200a35] relative overflow-hidden">
+          {/* Ambient glows */}
+          <div className="absolute inset-0 z-0">
+            <div className="absolute top-20 right-10 w-[500px] h-[500px] bg-fuchsia-500 rounded-full blur-[150px] opacity-[0.08]" />
+            <div className="absolute bottom-20 left-10 w-[400px] h-[400px] bg-purple-400 rounded-full blur-[150px] opacity-[0.08]" />
+          </div>
+          <div className="container relative z-10">
+            {/* Header */}
+            <div className="text-center mb-14">
+              <p className="text-xs uppercase tracking-[0.3em] text-[#E879F9]/50 font-semibold mb-3" style={{ fontFamily: 'var(--font-body)' }}>Dance Essentials</p>
+              <h3 className="text-3xl md:text-[3.5rem] font-bold mb-3 md:mb-4 text-white tracking-[-0.02em]" style={{ fontFamily: 'var(--font-display)' }}>
+                Shop
+              </h3>
+              <div className="flex items-center justify-center gap-3 mb-5">
+                <div className="h-px w-12 bg-gradient-to-r from-transparent to-[#E879F9]/30" />
+                <div className="w-1 h-1 rounded-full bg-[#E879F9]/40" />
+                <div className="h-px w-12 bg-gradient-to-l from-transparent to-[#E879F9]/30" />
+              </div>
+              <p className="text-base md:text-lg text-white/40 max-w-xl mx-auto leading-relaxed" style={{ fontFamily: 'var(--font-body)' }}>
+                Handpicked essentials for your dance journey
+              </p>
+            </div>
+
+            {/* Product grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-7xl mx-auto">
+              {featuredProducts.slice(0, 6).map((product) => (
+                <Link key={product.id} href={`/store`}>
+                  <div className="group cursor-pointer bg-white/[0.04] backdrop-blur-sm rounded-2xl p-3 border border-[#E879F9]/10 hover:border-[#E879F9]/25 hover:shadow-[0_0_30px_rgba(232,121,249,0.08)] transition-all duration-500">
+                    <div className="relative overflow-hidden rounded-xl mb-4">
+                      {product.images?.[0] ? (
+                        <img src={product.images[0].imageUrl} alt={product.images[0].altText || product.title} className="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-[1.05]" />
+                      ) : (
+                        <div className="w-full h-64 bg-gradient-to-br from-[#831843] via-[#86198F] to-[#701A75] flex items-center justify-center">
+                          <span className="text-6xl">👠</span>
+                        </div>
+                      )}
+                      {product.discountPercent && product.discountPercent > 0 && (
+                        <div className="absolute top-3 right-3 bg-[#E879F9] text-white px-2 py-1 rounded-full text-xs font-bold">-{product.discountPercent}%</div>
+                      )}
+                    </div>
+                    <h4 className="text-lg font-semibold text-white group-hover:text-[#E879F9] transition-colors mb-2" style={{ fontFamily: 'var(--font-display)' }}>
+                      {product.title}
+                    </h4>
+                    <span className="text-lg font-bold text-white">
+                      €{product.discountPercent ? (Number(product.basePrice) * (1 - product.discountPercent / 100)).toFixed(2) : Number(product.basePrice).toFixed(2)}
+                      {product.discountPercent > 0 && (
+                        <span className="ml-2 text-sm text-white/30 line-through font-normal">€{Number(product.basePrice).toFixed(2)}</span>
+                      )}
+                    </span>
+                    <div className="mt-4 h-px bg-gradient-to-r from-[#E879F9]/30 via-[#C026D3]/20 to-transparent" />
+                  </div>
+                </Link>
+              ))}
+            </div>
+
+            {/* Browse All button */}
+            <div className="flex justify-center mt-12">
+              <Link href="/store">
+                <button className="px-8 py-3 text-sm font-medium text-white/70 border border-white/15 hover:border-white/30 hover:text-white rounded-full transition-all duration-300 uppercase tracking-[0.1em]">
+                  Browse All Products
+                </button>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ── Testimonials Section ──────────────────────────────────────────── */}
       <section className="py-20 md:py-28 bg-[#141118] relative overflow-hidden">
