@@ -36,6 +36,7 @@ Transform YouTube videos into high-quality, engaging, SEO-friendly blog posts th
 - Screenshots must be displayed at full content width (near full-width of the page) — never small or thumbnail-sized
 - Add a short, helpful caption under each image
 - Use standard markdown image syntax: `![Caption](url)`
+- For YouTube videos, always use the high-resolution thumbnail: `https://img.youtube.com/vi/{videoId}/hq720.jpg` (720p) — NEVER use `/0.jpg`, `/1.jpg`, `/2.jpg`, `/3.jpg` (these are low-res and pixelated)
 
 ### SEO & Style Rules
 - Natural keyword usage
