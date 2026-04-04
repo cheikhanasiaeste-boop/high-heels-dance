@@ -47,6 +47,8 @@ import BlogPost from "./pages/BlogPost";
 import AccountSettings from "./pages/AccountSettings";
 import AdminBlog from "./pages/admin/Blog";
 import Unsubscribe from "./pages/Unsubscribe";
+import Store from "./pages/Store";
+import StoreManager from "./pages/admin/StoreManager";
 
 
 function Router() {
@@ -75,6 +77,7 @@ function Router() {
       <Route path="/blog/:slug" component={BlogPost} />
       <Route path="/account" component={AccountSettings} />
       <Route path="/unsubscribe" component={Unsubscribe} />
+      <Route path="/store" component={Store} />
 
       <Route path="/admin">{() => <AdminGuard><AdminDashboard /></AdminGuard>}</Route>
       <Route path="/admin/courses">{() => <AdminGuard><AdminCourses /></AdminGuard>}</Route>
@@ -89,6 +92,7 @@ function Router() {
       <Route path="/admin/discounts">{() => <AdminGuard><AdminDiscounts /></AdminGuard>}</Route>
       <Route path="/admin/settings">{() => <AdminGuard><AdminSettings /></AdminGuard>}</Route>
       <Route path="/admin/blog">{() => <AdminGuard><AdminBlog /></AdminGuard>}</Route>
+      <Route path="/admin/store">{() => <AdminGuard><StoreManager /></AdminGuard>}</Route>
       <Route path="/auth/callback" component={AuthCallback} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

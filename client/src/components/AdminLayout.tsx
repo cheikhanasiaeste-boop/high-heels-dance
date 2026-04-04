@@ -10,7 +10,8 @@ import {
   Users,
   Activity,
   Percent,
-  FileText
+  FileText,
+  ShoppingBag
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AdminNotifications } from "@/components/AdminNotifications";
@@ -28,6 +29,7 @@ const menuItems = [
   { path: "/admin/user-activity", icon: Activity, label: "User Activity" },
   { path: "/admin/testimonials", icon: MessageSquare, label: "Testimonials" },
   { path: "/admin/discounts", icon: Percent, label: "Discounts" },
+  { path: "/admin/store", icon: ShoppingBag, label: "Store Manager" },
   { path: "/admin/blog", icon: FileText, label: "Manage Blog" },
   { path: "/admin/settings", icon: Settings, label: "Site Settings" },
 ];
