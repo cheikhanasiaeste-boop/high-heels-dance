@@ -1,7 +1,7 @@
 import { AdminLayout } from "@/components/AdminLayout";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { useLocation } from "wouter";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -32,8 +32,11 @@ import {
   EyeOff,
   Users,
   FileText,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { marked } from "marked";
+import DOMPurify from "dompurify";
 
 type FilterTab = "all" | "drafts" | "published";
 
@@ -56,6 +59,7 @@ export default function AdminBlog() {
     content: "",
   });
   const [newsletterDialogPostId, setNewsletterDialogPostId] = useState<number | null>(null);
+  const [previewPostId, setPreviewPostId] = useState<number | null>(null);
 
   const utils = trpc.useUtils();
 
@@ -300,6 +304,16 @@ export default function AdminBlog() {
                     {/* Actions */}
                     <TableCell className="text-right pr-4">
                       <div className="flex items-center justify-end gap-1">
+                        {/* Preview */}
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          onClick={() => setPreviewPostId(post.id)}
+                          title="Preview post"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+
                         {/* Edit */}
                         <Button
                           variant="ghost"
@@ -460,6 +474,65 @@ export default function AdminBlog() {
               {updateMutation.isPending ? "Saving..." : "Save Changes"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Preview Dialog */}
+      <Dialog
+        open={previewPostId !== null}
+        onOpenChange={(open) => {
+          if (!open) setPreviewPostId(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto p-0">
+          {(() => {
+            const previewPost = previewPostId !== null ? posts?.find((p) => p.id === previewPostId) : null;
+            if (!previewPost) return null;
+            const htmlContent = DOMPurify.sanitize(marked(previewPost.content ?? "") as string);
+            return (
+              <div className="bg-gradient-to-b from-[#1a0525] via-[#200a35] to-[#150020] min-h-[60vh] rounded-lg overflow-hidden">
+                {/* Hero */}
+                <div className="relative w-full" style={{ maxHeight: "320px", overflow: "hidden" }}>
+                  {previewPost.thumbnailUrl && (
+                    <img src={previewPost.thumbnailUrl} alt={previewPost.title} className="w-full object-cover" style={{ maxHeight: "320px" }} />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#1a0525] via-[#1a0525]/60 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-6">
+                    <h2 className="text-2xl font-bold text-white">{previewPost.title}</h2>
+                    <p className="text-white/50 text-sm mt-1">{previewPost.excerpt}</p>
+                  </div>
+                </div>
+
+                {/* Video embed */}
+                {previewPost.youtubeVideoId && (
+                  <div className="max-w-3xl mx-auto px-6 mt-6">
+                    <div className="relative w-full rounded-xl overflow-hidden" style={{ paddingBottom: "56.25%", height: 0 }}>
+                      <iframe
+                        src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(previewPost.youtubeVideoId)}?rel=0`}
+                        title={previewPost.title}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        className="absolute inset-0 w-full h-full"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Content */}
+                <div
+                  className="max-w-3xl mx-auto px-6 py-8 prose prose-invert prose-lg max-w-none prose-headings:font-bold prose-headings:text-white prose-h2:text-2xl prose-h2:mt-8 prose-h2:mb-3 prose-h3:text-xl prose-h3:mt-6 prose-h3:mb-2 prose-p:text-white/70 prose-p:leading-relaxed prose-li:text-white/70 prose-strong:text-white prose-a:text-[#E879F9] prose-img:rounded-xl prose-img:shadow-2xl prose-img:my-6 prose-img:w-full"
+                  dangerouslySetInnerHTML={{ __html: htmlContent }}
+                />
+
+                {/* Close */}
+                <div className="px-6 pb-6 text-center">
+                  <Button variant="outline" onClick={() => setPreviewPostId(null)} className="bg-white/10 text-white border-white/20 hover:bg-white/20">
+                    Close Preview
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
