@@ -33,7 +33,9 @@ Transform YouTube videos into high-quality, engaging, SEO-friendly blog posts th
 ### Screenshots Requirements
 - Include 4–7 high-quality, sharp, well-cropped screenshots from the video
 - Each screenshot must be directly relevant to the specific tip being discussed
+- Screenshots must be displayed at full content width (near full-width of the page) — never small or thumbnail-sized
 - Add a short, helpful caption under each image
+- Use standard markdown image syntax: `![Caption](url)`
 
 ### SEO & Style Rules
 - Natural keyword usage
