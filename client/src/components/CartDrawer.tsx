@@ -108,7 +108,10 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const shipping = discountedSubtotal >= 50 ? 0 : 5;
   const total = discountedSubtotal + shipping;
 
-  // Checkout mutation
+  // Guest email state
+  const [guestEmail, setGuestEmail] = useState("");
+
+  // Checkout mutations
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const checkoutMutation = trpc.store.checkout.useMutation({
     onSuccess: (data) => {
@@ -125,10 +128,37 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     },
   });
 
+  const guestCheckoutMutation = trpc.store.guestCheckout.useMutation({
+    onSuccess: (data) => {
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        toast.error("Checkout failed — no redirect URL returned.");
+        setCheckoutLoading(false);
+      }
+    },
+    onError: (err) => {
+      toast.error(err.message ?? "Checkout failed.");
+      setCheckoutLoading(false);
+    },
+  });
+
   const handleCheckout = () => {
     if (!isAuthenticated) {
-      toast("Sign in to complete your purchase.", {
-        description: "Create a free account or log in to checkout.",
+      const email = guestEmail.trim();
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        toast.error("Please enter a valid email address to continue.");
+        return;
+      }
+      setCheckoutLoading(true);
+      guestCheckoutMutation.mutate({
+        items: items.map((i) => ({
+          productId: i.productId,
+          variantId: i.variantId,
+          quantity: i.quantity,
+        })),
+        email,
+        discountCode: appliedCode ?? undefined,
       });
       return;
     }
@@ -401,6 +431,19 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     </div>
                   </div>
 
+                  {/* Guest email input */}
+                  {!isAuthenticated && (
+                    <div>
+                      <input
+                        type="email"
+                        value={guestEmail}
+                        onChange={(e) => setGuestEmail(e.target.value)}
+                        placeholder="Email for order confirmation"
+                        className="w-full bg-white/[0.06] border border-white/10 rounded-xl px-3 py-2 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[#E879F9]/40 transition-colors"
+                      />
+                    </div>
+                  )}
+
                   {/* Checkout button */}
                   <Button
                     onClick={handleCheckout}
@@ -412,8 +455,6 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Processing…
                       </>
-                    ) : !isAuthenticated ? (
-                      "Sign In to Checkout"
                     ) : (
                       "Checkout"
                     )}

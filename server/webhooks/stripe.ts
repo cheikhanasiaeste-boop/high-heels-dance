@@ -252,13 +252,27 @@ async function handleStoreOrderCompleted(session: Stripe.Checkout.Session) {
   const totalBeforeDiscount = metadata.total_before_discount || "0";
   const shippingCost = metadata.shipping_cost || "0";
   const customerNotes = metadata.customer_notes || null;
-  const cartItems = JSON.parse(metadata.cart_items || "[]") as Array<{
+
+  let cartItems = JSON.parse(metadata.cart_items || "[]") as Array<{
     productId: number;
     variantId: number;
     variantKey: string;
     quantity: number;
     unitPrice: number;
   }>;
+
+  // Fallback: if cart_items was too large to fit in Stripe metadata (capped to ""),
+  // reload the frozen snapshot from the user's current DB cart.
+  if (cartItems.length === 0 && userId) {
+    const dbCart = await storeDb.getCartItems(userId);
+    cartItems = dbCart.map((i) => ({
+      productId: i.productId,
+      variantId: i.variantId,
+      variantKey: i.variantKey,
+      quantity: i.quantity,
+      unitPrice: i.unitPrice,
+    }));
+  }
 
   // Extract shipping from Stripe session
   const shipping = (session as any).shipping_details;

@@ -37,6 +37,154 @@ function slugify(title: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// Shared checkout helper (used by both `checkout` and `guestCheckout`)
+// ---------------------------------------------------------------------------
+
+type EnrichedCheckoutItem = {
+  productId: number;
+  variantId: number;
+  variantKey: string;
+  quantity: number;
+  unitPrice: number;
+  title: string;
+  imageUrl: string | null;
+  stock: number;
+  color?: string | null;
+  size?: string | null;
+};
+
+async function createStoreCheckoutSession(params: {
+  cartItems: EnrichedCheckoutItem[];
+  email: string | null | undefined;
+  userId: string;
+  discountCode?: string;
+  customerNotes?: string;
+}): Promise<{ url: string | null }> {
+  if (!stripe) {
+    throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Payment system not configured" });
+  }
+
+  const { cartItems, email, userId, discountCode, customerNotes } = params;
+
+  // Validate stock
+  const problems = cartItems
+    .filter((item) => item.quantity > item.stock)
+    .map((item) => ({ productId: item.productId, variantId: item.variantId, requested: item.quantity, available: item.stock }));
+  if (problems.length > 0) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: JSON.stringify({ code: "STOCK_INSUFFICIENT", problems }),
+    });
+  }
+
+  // Validate discount if provided
+  let discountRecord: Awaited<ReturnType<typeof db.getDiscountCodeByCode>> | null = null;
+  if (discountCode) {
+    discountRecord = await db.getDiscountCodeByCode(discountCode);
+    if (!discountRecord || !discountRecord.isActive) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid or inactive discount code" });
+    }
+    const now = new Date();
+    if (now < discountRecord.validFrom || now > discountRecord.validTo) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Discount code is not currently valid" });
+    }
+    if (discountRecord.maxUses && discountRecord.currentUses >= discountRecord.maxUses) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Discount code usage limit reached" });
+    }
+    if (discountRecord.applicableTo !== "all" && discountRecord.applicableTo !== "products") {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Discount code not applicable to store purchases" });
+    }
+  }
+
+  // Calculate totals
+  const subtotal = cartItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+
+  let discountAmount = 0;
+  if (discountRecord) {
+    if (discountRecord.discountType === "percentage") {
+      discountAmount = subtotal * (parseFloat(discountRecord.discountValue) / 100);
+    } else {
+      discountAmount = Math.min(parseFloat(discountRecord.discountValue), subtotal);
+    }
+  }
+
+  const [shippingRateRaw, freeThresholdRaw] = await Promise.all([
+    db.getSetting("store_shipping_flat_rate"),
+    db.getSetting("store_shipping_free_threshold"),
+  ]);
+  const shippingRate = parseFloat(shippingRateRaw ?? "5.00");
+  const freeThreshold = parseFloat(freeThresholdRaw ?? "50.00");
+  const afterDiscount = subtotal - discountAmount;
+  const shippingCost = afterDiscount >= freeThreshold ? 0 : shippingRate;
+
+  // Distribute discount proportionally across line items
+  const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = cartItems.map((item, idx) => {
+    const itemSubtotal = item.unitPrice * item.quantity;
+    let itemDiscount = subtotal > 0 ? (itemSubtotal / subtotal) * discountAmount : 0;
+    // Fix rounding remainder on last item
+    if (idx === cartItems.length - 1) {
+      const allocated = cartItems.slice(0, -1).reduce((sum, it) => {
+        const its = it.unitPrice * it.quantity;
+        return sum + (subtotal > 0 ? (its / subtotal) * discountAmount : 0);
+      }, 0);
+      itemDiscount = discountAmount - allocated;
+    }
+    const unitAmountAfterDiscount = Math.max(0, Math.round(((itemSubtotal - itemDiscount) / item.quantity) * 100));
+    const variantLabel = [item.color, item.size].filter(Boolean).join(" / ");
+    return {
+      price_data: {
+        currency: "gbp",
+        product_data: {
+          name: sanitize(item.title),
+          description: variantLabel ? sanitize(variantLabel) : undefined,
+        },
+        unit_amount: unitAmountAfterDiscount,
+      },
+      quantity: item.quantity,
+    };
+  });
+
+  const baseUrl = process.env.NODE_ENV === "production"
+    ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME || "high-heels-dance.onrender.com"}`
+    : `http://localhost:${process.env.PORT || 3000}`;
+
+  // Stripe metadata values are limited to 500 chars; fall back to empty string
+  // if the JSON exceeds that limit — the webhook will reload from DB.
+  const cartItemsJson = JSON.stringify(cartItems.map((item) => ({
+    productId: item.productId,
+    variantId: item.variantId,
+    variantKey: item.variantKey,
+    quantity: item.quantity,
+    unitPrice: item.unitPrice,
+  })));
+  const cartItemsMeta = cartItemsJson.length <= 490 ? cartItemsJson : "";
+
+  const session = await stripe.checkout.sessions.create({
+    mode: "payment",
+    shipping_address_collection: { allowed_countries: ["GB", "US", "CA", "AU", "IE", "FR", "DE", "ES", "IT", "NL"] as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[] },
+    line_items: lineItems,
+    shipping_options: shippingCost > 0
+      ? [{ shipping_rate_data: { type: "fixed_amount", fixed_amount: { amount: Math.round(shippingCost * 100), currency: "gbp" }, display_name: "Standard Shipping" } }]
+      : [{ shipping_rate_data: { type: "fixed_amount", fixed_amount: { amount: 0, currency: "gbp" }, display_name: "Free Shipping" } }],
+    success_url: `${baseUrl}/store/order-success?session_id={CHECKOUT_SESSION_ID}`,
+    cancel_url: `${baseUrl}/store/cart`,
+    customer_email: email ?? undefined,
+    metadata: {
+      type: "store_order",
+      user_id: userId,
+      discount_code: discountCode ?? "",
+      discount_amount: discountAmount.toFixed(2),
+      total_before_discount: subtotal.toFixed(2),
+      shipping_cost: shippingCost.toFixed(2),
+      customer_notes: sanitize(customerNotes ?? "", 500),
+      cart_items: cartItemsMeta,
+    },
+  });
+
+  return { url: session.url };
+}
+
+// ---------------------------------------------------------------------------
 // Public store router
 // ---------------------------------------------------------------------------
 
@@ -141,131 +289,75 @@ export const storeRouter = router({
       customerNotes: z.string().optional(),
     }))
     .mutation(async ({ ctx, input }) => {
-      // 1. Check stripe is configured
-      if (!stripe) {
-        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Payment system not configured" });
-      }
-
-      // 2. Load cart
       const cartItems = await storeDb.getCartItems(ctx.user.id);
       if (!cartItems || cartItems.length === 0) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Cart is empty" });
       }
+      return createStoreCheckoutSession({
+        cartItems,
+        email: ctx.user.email,
+        userId: String(ctx.user.id),
+        discountCode: input.discountCode,
+        customerNotes: input.customerNotes,
+      });
+    }),
 
-      // 3. Validate stock
-      const problems = cartItems
-        .filter((item) => item.quantity > item.stock)
-        .map((item) => ({ productId: item.productId, variantId: item.variantId, requested: item.quantity, available: item.stock }));
-      if (problems.length > 0) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: JSON.stringify({ code: "STOCK_INSUFFICIENT", problems }),
+  guestCheckout: publicProcedure
+    .input(z.object({
+      items: z.array(z.object({
+        productId: z.number(),
+        variantId: z.number(),
+        quantity: z.number().min(1).max(100),
+      })).min(1),
+      email: z.string().email(),
+      discountCode: z.string().optional(),
+      customerNotes: z.string().optional(),
+    }))
+    .mutation(async ({ input }) => {
+      if (!stripe) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Payment system not configured" });
+      }
+
+      // Server-side validate each item: fetch product + variant, check published + stock
+      const enriched: EnrichedCheckoutItem[] = [];
+      for (const clientItem of input.items) {
+        const product = await storeDb.getProductById(clientItem.productId);
+        if (!product || !product.isPublished) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: `Product ${clientItem.productId} is not available` });
+        }
+        const variant = product.variants?.find((v) => v.id === clientItem.variantId);
+        if (!variant) {
+          throw new TRPCError({ code: "BAD_REQUEST", message: `Variant ${clientItem.variantId} not found` });
+        }
+
+        // Calculate server-side price (same logic as EnrichedCartItem)
+        const basePrice = parseFloat(product.basePrice);
+        const modifier = parseFloat(variant.priceModifier ?? "0");
+        const discountPct = product.discountPercent ?? 0;
+        const rawPrice = basePrice + modifier;
+        const unitPrice = discountPct > 0 ? rawPrice * (1 - discountPct / 100) : rawPrice;
+
+        enriched.push({
+          productId: product.id,
+          variantId: variant.id,
+          variantKey: variant.variantKey ?? "",
+          quantity: clientItem.quantity,
+          unitPrice,
+          title: product.title,
+          imageUrl: product.images?.[0]?.imageUrl ?? null,
+          stock: variant.stock,
+          color: variant.color,
+          size: variant.size,
         });
       }
 
-      // 4. Validate discount if provided
-      let discountRecord: Awaited<ReturnType<typeof db.getDiscountCodeByCode>> | null = null;
-      if (input.discountCode) {
-        discountRecord = await db.getDiscountCodeByCode(input.discountCode);
-        if (!discountRecord || !discountRecord.isActive) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Invalid or inactive discount code" });
-        }
-        const now = new Date();
-        if (now < discountRecord.validFrom || now > discountRecord.validTo) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Discount code is not currently valid" });
-        }
-        if (discountRecord.maxUses && discountRecord.currentUses >= discountRecord.maxUses) {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Discount code usage limit reached" });
-        }
-        if (discountRecord.applicableTo !== "all" && discountRecord.applicableTo !== "products") {
-          throw new TRPCError({ code: "BAD_REQUEST", message: "Discount code not applicable to store purchases" });
-        }
-      }
-
-      // 5. Calculate totals
-      const subtotal = cartItems.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
-
-      let discountAmount = 0;
-      if (discountRecord) {
-        if (discountRecord.discountType === "percentage") {
-          discountAmount = subtotal * (parseFloat(discountRecord.discountValue) / 100);
-        } else {
-          discountAmount = Math.min(parseFloat(discountRecord.discountValue), subtotal);
-        }
-      }
-
-      const [shippingRateRaw, freeThresholdRaw] = await Promise.all([
-        db.getSetting("store_shipping_flat_rate"),
-        db.getSetting("store_shipping_free_threshold"),
-      ]);
-      const shippingRateStr = shippingRateRaw ?? "5.00";
-      const freeThresholdStr = freeThresholdRaw ?? "50.00";
-      const shippingRate = parseFloat(shippingRateStr);
-      const freeThreshold = parseFloat(freeThresholdStr);
-      const afterDiscount = subtotal - discountAmount;
-      const shippingCost = afterDiscount >= freeThreshold ? 0 : shippingRate;
-
-      // 6. Distribute discount proportionally across line items
-      const lineItems: Stripe.Checkout.SessionCreateParams.LineItem[] = cartItems.map((item, idx) => {
-        const itemSubtotal = item.unitPrice * item.quantity;
-        let itemDiscount = subtotal > 0 ? (itemSubtotal / subtotal) * discountAmount : 0;
-        // Fix rounding remainder on last item
-        if (idx === cartItems.length - 1) {
-          const allocated = cartItems.slice(0, -1).reduce((sum, it) => {
-            const its = it.unitPrice * it.quantity;
-            return sum + (subtotal > 0 ? (its / subtotal) * discountAmount : 0);
-          }, 0);
-          itemDiscount = discountAmount - allocated;
-        }
-        const unitAmountAfterDiscount = Math.max(0, Math.round(((itemSubtotal - itemDiscount) / item.quantity) * 100));
-        const variantLabel = [item.color, item.size].filter(Boolean).join(" / ");
-        return {
-          price_data: {
-            currency: "gbp",
-            product_data: {
-              name: sanitize(item.title),
-              description: variantLabel ? sanitize(variantLabel) : undefined,
-            },
-            unit_amount: unitAmountAfterDiscount,
-          },
-          quantity: item.quantity,
-        };
+      return createStoreCheckoutSession({
+        cartItems: enriched,
+        email: input.email,
+        userId: "", // guest — no user ID
+        discountCode: input.discountCode,
+        customerNotes: input.customerNotes,
       });
-
-      const baseUrl = process.env.NODE_ENV === "production"
-        ? `https://${process.env.RENDER_EXTERNAL_HOSTNAME || "high-heels-dance.onrender.com"}`
-        : `http://localhost:${process.env.PORT || 3000}`;
-
-      // 7. Create Stripe Checkout Session
-      const session = await stripe.checkout.sessions.create({
-        mode: "payment",
-        shipping_address_collection: { allowed_countries: ["GB", "US", "CA", "AU", "IE", "FR", "DE", "ES", "IT", "NL"] as Stripe.Checkout.SessionCreateParams.ShippingAddressCollection.AllowedCountry[] },
-        line_items: lineItems,
-        shipping_options: shippingCost > 0
-          ? [{ shipping_rate_data: { type: "fixed_amount", fixed_amount: { amount: Math.round(shippingCost * 100), currency: "gbp" }, display_name: "Standard Shipping" } }]
-          : [{ shipping_rate_data: { type: "fixed_amount", fixed_amount: { amount: 0, currency: "gbp" }, display_name: "Free Shipping" } }],
-        success_url: `${baseUrl}/store/order-success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${baseUrl}/store/cart`,
-        customer_email: ctx.user.email ?? undefined,
-        metadata: {
-          type: "store_order",
-          user_id: String(ctx.user.id),
-          discount_code: input.discountCode ?? "",
-          discount_amount: discountAmount.toFixed(2),
-          total_before_discount: subtotal.toFixed(2),
-          shipping_cost: shippingCost.toFixed(2),
-          customer_notes: sanitize(input.customerNotes ?? "", 500),
-          cart_items: JSON.stringify(cartItems.map((item) => ({
-            productId: item.productId,
-            variantId: item.variantId,
-            quantity: item.quantity,
-            unitPrice: item.unitPrice,
-          }))),
-        },
-      });
-
-      // 8. Return session URL
-      return { url: session.url };
     }),
 
   orderBySession: publicProcedure

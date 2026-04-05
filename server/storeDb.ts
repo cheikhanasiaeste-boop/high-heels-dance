@@ -1705,7 +1705,7 @@ export async function decrementVariantStock(
     }
   }
 
-  // REST API fallback
+  // REST API fallback — use optimistic locking to avoid read-then-write race condition
   const { supabaseAdmin } = await import("./lib/supabase");
   const { data: current } = await supabaseAdmin
     .from("store_product_variants")
@@ -1713,13 +1713,41 @@ export async function decrementVariantStock(
     .eq("id", variantId)
     .single();
 
-  const newStock = (current?.stock ?? 0) - quantity;
-  await supabaseAdmin
+  if (!current) return { variantId, variantKey: "", stock: 0 };
+
+  const expectedOldStock = current.stock;
+  const newStock = expectedOldStock - quantity;
+
+  // Optimistic lock: only update if stock is still what we read
+  const { data: updated, error } = await supabaseAdmin
     .from("store_product_variants")
     .update({ stock: newStock })
-    .eq("id", variantId);
+    .eq("id", variantId)
+    .eq("stock", expectedOldStock) // optimistic lock
+    .select("stock, variant_key")
+    .single();
 
-  return { variantId, variantKey: current?.variant_key ?? "", stock: newStock };
+  if (error || !updated) {
+    // Retry once if optimistic lock failed (concurrent update)
+    const { data: retry } = await supabaseAdmin
+      .from("store_product_variants")
+      .select("stock, variant_key")
+      .eq("id", variantId)
+      .single();
+
+    if (retry) {
+      const retryNew = retry.stock - quantity;
+      await supabaseAdmin
+        .from("store_product_variants")
+        .update({ stock: retryNew })
+        .eq("id", variantId)
+        .eq("stock", retry.stock);
+      return { variantId, variantKey: retry.variant_key ?? "", stock: retryNew };
+    }
+    return { variantId, variantKey: current.variant_key ?? "", stock: newStock };
+  }
+
+  return { variantId, variantKey: updated.variant_key ?? "", stock: updated.stock };
 }
 
 /**
