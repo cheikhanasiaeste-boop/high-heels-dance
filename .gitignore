@@ -101,6 +101,9 @@ jspm_packages/
 tmp/
 temp/
 
+# Superpowers brainstorm artifacts
+.superpowers/
+
 # Database
 *.db
 *.sqlite
