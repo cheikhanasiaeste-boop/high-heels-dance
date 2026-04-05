@@ -6,10 +6,10 @@ While the student practices with Live Movement Coach enabled (Sub-project 2), th
 
 **Key decisions:**
 - Two feedback triggers: periodic summaries (every 90s of active dancing) + threshold alerts (when a body part stays red for 5s+)
-- 20-second cooldown between any feedback messages — prevents overwhelming the student
+- 20-second cooldown after periodic feedback, 30-second cooldown after threshold alerts — prevents overwhelming the student
 - Non-dance detection via movement energy — suppresses scoring during talking-to-camera segments
 - Speech bubble overlay with dismiss button, auto-dismiss after 10 seconds
-- Session summary persisted to DB if at least 60 seconds of active coaching
+- Session summary persisted to DB if at least 90 seconds of active coaching
 - "Live Movement Coach" naming used consistently
 - All feedback generation server-side (API key secure, rate-limited)
 
@@ -54,10 +54,10 @@ Lesson: "Beginner Heels Choreography — Section 2"
 
 ### Cooldown
 
-- **20-second cooldown** after any feedback message (periodic or threshold)
+- **20-second cooldown** after periodic feedback, **30-second cooldown** after threshold alerts
 - During cooldown, no new feedback is generated even if triggers fire
 - Cooldown timer only counts active playback time (pausing doesn't tick the cooldown)
-- This prevents the student from being bombarded during difficult sections
+- The longer threshold cooldown prevents repetitive corrections about the same body part
 
 ### Rate Limiting
 
@@ -141,6 +141,7 @@ Your feedback style:
 - Bring real energy and excitement when the student is doing well
 - Focus on hips, knees, and torso — these are the foundation of high heels dance
 - Make the student feel like they have a supportive expert right there with them
+- Use Elizabeth's warm, slightly playful energy when the student is doing well
 
 Never mention scores, percentages, numbers, AI, technology, or algorithms. Speak as if you're right there in the room watching them dance.
 ```
@@ -236,14 +237,14 @@ Index on `(user_id, lesson_id)`.
 
 ### Save trigger
 
-When the student toggles off Live Movement Coach, or navigates away from the lesson (component unmount with cleanup), **if they had at least 60 seconds of active coaching time**:
+When the student toggles off Live Movement Coach, or navigates away from the lesson (component unmount with cleanup), **if they had at least 90 seconds of active coaching time**:
 
 1. Client sends accumulated stats to server: `aiCoach.saveSession({ ... })`
 2. Server calls Gemini for a session summary (richer prompt, 3-4 sentences)
 3. Server saves the session row to DB
 4. Client shows a brief toast: "Practice session saved!"
 
-If under 60 seconds: no save, no API call, data discarded silently.
+If under 90 seconds: no save, no API call, data discarded silently.
 
 ### tRPC route: `aiCoach.saveSession`
 
