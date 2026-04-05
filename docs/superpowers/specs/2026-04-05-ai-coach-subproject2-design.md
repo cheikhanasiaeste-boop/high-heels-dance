@@ -2,12 +2,12 @@
 
 ## Overview
 
-When a student enables the "Live Coach" toggle in the lesson player, the browser activates their webcam, runs MediaPipe Pose at 3fps in a Web Worker, compares the student's pose against the pre-computed teacher reference keypoints (from Sub-project 1) at the current video timestamp, and displays a real-time similarity score as an elegant floating percentage wheel above the video. A small color-coded skeleton visualization replaces the raw camera feed — showing the student's detected pose with limbs colored by accuracy.
+When a student enables the "Live Movement Coach" toggle in the lesson player, the browser activates their webcam, runs MediaPipe Pose at 3fps in a Web Worker, compares the student's pose against the pre-computed teacher reference keypoints (from Sub-project 1) at the current video timestamp, and displays a real-time similarity score as an elegant floating percentage wheel inside the top-right corner of the video. A small color-coded skeleton visualization replaces the raw camera feed — showing the student's detected pose with limbs colored by accuracy.
 
 Analysis runs only while the video is playing. When paused, everything pauses.
 
 **Key decisions:**
-- Score displayed as a subtle percentage wheel above the lesson video — luxurious, minimal, fuchsia accents on high scores
+- Score displayed as a subtle percentage wheel inside the video's top-right corner — luxurious, minimal, fuchsia accents on high scores
 - No raw camera feed shown — student sees a small color-coded skeleton (green = matching, amber = drifting, red = off)
 - Comparison uses joint angle similarity — rotation/scale invariant, works at any distance
 - Hips, knees, and torso weighted 2x heavier than arms (core to high heels dance technique)
@@ -19,25 +19,26 @@ Analysis runs only while the video is playing. When paused, everything pauses.
 
 ## UI Components
 
-### "Enable Live Coach" Toggle
+### "Live Movement Coach" Toggle
 
 Placed between the video player and the lesson content inside the lesson `<Card>`, on the same row as the "Mark as Complete" button area.
 
 **Off state:**
-- Subtle pill-shaped toggle: ghost outline, "Enable Live Coach" label + small sparkle/brain icon
+- Subtle pill-shaped toggle: ghost outline, "Live Movement Coach" label + small sparkle/brain icon
 - Does not draw attention — blends with the lesson UI
 
 **On state:**
 - Fuchsia gradient fill on the toggle pill, soft glow
-- "Live Coach Active" label
+- "Coach Active" label with fuchsia dot indicator
 - First activation triggers browser camera permission prompt
 - On subsequent activations, camera resumes immediately (permission cached)
+- **First-time tooltip:** on the very first enable, show a gentle tooltip (auto-dismiss after 6s): "Green = good alignment, Amber = minor adjustment, Red = focus here". Store dismissal in `localStorage("hh-coach-tooltip-seen")`.
 
 **Availability:** Only shown if the lesson has reference keypoints (`keypointStatus === "complete"`). Hidden otherwise — no confusing disabled state.
 
 ### Score Wheel
 
-Positioned **above the video player**, right-aligned, floating over the top-right corner of the video container.
+Positioned **inside the video container**, top-right corner, overlaid on the video.
 
 - Circular percentage gauge, ~64px diameter
 - Thin arc stroke (3-4px) with gradient fill based on score:
@@ -63,6 +64,7 @@ Positioned in the **bottom-right corner** of the video container.
   - Red (`#F43F5E`): more than 30° off
 - Joints drawn as small circles (4px radius), connections as lines (2px stroke)
 - Mirrored horizontally so the skeleton feels natural (student's left = screen left)
+- When overall score > 85%: subtle fuchsia glow border on the skeleton panel for positive reinforcement
 - Hidden when AI Coach is off or video is paused
 
 ### Loading State
