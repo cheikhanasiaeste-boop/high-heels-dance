@@ -99,6 +99,7 @@ Extend `transactionType` type from `"subscription" | "course"` to `"subscription
 - Cart stored in `localStorage` key `"hh-cart"` as `Array<{ productId, variantId, quantity }>`
 - All operations read/write localStorage directly
 - Product details (title, image, price, stock) fetched via tRPC to enrich display
+- On add/update: client calls `store.getBySlug` to fetch current stock and validates quantity before writing to localStorage. This prevents guests from adding more than available stock.
 
 **Authenticated:**
 - Cart stored in `store_cart_items` table
@@ -112,9 +113,9 @@ When a user signs in and has items in localStorage, inside a single transaction:
 1. Client reads localStorage `"hh-cart"` items
 2. Calls `store.cart.merge({ items })` mutation
 3. Server per item:
-   - If item exists in DB cart → `new_qty = min(max(db_qty, local_qty), variant.stock)`
+   - If item exists in DB cart → DB quantity wins: `new_qty = min(db_qty, variant.stock)`. Only use localStorage quantity if it's higher AND stock allows: `new_qty = min(max(db_qty, local_qty), variant.stock)`
    - If item is new → `new_qty = min(local_qty, variant.stock)`
-   - If variant doesn't exist or stock is 0 → skip silently
+   - If variant doesn't exist or stock is 0 → skip silently, do not error
 4. Returns full merged cart (enriched with product details)
 5. Client clears localStorage `"hh-cart"`
 
@@ -209,7 +210,10 @@ For guest checkout: a separate `store.guestCheckout` mutation that accepts cart 
    - `totalBeforeDiscount = subtotal`
    - Discount: percentage → `discountAmount = round(subtotal * value / 100, 2)`, fixed → `min(value, subtotal)`
    - `afterDiscount = subtotal - discountAmount`
-   - Shipping from `siteSettings`: `shippingCost = afterDiscount >= freeThreshold ? 0 : flatRate`
+   - Shipping from `siteSettings`:
+     - Fetch `store_shipping_flat_rate` (e.g. "5.00") and `store_shipping_free_threshold` (e.g. "50.00")
+     - If either setting is missing, default to flatRate=5.00, freeThreshold=50.00
+     - `shippingCost = afterDiscount >= freeThreshold ? 0 : flatRate`
    - `total = afterDiscount + shippingCost`
 
 5. **Distribute discount across line items** (no Stripe coupons):
@@ -323,6 +327,7 @@ Check `store_orders` for existing row with matching `stripe_session_id`. If foun
    - Set `hasStockIssue = true` on the order
    - Log: `[Store][STOCK_ISSUE] Order #${orderId}: ${variantKey} stock=${stock}`
    - Push admin notification via existing SSE system
+   - Send admin email notification (using existing email infrastructure if available, otherwise log-only for v1)
 6. **Record discount usage** — increment `currentUses`, insert `discountUsage` row with `transactionType: "product"`
 7. **Clear user's cart** — if `user_id` is present, delete from `store_cart_items`
 
