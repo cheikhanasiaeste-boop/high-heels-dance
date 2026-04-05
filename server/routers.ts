@@ -7,6 +7,7 @@ import { discountRouter } from "./discountRouter";
 import { sessionDiscountRouter } from "./sessionDiscountRouter";
 import { blogRouter, newsletterRouter, adminBlogRouter } from "./blogRouter";
 import { storeRouter, adminStoreRouter } from "./storeRouter";
+import { keypointRouter, adminKeypointRouter } from "./keypointRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
@@ -2440,6 +2441,8 @@ Never be pushy. Be genuinely helpful and make people feel welcome.`;
   adminBlog: adminBlogRouter,
   store: storeRouter,
   adminStore: adminStoreRouter,
+  keypoints: keypointRouter,
+  adminKeypoints: adminKeypointRouter,
 });
 
 export type AppRouter = typeof appRouter;
