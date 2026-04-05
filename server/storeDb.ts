@@ -14,6 +14,12 @@ import {
   storeCartItems,
   StoreCartItem,
   InsertStoreCartItem,
+  storeOrders,
+  StoreOrder,
+  InsertStoreOrder,
+  storeOrderItems,
+  StoreOrderItem,
+  InsertStoreOrderItem,
 } from "../drizzle/schema";
 
 // ---------------------------------------------------------------------------
@@ -69,6 +75,45 @@ function mapStoreCartItem(row: any): StoreCartItem {
     variantId: row.variant_id,
     quantity: row.quantity,
     addedAt: row.added_at ? new Date(row.added_at) : new Date(),
+  };
+}
+
+function mapStoreOrder(row: any): StoreOrder {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    email: row.email,
+    status: row.status,
+    currency: row.currency,
+    shippingName: row.shipping_name,
+    shippingAddress: row.shipping_address,
+    shippingCity: row.shipping_city,
+    shippingCountry: row.shipping_country,
+    shippingPostalCode: row.shipping_postal_code,
+    shippingMethod: row.shipping_method,
+    subtotal: row.subtotal,
+    totalBeforeDiscount: row.total_before_discount,
+    discountCode: row.discount_code,
+    discountAmount: row.discount_amount,
+    shippingCost: row.shipping_cost,
+    total: row.total,
+    customerNotes: row.customer_notes,
+    stripeSessionId: row.stripe_session_id,
+    stripePaymentId: row.stripe_payment_id,
+    hasStockIssue: row.has_stock_issue,
+    createdAt: row.created_at ? new Date(row.created_at) : new Date(),
+  };
+}
+
+function mapStoreOrderItem(row: any): StoreOrderItem {
+  return {
+    id: row.id,
+    orderId: row.order_id,
+    productId: row.product_id,
+    variantId: row.variant_id,
+    variantKey: row.variant_key,
+    quantity: row.quantity,
+    unitPrice: row.unit_price,
   };
 }
 
@@ -1453,4 +1498,395 @@ export async function mergeCart(
   }
 
   return getCartItems(userId);
+}
+
+// ---------------------------------------------------------------------------
+// Order Functions
+// ---------------------------------------------------------------------------
+
+/**
+ * Create an order with its items. Returns the created order.
+ */
+export async function createOrder(
+  order: InsertStoreOrder,
+  items: InsertStoreOrderItem[]
+): Promise<StoreOrder & { items: StoreOrderItem[] }> {
+  const db = await getDb();
+  if (db) {
+    try {
+      const [created] = await db.insert(storeOrders).values(order).returning();
+      const orderItems = await db
+        .insert(storeOrderItems)
+        .values(items.map((item) => ({ ...item, orderId: created.id })))
+        .returning();
+      return { ...created, items: orderItems };
+    } catch (e) {
+      console.warn("[Store] createOrder direct query failed, trying REST:", (e as Error).message);
+    }
+  }
+
+  // REST API fallback
+  const { supabaseAdmin } = await import("./lib/supabase");
+  const { data: orderData, error: orderErr } = await supabaseAdmin
+    .from("store_orders")
+    .insert({
+      user_id: order.userId ?? null,
+      email: order.email,
+      status: order.status ?? "pending",
+      currency: order.currency ?? "EUR",
+      shipping_name: order.shippingName,
+      shipping_address: order.shippingAddress,
+      shipping_city: order.shippingCity,
+      shipping_country: order.shippingCountry,
+      shipping_postal_code: order.shippingPostalCode,
+      shipping_method: order.shippingMethod ?? null,
+      subtotal: order.subtotal,
+      total_before_discount: order.totalBeforeDiscount,
+      discount_code: order.discountCode ?? null,
+      discount_amount: order.discountAmount ?? "0",
+      shipping_cost: order.shippingCost ?? "0",
+      total: order.total,
+      customer_notes: order.customerNotes ?? null,
+      stripe_session_id: order.stripeSessionId ?? null,
+      stripe_payment_id: order.stripePaymentId ?? null,
+      has_stock_issue: order.hasStockIssue ?? false,
+    })
+    .select("*")
+    .single();
+
+  if (orderErr) throw new Error(orderErr.message);
+  const created = mapStoreOrder(orderData);
+
+  const restItems = items.map((item) => ({
+    order_id: created.id,
+    product_id: item.productId,
+    variant_id: item.variantId ?? null,
+    variant_key: item.variantKey ?? null,
+    quantity: item.quantity,
+    unit_price: item.unitPrice,
+  }));
+
+  const { data: itemsData, error: itemsErr } = await supabaseAdmin
+    .from("store_order_items")
+    .insert(restItems)
+    .select("*");
+
+  if (itemsErr) throw new Error(itemsErr.message);
+
+  return { ...created, items: (itemsData ?? []).map(mapStoreOrderItem) };
+}
+
+/**
+ * Get order by Stripe session ID. Used for idempotency check and success page.
+ */
+export async function getOrderByStripeSession(
+  sessionId: string
+): Promise<(StoreOrder & { items: (StoreOrderItem & { productTitle?: string })[] }) | null> {
+  const db = await getDb();
+  if (db) {
+    try {
+      const [order] = await db
+        .select()
+        .from(storeOrders)
+        .where(eq(storeOrders.stripeSessionId, sessionId))
+        .limit(1);
+
+      if (!order) return null;
+
+      const items = await db
+        .select({
+          id: storeOrderItems.id,
+          orderId: storeOrderItems.orderId,
+          productId: storeOrderItems.productId,
+          variantId: storeOrderItems.variantId,
+          variantKey: storeOrderItems.variantKey,
+          quantity: storeOrderItems.quantity,
+          unitPrice: storeOrderItems.unitPrice,
+          productTitle: storeProducts.title,
+        })
+        .from(storeOrderItems)
+        .leftJoin(storeProducts, eq(storeProducts.id, storeOrderItems.productId))
+        .where(eq(storeOrderItems.orderId, order.id));
+
+      return { ...order, items };
+    } catch (e) {
+      console.warn("[Store] getOrderByStripeSession direct query failed, trying REST:", (e as Error).message);
+    }
+  }
+
+  // REST API fallback
+  const { supabaseAdmin } = await import("./lib/supabase");
+  const { data: orderData } = await supabaseAdmin
+    .from("store_orders")
+    .select("*")
+    .eq("stripe_session_id", sessionId)
+    .limit(1)
+    .single();
+
+  if (!orderData) return null;
+  const order = mapStoreOrder(orderData);
+
+  const { data: itemsData } = await supabaseAdmin
+    .from("store_order_items")
+    .select("*")
+    .eq("order_id", order.id);
+
+  const productIds = [...new Set((itemsData ?? []).map((i: any) => i.product_id))];
+  const { data: products } = await supabaseAdmin
+    .from("store_products")
+    .select("id, title")
+    .in("id", productIds);
+
+  const titleMap = new Map((products ?? []).map((p: any) => [p.id, p.title]));
+
+  return {
+    ...order,
+    items: (itemsData ?? []).map((row: any) => ({
+      ...mapStoreOrderItem(row),
+      productTitle: titleMap.get(row.product_id) ?? "Unknown",
+    })),
+  };
+}
+
+/**
+ * Decrement stock for a variant. Returns the new stock (may be negative).
+ */
+export async function decrementVariantStock(
+  variantId: number,
+  quantity: number
+): Promise<{ variantId: number; variantKey: string; stock: number }> {
+  const db = await getDb();
+  if (db) {
+    try {
+      const [result] = await db
+        .update(storeProductVariants)
+        .set({ stock: sql`${storeProductVariants.stock} - ${quantity}` })
+        .where(eq(storeProductVariants.id, variantId))
+        .returning({
+          variantId: storeProductVariants.id,
+          variantKey: storeProductVariants.variantKey,
+          stock: storeProductVariants.stock,
+        });
+      return result;
+    } catch (e) {
+      console.warn("[Store] decrementVariantStock direct query failed, trying REST:", (e as Error).message);
+    }
+  }
+
+  // REST API fallback
+  const { supabaseAdmin } = await import("./lib/supabase");
+  const { data: current } = await supabaseAdmin
+    .from("store_product_variants")
+    .select("stock, variant_key")
+    .eq("id", variantId)
+    .single();
+
+  const newStock = (current?.stock ?? 0) - quantity;
+  await supabaseAdmin
+    .from("store_product_variants")
+    .update({ stock: newStock })
+    .eq("id", variantId);
+
+  return { variantId, variantKey: current?.variant_key ?? "", stock: newStock };
+}
+
+/**
+ * Flag an order as having a stock issue.
+ */
+export async function setOrderStockIssue(orderId: number): Promise<void> {
+  const db = await getDb();
+  if (db) {
+    try {
+      await db
+        .update(storeOrders)
+        .set({ hasStockIssue: true })
+        .where(eq(storeOrders.id, orderId));
+      return;
+    } catch (e) {
+      console.warn("[Store] setOrderStockIssue direct query failed, trying REST:", (e as Error).message);
+    }
+  }
+
+  const { supabaseAdmin } = await import("./lib/supabase");
+  await supabaseAdmin
+    .from("store_orders")
+    .update({ has_stock_issue: true })
+    .eq("id", orderId);
+}
+
+/**
+ * Get orders for admin — paginated, filterable by status.
+ */
+export async function getOrders(
+  status: string | undefined,
+  page: number,
+  limit: number
+): Promise<{ orders: (StoreOrder & { itemCount: number })[]; total: number }> {
+  const db = await getDb();
+  if (db) {
+    try {
+      const offset = (page - 1) * limit;
+      const conditions: ReturnType<typeof eq>[] = [];
+      if (status) conditions.push(eq(storeOrders.status, status));
+      const where = conditions.length === 1 ? conditions[0] : conditions.length > 1 ? and(...conditions) : undefined;
+
+      const [orders, [countRow]] = await Promise.all([
+        db.select().from(storeOrders).where(where).orderBy(desc(storeOrders.createdAt)).limit(limit).offset(offset),
+        db.select({ count: sql<number>`count(*)::int` }).from(storeOrders).where(where),
+      ]);
+
+      // Get item counts per order
+      const orderIds = orders.map((o) => o.id);
+      const itemCounts = orderIds.length > 0
+        ? await db
+            .select({
+              orderId: storeOrderItems.orderId,
+              count: sql<number>`count(*)::int`,
+            })
+            .from(storeOrderItems)
+            .where(inArray(storeOrderItems.orderId, orderIds))
+            .groupBy(storeOrderItems.orderId)
+        : [];
+
+      const countMap = new Map(itemCounts.map((c) => [c.orderId, c.count]));
+
+      return {
+        orders: orders.map((o) => ({ ...o, itemCount: countMap.get(o.id) ?? 0 })),
+        total: countRow?.count ?? 0,
+      };
+    } catch (e) {
+      console.warn("[Store] getOrders direct query failed, trying REST:", (e as Error).message);
+    }
+  }
+
+  // REST API fallback
+  const { supabaseAdmin } = await import("./lib/supabase");
+  const offset = (page - 1) * limit;
+  let query = supabaseAdmin.from("store_orders").select("*", { count: "exact" });
+  if (status) query = query.eq("status", status);
+  query = query.order("created_at", { ascending: false }).range(offset, offset + limit - 1);
+
+  const { data, count, error } = await query;
+  if (error) throw new Error(error.message);
+  const orders = (data ?? []).map(mapStoreOrder);
+
+  // Get item counts
+  const orderIds = orders.map((o) => o.id);
+  if (orderIds.length === 0) return { orders: [], total: 0 };
+
+  const { data: itemsData } = await supabaseAdmin
+    .from("store_order_items")
+    .select("order_id")
+    .in("order_id", orderIds);
+
+  const countMap = new Map<number, number>();
+  for (const row of itemsData ?? []) {
+    countMap.set(row.order_id, (countMap.get(row.order_id) ?? 0) + 1);
+  }
+
+  return {
+    orders: orders.map((o) => ({ ...o, itemCount: countMap.get(o.id) ?? 0 })),
+    total: count ?? 0,
+  };
+}
+
+/**
+ * Get a single order by ID with all items + product titles.
+ */
+export async function getOrderById(
+  id: number
+): Promise<(StoreOrder & { items: (StoreOrderItem & { productTitle?: string })[] }) | null> {
+  const db = await getDb();
+  if (db) {
+    try {
+      const [order] = await db.select().from(storeOrders).where(eq(storeOrders.id, id)).limit(1);
+      if (!order) return null;
+
+      const items = await db
+        .select({
+          id: storeOrderItems.id,
+          orderId: storeOrderItems.orderId,
+          productId: storeOrderItems.productId,
+          variantId: storeOrderItems.variantId,
+          variantKey: storeOrderItems.variantKey,
+          quantity: storeOrderItems.quantity,
+          unitPrice: storeOrderItems.unitPrice,
+          productTitle: storeProducts.title,
+        })
+        .from(storeOrderItems)
+        .leftJoin(storeProducts, eq(storeProducts.id, storeOrderItems.productId))
+        .where(eq(storeOrderItems.orderId, id));
+
+      return { ...order, items };
+    } catch (e) {
+      console.warn("[Store] getOrderById direct query failed, trying REST:", (e as Error).message);
+    }
+  }
+
+  // REST API fallback
+  const { supabaseAdmin } = await import("./lib/supabase");
+  const { data: orderData } = await supabaseAdmin
+    .from("store_orders")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (!orderData) return null;
+  const order = mapStoreOrder(orderData);
+
+  const { data: itemsData } = await supabaseAdmin
+    .from("store_order_items")
+    .select("*")
+    .eq("order_id", id);
+
+  const productIds = [...new Set((itemsData ?? []).map((i: any) => i.product_id))];
+  const { data: products } = await supabaseAdmin
+    .from("store_products")
+    .select("id, title")
+    .in("id", productIds);
+
+  const titleMap = new Map((products ?? []).map((p: any) => [p.id, p.title]));
+
+  return {
+    ...order,
+    items: (itemsData ?? []).map((row: any) => ({
+      ...mapStoreOrderItem(row),
+      productTitle: titleMap.get(row.product_id) ?? "Unknown",
+    })),
+  };
+}
+
+/**
+ * Update order status. Validates transitions.
+ */
+export async function updateOrderStatus(id: number, status: string): Promise<StoreOrder> {
+  const validStatuses = ["pending", "paid", "shipped", "delivered", "cancelled"];
+  if (!validStatuses.includes(status)) {
+    throw new TRPCError({ code: "BAD_REQUEST", message: `Invalid status: ${status}` });
+  }
+
+  const db = await getDb();
+  if (db) {
+    try {
+      const [updated] = await db
+        .update(storeOrders)
+        .set({ status })
+        .where(eq(storeOrders.id, id))
+        .returning();
+      return updated;
+    } catch (e) {
+      console.warn("[Store] updateOrderStatus direct query failed, trying REST:", (e as Error).message);
+    }
+  }
+
+  const { supabaseAdmin } = await import("./lib/supabase");
+  const { data, error } = await supabaseAdmin
+    .from("store_orders")
+    .update({ status })
+    .eq("id", id)
+    .select("*")
+    .single();
+
+  if (error) throw new Error(error.message);
+  return mapStoreOrder(data);
 }
