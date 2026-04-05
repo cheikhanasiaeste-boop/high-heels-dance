@@ -1,19 +1,21 @@
 interface AiCoachScoreWheelProps {
-  score: number; // 0-100
+  score: number; // 0-100, or -1 for non-dance (show "—")
 }
 
 export function AiCoachScoreWheel({ score }: AiCoachScoreWheelProps) {
   const radius = 26;
   const circumference = 2 * Math.PI * radius;
-  const progress = (score / 100) * circumference;
+  const isNonDance = score === -1;
+  const progress = isNonDance ? 0 : (score / 100) * circumference;
   const offset = circumference - progress;
-  const isExcellent = score > 85;
+  const isExcellent = !isNonDance && score > 85;
 
-  // Color based on score
-  const strokeColor =
-    score >= 70 ? "#E879F9" :
-    score >= 40 ? "#F59E0B" :
-    "#F43F5E";
+  // Color based on score; neutral/dim when non-dance
+  const strokeColor = isNonDance
+    ? "rgba(255,255,255,0.2)"
+    : score >= 70 ? "#E879F9"
+    : score >= 40 ? "#F59E0B"
+    : "#F43F5E";
 
   return (
     <div
@@ -44,7 +46,9 @@ export function AiCoachScoreWheel({ score }: AiCoachScoreWheelProps) {
           style={{ transition: "stroke-dashoffset 300ms ease, stroke 300ms ease" }}
         />
       </svg>
-      <span className="text-white font-bold text-base z-10">{score}</span>
+      <span className="text-white font-bold text-base z-10">
+        {isNonDance ? "—" : score}
+      </span>
     </div>
   );
 }

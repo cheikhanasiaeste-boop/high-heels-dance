@@ -17,6 +17,8 @@ import { useAiCoach } from "@/hooks/useAiCoach";
 import { AiCoachToggle } from "@/components/AiCoachToggle";
 import { AiCoachScoreWheel } from "@/components/AiCoachScoreWheel";
 import { AiCoachSkeleton } from "@/components/AiCoachSkeleton";
+import { useAiCoachFeedback } from "@/hooks/useAiCoachFeedback";
+import { AiCoachFeedback } from "@/components/AiCoachFeedback";
 
 /** Fetches a signed playback URL and renders HLS or direct video */
 function LessonVideoPlayer({
@@ -265,11 +267,52 @@ export default function CourseLearn() {
   );
   const hasKeypoints = keypointMeta?.status === "complete";
 
-  const { score, jointScores, studentLandmarks, isReady, isActive, error: aiCoachError } = useAiCoach({
+  const { score, jointScores, studentLandmarks, isReady, isActive, error: aiCoachError, isDancing, accumulatedStats, incrementFeedbackCount } = useAiCoach({
     lessonId: currentLessonId || 0,
     videoElement: videoRef.current,
     enabled: aiCoachEnabled && hasKeypoints,
   });
+
+  const { currentFeedback, dismissFeedback, isNonDance } = useAiCoachFeedback({
+    lessonId: currentLessonId || 0,
+    lessonTitle: currentLesson?.title || "",
+    score,
+    jointScores,
+    isDancing,
+    isActive,
+    enabled: aiCoachEnabled && hasKeypoints,
+    onFeedbackGenerated: incrementFeedbackCount,
+  });
+
+  const saveSessionMutation = trpc.aiCoach.saveSession.useMutation({
+    onSuccess: () => { toast.success("Practice session saved!"); },
+  });
+
+  const prevEnabledRef = useRef(false);
+  useEffect(() => {
+    if (prevEnabledRef.current && !aiCoachEnabled && accumulatedStats.activeSeconds >= 90) {
+      const strengths: string[] = [];
+      const improvements: string[] = [];
+      accumulatedStats.jointScoreHistory.forEach((scores, name) => {
+        const avg = scores.reduce((a, b) => a + b, 0) / scores.length;
+        if (avg >= 0.67) strengths.push(name);
+        else if (avg < 0.33) improvements.push(name);
+      });
+
+      saveSessionMutation.mutate({
+        lessonId: currentLessonId || 0,
+        avgScore: Math.round(accumulatedStats.scores.reduce((a, b) => a + b, 0) / Math.max(accumulatedStats.scores.length, 1)),
+        bestScore: accumulatedStats.bestScore,
+        worstScore: accumulatedStats.worstScore,
+        totalActiveSeconds: Math.round(accumulatedStats.activeSeconds),
+        feedbackCount: accumulatedStats.feedbackCount,
+        topStrengths: strengths.slice(0, 3),
+        topImprovements: improvements.slice(0, 3),
+        lessonTitle: currentLesson?.title || "",
+      });
+    }
+    prevEnabledRef.current = aiCoachEnabled;
+  }, [aiCoachEnabled]);
 
   // Reset AI coach when lesson changes
   useEffect(() => { setAiCoachEnabled(false); }, [currentLessonId]);
@@ -406,8 +449,19 @@ export default function CourseLearn() {
                     }}
                     videoRef={videoRef}
                   />
-                  {aiCoachEnabled && isReady && <AiCoachScoreWheel score={score} />}
+                  {aiCoachEnabled && isReady && (
+                    <div className={`transition-opacity duration-500 ${isNonDance && isActive ? "opacity-40" : "opacity-100"}`}>
+                      <AiCoachScoreWheel score={isNonDance && isActive ? -1 : score} />
+                    </div>
+                  )}
                   {aiCoachEnabled && isActive && <AiCoachSkeleton landmarks={studentLandmarks} jointScores={jointScores} score={score} />}
+                  {aiCoachEnabled && isReady && (
+                    <AiCoachFeedback
+                      feedback={currentFeedback}
+                      onDismiss={dismissFeedback}
+                      isNonDance={isNonDance && isActive}
+                    />
+                  )}
                 </div>
                 
                 {/* Lesson Content */}
