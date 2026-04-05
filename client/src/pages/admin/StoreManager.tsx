@@ -50,6 +50,8 @@ import {
   ChevronDown,
   X,
   ChevronsUpDown,
+  AlertTriangle,
+  Download,
 } from "lucide-react";
 
 const CATEGORIES = ["tops", "bottoms", "accessories", "shoes", "other"] as const;
@@ -86,11 +88,18 @@ export default function StoreManager() {
   const [, navigate] = useLocation();
 
   // UI state
+  const [activeTab, setActiveTab] = useState<"products" | "orders">("products");
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [editingProductId, setEditingProductId] = useState<number | null>(null);
   const [createForm, setCreateForm] = useState<CreateFormState>(EMPTY_CREATE_FORM);
+
+  // Orders state
+  const [orderStatusFilter, setOrderStatusFilter] = useState<string>("");
+  const [orderPage, setOrderPage] = useState(1);
+  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [selectedOrderStatus, setSelectedOrderStatus] = useState<string>("");
 
   const utils = trpc.useUtils();
 
@@ -110,6 +119,20 @@ export default function StoreManager() {
       },
       { enabled: isAuthenticated && user?.role === "admin" }
     );
+
+  const ordersQuery = trpc.adminStore.orders.list.useQuery(
+    {
+      status: orderStatusFilter || undefined,
+      page: orderPage,
+      limit: 20,
+    },
+    { enabled: isAuthenticated && user?.role === "admin" && activeTab === "orders" }
+  );
+
+  const selectedOrderQuery = trpc.adminStore.orders.getById.useQuery(
+    { id: selectedOrderId! },
+    { enabled: !!selectedOrderId }
+  );
 
   // ---- Mutations ----
   const createMutation = trpc.adminStore.products.create.useMutation({
@@ -146,6 +169,15 @@ export default function StoreManager() {
     onError: (err) => toast.error(err.message || "Failed to unpublish product"),
   });
 
+  const updateStatusMutation = trpc.adminStore.orders.updateStatus.useMutation({
+    onSuccess: () => {
+      ordersQuery.refetch();
+      selectedOrderQuery.refetch();
+      toast.success("Order status updated");
+    },
+    onError: (err) => toast.error(err.message || "Failed to update status"),
+  });
+
   // ---- Handlers ----
   const handleCreate = () => {
     if (!createForm.title.trim() || !createForm.basePrice) return;
@@ -178,6 +210,36 @@ export default function StoreManager() {
     }
   };
 
+  const handleExportCsv = async () => {
+    try {
+      const result = await utils.adminStore.orders.exportCsv.fetch({
+        status: orderStatusFilter || undefined,
+      });
+      const blob = new Blob([result.csv], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `orders-${new Date().toISOString().split("T")[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to export CSV");
+    }
+  };
+
+  const formatDate = (dateStr: string | Date) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("en-IE", { day: "2-digit", month: "short", year: "numeric" });
+  };
+
+  const ORDER_STATUS_COLORS: Record<string, string> = {
+    pending: "bg-amber-100 text-amber-800 border-amber-200",
+    paid: "bg-blue-100 text-blue-800 border-blue-200",
+    shipped: "bg-purple-100 text-purple-800 border-purple-200",
+    delivered: "bg-green-100 text-green-800 border-green-200",
+    cancelled: "bg-red-100 text-red-800 border-red-200",
+  };
+
   // ---- Loading / Auth guard ----
   if (loading) {
     return (
@@ -204,12 +266,41 @@ export default function StoreManager() {
               Manage products, images, variants, and inventory
             </p>
           </div>
-          <Button onClick={() => setCreateModalOpen(true)}>
-            <Plus className="h-4 w-4" />
-            Create Product
-          </Button>
+          {activeTab === "products" && (
+            <Button onClick={() => setCreateModalOpen(true)}>
+              <Plus className="h-4 w-4" />
+              Create Product
+            </Button>
+          )}
         </div>
 
+        {/* Tab Bar */}
+        <div className="flex gap-2 mb-6">
+          <button
+            onClick={() => setActiveTab("products")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === "products"
+                ? "bg-[#E879F9]/20 text-[#E879F9] border border-[#E879F9]/30"
+                : "text-white/60 hover:text-white/80"
+            }`}
+          >
+            Products
+          </button>
+          <button
+            onClick={() => setActiveTab("orders")}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === "orders"
+                ? "bg-[#E879F9]/20 text-[#E879F9] border border-[#E879F9]/30"
+                : "text-white/60 hover:text-white/80"
+            }`}
+          >
+            Orders
+          </button>
+        </div>
+
+        {/* ===== Products Tab ===== */}
+        {activeTab === "products" && (
+          <>
         {/* Search + Filter */}
         <div className="flex items-center gap-3">
           <div className="relative flex-1 max-w-sm">
@@ -405,6 +496,129 @@ export default function StoreManager() {
             </p>
           </div>
         )}
+          </>
+        )}
+
+        {/* ===== Orders Tab ===== */}
+        {activeTab === "orders" && (
+          <div className="space-y-4">
+            {/* Filters bar */}
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <Select
+                  value={orderStatusFilter || "all"}
+                  onValueChange={(val) => {
+                    setOrderStatusFilter(val === "all" ? "" : val);
+                    setOrderPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="All Statuses" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="shipped">Shipped</SelectItem>
+                    <SelectItem value="delivered">Delivered</SelectItem>
+                    <SelectItem value="cancelled">Cancelled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button variant="outline" size="sm" onClick={handleExportCsv} className="gap-1.5">
+                <Download className="h-4 w-4" />
+                Export CSV
+              </Button>
+            </div>
+
+            {/* Orders Table */}
+            {ordersQuery.isLoading ? (
+              <div className="flex items-center justify-center h-48">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              </div>
+            ) : ordersQuery.data && ordersQuery.data.orders.length > 0 ? (
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gray-50">
+                      <TableHead className="pl-4">#</TableHead>
+                      <TableHead>Customer</TableHead>
+                      <TableHead>Items</TableHead>
+                      <TableHead>Total</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {ordersQuery.data.orders.map((order) => (
+                      <TableRow
+                        key={order.id}
+                        className="cursor-pointer hover:bg-gray-50 transition-colors"
+                        onClick={() => {
+                          setSelectedOrderId(order.id);
+                          setSelectedOrderStatus(order.status);
+                        }}
+                      >
+                        <TableCell className="pl-4">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-mono text-sm">#{order.id}</span>
+                            {order.hasStockIssue && (
+                              <AlertTriangle className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-700">{order.email}</TableCell>
+                        <TableCell className="text-sm text-gray-600">{order.itemCount}</TableCell>
+                        <TableCell className="font-medium text-sm">{"\u20AC"}{Number(order.total).toFixed(2)}</TableCell>
+                        <TableCell>
+                          <Badge
+                            className={`text-xs capitalize border ${ORDER_STATUS_COLORS[order.status] ?? "bg-gray-100 text-gray-600 border-gray-200"} hover:opacity-100`}
+                          >
+                            {order.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-gray-500">{formatDate(order.createdAt)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            ) : (
+              <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+                <Package className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500 font-medium">No orders found</p>
+                <p className="text-gray-400 text-sm mt-1">Orders will appear here once customers make purchases.</p>
+              </div>
+            )}
+
+            {/* Pagination */}
+            {ordersQuery.data && ordersQuery.data.total > 20 && (
+              <div className="flex items-center justify-between pt-2">
+                <span className="text-sm text-gray-500">
+                  Page {orderPage} of {Math.ceil(ordersQuery.data.total / 20)}
+                </span>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setOrderPage((p) => Math.max(1, p - 1))}
+                    disabled={orderPage === 1}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setOrderPage((p) => p + 1)}
+                    disabled={orderPage >= Math.ceil(ordersQuery.data.total / 20)}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* ---- Create Product Modal ---- */}
@@ -569,6 +783,171 @@ export default function StoreManager() {
           productId={editingProductId}
           onClose={() => setEditingProductId(null)}
         />
+      )}
+
+      {/* ---- Order Detail Modal ---- */}
+      {selectedOrderId !== null && (
+        <Dialog open onOpenChange={(open) => { if (!open) setSelectedOrderId(null); }}>
+          <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Order #{selectedOrderId}</DialogTitle>
+              <DialogDescription>
+                View order details and update status.
+              </DialogDescription>
+            </DialogHeader>
+
+            {selectedOrderQuery.isLoading || !selectedOrderQuery.data ? (
+              <div className="flex items-center justify-center h-32">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+              </div>
+            ) : (() => {
+              const order = selectedOrderQuery.data;
+              return (
+                <div className="space-y-5 py-2">
+                  {/* Stock issue banner */}
+                  {order.hasStockIssue && (
+                    <div className="flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 p-3 text-red-700 text-sm">
+                      <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                      <span>Stock issue: one or more items exceeded available inventory.</span>
+                    </div>
+                  )}
+
+                  {/* Order meta */}
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-500">Customer</span>
+                      <p className="font-medium break-all">{order.email}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Date</span>
+                      <p className="font-medium">{formatDate(order.createdAt)}</p>
+                    </div>
+                    <div>
+                      <span className="text-gray-500">Status</span>
+                      <p>
+                        <Badge
+                          className={`text-xs capitalize border ${ORDER_STATUS_COLORS[order.status] ?? "bg-gray-100 text-gray-600 border-gray-200"} hover:opacity-100`}
+                        >
+                          {order.status}
+                        </Badge>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Items */}
+                  <div className="border-t pt-4 space-y-2">
+                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Items</h3>
+                    <div className="bg-gray-50 rounded-lg border overflow-hidden">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="bg-gray-100">
+                            <TableHead className="pl-3">Product</TableHead>
+                            <TableHead>Variant</TableHead>
+                            <TableHead className="text-right">Qty</TableHead>
+                            <TableHead className="text-right pr-3">Unit Price</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {order.items?.map((item: any, idx: number) => (
+                            <TableRow key={idx}>
+                              <TableCell className="pl-3 text-sm">{item.productTitle}</TableCell>
+                              <TableCell className="text-sm text-gray-500">{item.variantKey || "-"}</TableCell>
+                              <TableCell className="text-right text-sm">{item.quantity}</TableCell>
+                              <TableCell className="text-right pr-3 text-sm">{"\u20AC"}{Number(item.unitPrice).toFixed(2)}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+
+                  {/* Totals */}
+                  <div className="border-t pt-3 space-y-1 text-sm">
+                    {order.discountAmount != null && Number(order.discountAmount) > 0 && (
+                      <div className="flex justify-between text-green-700">
+                        <span>Discount</span>
+                        <span>-{"\u20AC"}{Number(order.discountAmount).toFixed(2)}</span>
+                      </div>
+                    )}
+                    {order.shippingCost != null && (
+                      <div className="flex justify-between text-gray-600">
+                        <span>Shipping</span>
+                        <span>{"\u20AC"}{Number(order.shippingCost).toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between font-semibold text-base pt-1 border-t">
+                      <span>Total</span>
+                      <span>{"\u20AC"}{Number(order.total).toFixed(2)}</span>
+                    </div>
+                  </div>
+
+                  {/* Shipping address */}
+                  {order.shippingAddress && (
+                    <div className="border-t pt-3 space-y-1 text-sm">
+                      <h3 className="font-semibold text-gray-500 uppercase tracking-wide text-xs">Shipping Address</h3>
+                      <p className="text-gray-700 whitespace-pre-line">
+                        {typeof order.shippingAddress === "string"
+                          ? order.shippingAddress
+                          : JSON.stringify(order.shippingAddress, null, 2)}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Customer notes */}
+                  {(order as any).notes && (
+                    <div className="border-t pt-3 space-y-1 text-sm">
+                      <h3 className="font-semibold text-gray-500 uppercase tracking-wide text-xs">Customer Notes</h3>
+                      <p className="text-gray-700">{(order as any).notes}</p>
+                    </div>
+                  )}
+
+                  {/* Status update */}
+                  <div className="border-t pt-4 space-y-2">
+                    <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Update Status</h3>
+                    <div className="flex items-center gap-3">
+                      <Select
+                        value={selectedOrderStatus}
+                        onValueChange={setSelectedOrderStatus}
+                      >
+                        <SelectTrigger className="w-[180px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="paid">Paid</SelectItem>
+                          <SelectItem value="shipped">Shipped</SelectItem>
+                          <SelectItem value="delivered">Delivered</SelectItem>
+                          <SelectItem value="cancelled">Cancelled</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          updateStatusMutation.mutate({
+                            id: selectedOrderId!,
+                            status: selectedOrderStatus,
+                          })
+                        }
+                        disabled={
+                          updateStatusMutation.isPending ||
+                          selectedOrderStatus === order.status
+                        }
+                      >
+                        {updateStatusMutation.isPending ? "Updating..." : "Update"}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSelectedOrderId(null)}>
+                Close
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </AdminLayout>
   );
