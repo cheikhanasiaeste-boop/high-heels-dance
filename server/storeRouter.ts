@@ -74,7 +74,7 @@ export const storeRouter = router({
       .input(z.object({
         productId: z.number(),
         variantId: z.number(),
-        quantity: z.number().min(1),
+        quantity: z.number().min(1).max(100),
       }))
       .mutation(({ ctx, input }) =>
         storeDb.addCartItem(ctx.user.id, input.productId, input.variantId, input.quantity)
@@ -111,7 +111,7 @@ export const storeRouter = router({
         items: z.array(z.object({
           productId: z.number(),
           variantId: z.number(),
-          quantity: z.number().min(1),
+          quantity: z.number().min(1).max(100),
         })),
       }))
       .mutation(({ ctx, input }) =>

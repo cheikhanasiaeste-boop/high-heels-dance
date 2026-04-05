@@ -635,7 +635,7 @@ export const storeOrders = pgTable("store_orders", {
   shippingCost: numeric("shipping_cost", { precision: 10, scale: 2 }).default("0").notNull(),
   total: numeric("total", { precision: 10, scale: 2 }).notNull(),
   customerNotes: text("customer_notes"),
-  stripeSessionId: varchar("stripe_session_id", { length: 255 }),
+  stripeSessionId: varchar("stripe_session_id", { length: 255 }).unique(),
   stripePaymentId: varchar("stripe_payment_id", { length: 255 }),
   hasStockIssue: boolean("has_stock_issue").default(false).notNull(),
   createdAt: timestamp("created_at").defaultNow().notNull(),

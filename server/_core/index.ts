@@ -98,6 +98,14 @@ async function startServer() {
     legacyHeaders: false,
   }));
 
+  // Stricter limit on store checkout (5/min to prevent Stripe session abuse)
+  app.use("/api/trpc/store.checkout", rateLimit({
+    windowMs: 60 * 1000,
+    max: 5,
+    standardHeaders: true,
+    legacyHeaders: false,
+  }));
+
   // ── Maps proxy — keeps Forge API key server-side ──────────────────
   app.get("/api/maps/script-url", (_req, res) => {
     const forgeKey = process.env.BUILT_IN_FORGE_API_KEY || process.env.VITE_FRONTEND_FORGE_API_KEY;

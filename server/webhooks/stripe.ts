@@ -18,6 +18,10 @@ export async function handleStripeWebhook(req: Request, res: Response) {
     return res.status(503).send('Payment system not configured');
   }
 
+  if (!webhookSecret) {
+    return res.status(503).send('Webhook secret not configured');
+  }
+
   const sig = req.headers['stripe-signature'] as string;
 
   let event: Stripe.Event;
