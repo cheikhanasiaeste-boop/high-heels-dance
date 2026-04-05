@@ -74,6 +74,9 @@ import {
   lessonKeypoints,
   LessonKeypoint,
   InsertLessonKeypoint,
+  aiCoachSessions,
+  AiCoachSession,
+  InsertAiCoachSession,
 } from "../drizzle/schema";
 
 let _db: ReturnType<typeof drizzle> | null = null;

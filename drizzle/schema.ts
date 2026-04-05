@@ -691,3 +691,26 @@ export const storeOrderItems = pgTable("store_order_items", {
 
 export type StoreOrderItem = typeof storeOrderItems.$inferSelect;
 export type InsertStoreOrderItem = typeof storeOrderItems.$inferInsert;
+
+/**
+ * AI Coach sessions — saved practice session summaries
+ */
+export const aiCoachSessions = pgTable("ai_coach_sessions", {
+  id: serial("id").primaryKey(),
+  userId: integer("userId").notNull(),
+  lessonId: integer("lessonId").notNull(),
+  avgScore: integer("avgScore").notNull(),
+  bestScore: integer("bestScore").notNull(),
+  worstScore: integer("worstScore").notNull(),
+  totalActiveSeconds: integer("totalActiveSeconds").notNull(),
+  feedbackCount: integer("feedbackCount").notNull(),
+  topStrengths: jsonb("topStrengths").notNull(),
+  topImprovements: jsonb("topImprovements").notNull(),
+  summary: text("summary").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+  userLessonIdx: index("ai_coach_user_lesson_idx").on(table.userId, table.lessonId),
+}));
+
+export type AiCoachSession = typeof aiCoachSessions.$inferSelect;
+export type InsertAiCoachSession = typeof aiCoachSessions.$inferInsert;
