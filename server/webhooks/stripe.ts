@@ -1,7 +1,6 @@
 import Stripe from 'stripe';
 import { Request, Response } from 'express';
 import * as db from '../db';
-import { getDb } from '../db';
 import * as storeDb from '../storeDb';
 import { adminNotifications } from '../events';
 
@@ -326,6 +325,8 @@ async function handleStoreOrderCompleted(session: Stripe.Checkout.Session) {
           transactionType: "product",
           transactionId: String(order.id),
         });
+        // Increment the usage counter
+        await db.incrementDiscountUsage(discount.id);
       }
     } catch (e) {
       console.error(`[Store] Failed to record discount usage for order #${order.id}:`, e);

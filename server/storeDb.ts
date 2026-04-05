@@ -1133,7 +1133,11 @@ export async function getCartItems(userId: number): Promise<EnrichedCartItem[]> 
         variantKey: r.variantKey,
         color: r.color,
         size: r.size,
-        unitPrice: parseFloat(r.basePrice) + parseFloat(r.priceModifier),
+        unitPrice: (() => {
+          const raw = parseFloat(r.basePrice) + parseFloat(r.priceModifier);
+          const pctOff = r.discountPercent ? raw * (r.discountPercent / 100) : 0;
+          return Math.round((raw - pctOff) * 100) / 100;
+        })(),
         stock: r.stock,
         basePrice: r.basePrice,
         priceModifier: r.priceModifier,
@@ -1182,7 +1186,12 @@ export async function getCartItems(userId: number): Promise<EnrichedCartItem[]> 
       variantKey: variant?.variant_key ?? "",
       color: variant?.color ?? null,
       size: variant?.size ?? null,
-      unitPrice: parseFloat(product?.base_price ?? "0") + parseFloat(variant?.price_modifier ?? "0"),
+      unitPrice: (() => {
+        const raw = parseFloat(product?.base_price ?? "0") + parseFloat(variant?.price_modifier ?? "0");
+        const discPct = product?.discount_percent ?? null;
+        const pctOff = discPct ? raw * (discPct / 100) : 0;
+        return Math.round((raw - pctOff) * 100) / 100;
+      })(),
       stock: variant?.stock ?? 0,
       basePrice: product?.base_price ?? "0",
       priceModifier: variant?.price_modifier ?? "0",
@@ -1212,6 +1221,18 @@ export async function addCartItem(
         .limit(1);
 
       if (!variant) throw new TRPCError({ code: "NOT_FOUND", message: "Variant not found" });
+
+      // Verify the parent product is published
+      const [product] = await db
+        .select({ isPublished: storeProducts.isPublished })
+        .from(storeProducts)
+        .innerJoin(storeProductVariants, eq(storeProductVariants.productId, storeProducts.id))
+        .where(eq(storeProductVariants.id, variantId))
+        .limit(1);
+
+      if (!product || !product.isPublished) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Product not found" });
+      }
 
       const [existing] = await db
         .select()
@@ -1253,11 +1274,22 @@ export async function addCartItem(
   const { supabaseAdmin } = await import("./lib/supabase");
   const { data: variant } = await supabaseAdmin
     .from("store_product_variants")
-    .select("stock")
+    .select("stock, product_id")
     .eq("id", variantId)
     .single();
 
   if (!variant) throw new TRPCError({ code: "NOT_FOUND", message: "Variant not found" });
+
+  // Verify the parent product is published
+  const { data: productCheck } = await supabaseAdmin
+    .from("store_products")
+    .select("is_published")
+    .eq("id", (variant as any).product_id)
+    .single();
+
+  if (!productCheck || !(productCheck as any).is_published) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Product not found" });
+  }
 
   const { data: existing } = await supabaseAdmin
     .from("store_cart_items")

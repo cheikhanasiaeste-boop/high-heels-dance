@@ -21,6 +21,11 @@ const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
   return next({ ctx });
 });
 
+function csvSafe(val: string): string {
+  if (/^[=+\-@\t\r]/.test(val)) return `'${val}`;
+  return val.replace(/"/g, '""');
+}
+
 function slugify(title: string): string {
   return title
     .toLowerCase()
@@ -268,7 +273,25 @@ export const storeRouter = router({
     .query(async ({ input }) => {
       const order = await storeDb.getOrderByStripeSession(input.sessionId);
       if (!order) throw new TRPCError({ code: "NOT_FOUND", message: "Order not found" });
-      return order;
+      // Strip PII for public access — return only non-sensitive order summary fields
+      return {
+        id: order.id,
+        status: order.status,
+        currency: order.currency,
+        subtotal: order.subtotal,
+        totalBeforeDiscount: order.totalBeforeDiscount,
+        discountCode: order.discountCode,
+        discountAmount: order.discountAmount,
+        shippingCost: order.shippingCost,
+        total: order.total,
+        createdAt: order.createdAt,
+        items: order.items.map((i) => ({
+          productTitle: i.productTitle,
+          variantKey: i.variantKey,
+          quantity: i.quantity,
+          unitPrice: i.unitPrice,
+        })),
+      };
     }),
 });
 
@@ -473,7 +496,7 @@ export const adminStoreRouter = router({
         });
         const header = "Order #,Email,Items,Total,Status,Stock Issue,Date\n";
         const rows = filtered.map((o) =>
-          `${o.id},"${o.email}",${o.itemCount},${o.total},${o.status},${o.hasStockIssue},${o.createdAt.toISOString()}`
+          `${o.id},"${csvSafe(o.email)}",${o.itemCount},${o.total},"${csvSafe(o.status)}",${o.hasStockIssue},${o.createdAt.toISOString()}`
         ).join("\n");
         return { csv: header + rows };
       }),
