@@ -30,7 +30,12 @@ interface CartContextValue {
   items: CartItem[];
   count: number;
   subtotal: number;
-  addToCart: (productId: number, variantId: number, qty: number) => void;
+  addToCart: (
+    productId: number,
+    variantId: number,
+    qty: number,
+    enrichment?: Omit<CartItem, "productId" | "variantId" | "quantity">
+  ) => void;
   removeFromCart: (productId: number, variantId: number) => void;
   updateQuantity: (productId: number, variantId: number, qty: number) => void;
   clearCart: () => void;
@@ -45,7 +50,7 @@ const CartContext = createContext<CartContextValue>({
   items: [],
   count: 0,
   subtotal: 0,
-  addToCart: () => {
+  addToCart: (_productId, _variantId, _qty, _enrichment?) => {
     throw new Error("useCart must be used within CartProvider");
   },
   removeFromCart: () => {

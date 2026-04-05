@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link } from "wouter";
-import { ArrowLeft, Minus, Plus, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Minus, Plus, ShoppingCart, Check, Loader2 } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { useCart } from "@/contexts/CartContext";
+import { CartDrawer } from "@/components/CartDrawer";
 
 const LIMIT = 12;
 
@@ -36,7 +38,7 @@ interface ProductCardProps {
     slug: string;
     category: string;
     basePrice: number | string;
-    discountPercent: number;
+    discountPercent: number | null;
     images: { id: number; imageUrl: string; altText: string | null; displayOrder: number }[];
   };
   onClick: () => void;
@@ -44,8 +46,8 @@ interface ProductCardProps {
 
 function ProductCard({ product, onClick }: ProductCardProps) {
   const firstImage = product.images?.[0];
-  const hasDiscount = product.discountPercent > 0;
-  const finalPrice = discountedPrice(product.basePrice, product.discountPercent);
+  const hasDiscount = (product.discountPercent ?? 0) > 0;
+  const finalPrice = discountedPrice(product.basePrice, product.discountPercent ?? 0);
 
   return (
     <div
@@ -67,7 +69,7 @@ function ProductCard({ product, onClick }: ProductCardProps) {
         )}
         {hasDiscount && (
           <div className="absolute top-2 right-2 bg-gradient-to-r from-red-500 to-fuchsia-600 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md">
-            -{product.discountPercent}%
+            -{product.discountPercent ?? 0}%
           </div>
         )}
       </div>
@@ -114,13 +116,15 @@ function ProductCard({ product, onClick }: ProductCardProps) {
 interface ProductModalProps {
   slug: string | null;
   onClose: () => void;
+  onOpenCart: () => void;
 }
 
-function ProductModal({ slug, onClose }: ProductModalProps) {
+function ProductModal({ slug, onClose, onOpenCart }: ProductModalProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [selectedColor, setSelectedColor] = useState<string | null>(null);
   const [selectedSize, setSelectedSize] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [addState, setAddState] = useState<"idle" | "loading" | "success">("idle");
 
   const { data: product, isLoading } = trpc.store.getBySlug.useQuery(
     { slug: slug! },
@@ -170,15 +174,37 @@ function ProductModal({ slug, onClose }: ProductModalProps) {
   const stock: number = matchedVariant ? (matchedVariant.stock ?? 0) : 0;
   const isOutOfStock = matchedVariant ? stock === 0 : false;
 
+  const { addToCart } = useCart();
+
   const handleAddToCart = () => {
-    toast("Cart coming soon!", {
-      description: "We're working on the cart feature. Stay tuned!",
+    if (!product || !matchedVariant) return;
+    setAddState("loading");
+    addToCart(product.id, matchedVariant.id, quantity, {
+      title: product.title,
+      imageUrl: product.images?.[0]?.imageUrl ?? null,
+      variantKey: [matchedVariant.color, matchedVariant.size].filter(Boolean).join(" — "),
+      color: matchedVariant.color ?? null,
+      size: matchedVariant.size ?? null,
+      unitPrice: Number(
+        (product.discountPercent ?? 0) > 0
+          ? discountedPrice(product.basePrice, product.discountPercent ?? 0)
+          : product.basePrice
+      ),
+      stock: matchedVariant.stock ?? 0,
     });
+    toast.success("Added to cart!", {
+      action: {
+        label: "View Cart",
+        onClick: () => { onOpenCart(); },
+      },
+    });
+    setAddState("success");
+    setTimeout(() => setAddState("idle"), 2000);
   };
 
-  const hasDiscount = product && product.discountPercent > 0;
+  const hasDiscount = product && (product.discountPercent ?? 0) > 0;
   const finalPrice = product
-    ? discountedPrice(product.basePrice, product.discountPercent)
+    ? discountedPrice(product.basePrice, product.discountPercent ?? 0)
     : 0;
 
   return (
@@ -409,12 +435,42 @@ function ProductModal({ slug, onClose }: ProductModalProps) {
               {/* Add to Cart */}
               <Button
                 onClick={handleAddToCart}
-                disabled={!!matchedVariant && isOutOfStock}
-                className="w-full mt-auto bg-[#C026D3] hover:bg-[#A21CAF] text-white border-0 shadow-[0_0_20px_rgba(192,38,211,0.3)] hover:shadow-[0_0_30px_rgba(192,38,211,0.5)] transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={
+                  (!!matchedVariant && isOutOfStock) ||
+                  addState === "loading" ||
+                  addState === "success"
+                }
+                className="w-full mt-auto bg-gradient-to-r from-[#E879F9] to-[#A855F7] hover:opacity-90 text-white border-0 shadow-[0_0_20px_rgba(232,121,249,0.3)] hover:shadow-[0_0_30px_rgba(232,121,249,0.5)] transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                <ShoppingCart className="h-4 w-4 mr-2" />
-                {matchedVariant && isOutOfStock ? "Out of Stock" : "Add to Cart"}
+                {addState === "loading" ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Adding…
+                  </>
+                ) : addState === "success" ? (
+                  <>
+                    <Check className="h-4 w-4 mr-2" />
+                    Added!
+                  </>
+                ) : matchedVariant && isOutOfStock ? (
+                  "Out of Stock"
+                ) : (
+                  <>
+                    <ShoppingCart className="h-4 w-4 mr-2" />
+                    Add to Cart
+                  </>
+                )}
               </Button>
+
+              {/* View Cart shortcut after success */}
+              {addState === "success" && (
+                <button
+                  onClick={onOpenCart}
+                  className="text-sm text-[#E879F9] hover:text-white transition-colors text-center w-full mt-1"
+                >
+                  View Cart →
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -429,6 +485,7 @@ export default function Store() {
   const [page, setPage] = useState(1);
   const [category, setCategory] = useState<CategoryValue>(undefined);
   const [selectedSlug, setSelectedSlug] = useState<string | null>(null);
+  const [cartOpen, setCartOpen] = useState(false);
 
   const { data, isLoading } = trpc.store.list.useQuery({
     category,
@@ -563,7 +620,11 @@ export default function Store() {
       <ProductModal
         slug={selectedSlug}
         onClose={() => setSelectedSlug(null)}
+        onOpenCart={() => setCartOpen(true)}
       />
+
+      {/* Cart Drawer */}
+      <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
     </div>
   );
 }

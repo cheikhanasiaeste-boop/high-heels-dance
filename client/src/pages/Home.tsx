@@ -10,6 +10,8 @@ import { WebsitePopup } from "@/components/WebsitePopup";
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
 import { UpcomingSessionsWidget } from '@/components/UpcomingSessionsWidget';
 import { MobileNav } from "@/components/MobileNav";
+import { CartIcon } from "@/components/CartIcon";
+import { CartDrawer } from "@/components/CartDrawer";
 import { useProgressiveAuth } from '@/hooks/useProgressiveAuth';
 import { ProgressiveAuthModal } from '@/components/ProgressiveAuthModal';
 import { AuthModal } from '@/components/AuthModal';
@@ -169,6 +171,7 @@ export default function Home() {
   const [heroVideoReady, setHeroVideoReady] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [courseFilter, setCourseFilter] = useState<'all' | 'free' | 'premium'>('all');
 
@@ -236,6 +239,9 @@ export default function Home() {
       {/* ── Auth Modal ────────────────────────────────────────────────────── */}
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
 
+      {/* ── Cart Drawer ───────────────────────────────────────────────────── */}
+      <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+
       {/* ── Website Popup ─────────────────────────────────────────────────── */}
       <WebsitePopup
         settings={effectivePopupSettings}
@@ -297,10 +303,12 @@ export default function Home() {
                     </button>
                   </Link>
                 )}
+                <CartIcon onClick={() => setCartOpen(true)} />
                 <UserProfileDropdown unreadMessagesCount={unreadCount || 0} />
               </>
             ) : (
               <>
+                <CartIcon onClick={() => setCartOpen(true)} />
                 <button
                   onClick={() => setShowAuthModal(true)}
                   className="text-[13px] font-medium text-white/70 uppercase tracking-[0.15em] hover:text-white transition-colors"
@@ -704,7 +712,7 @@ export default function Home() {
                     </h4>
                     <span className="text-lg font-bold text-white">
                       €{product.discountPercent ? (Number(product.basePrice) * (1 - product.discountPercent / 100)).toFixed(2) : Number(product.basePrice).toFixed(2)}
-                      {product.discountPercent > 0 && (
+                      {(product.discountPercent ?? 0) > 0 && (
                         <span className="ml-2 text-sm text-white/30 line-through font-normal">€{Number(product.basePrice).toFixed(2)}</span>
                       )}
                     </span>

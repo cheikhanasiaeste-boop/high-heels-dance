@@ -3,6 +3,8 @@ import { Link } from 'wouter';
 import { Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UserProfileDropdown } from '@/components/UserProfileDropdown';
+import { CartIcon } from '@/components/CartIcon';
+import { CartDrawer } from '@/components/CartDrawer';
 import { useAuth } from '@/_core/hooks/useAuth';
 import { trpc } from '@/lib/trpc';
 
@@ -12,6 +14,7 @@ interface MobileNavProps {
 
 export function MobileNav({ onSignInClick }: MobileNavProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
   const { user, isAuthenticated } = useAuth();
   const { data: unreadCount } = trpc.messages.unreadCount.useQuery(undefined, { enabled: isAuthenticated });
 
@@ -44,15 +47,21 @@ export function MobileNav({ onSignInClick }: MobileNavProps) {
 
   return (
     <>
-      {/* Hamburger Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="lg:hidden p-2 hover:bg-white/10 rounded-lg transition-colors"
-        aria-label="Toggle mobile menu"
-        aria-expanded={isOpen}
-      >
-        <Menu className="w-6 h-6 text-white" />
-      </button>
+      {/* Cart Drawer */}
+      <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+
+      {/* Mobile header row: CartIcon + Hamburger */}
+      <div className="lg:hidden flex items-center gap-1">
+        <CartIcon onClick={() => setCartOpen(true)} />
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+          aria-label="Toggle mobile menu"
+          aria-expanded={isOpen}
+        >
+          <Menu className="w-6 h-6 text-white" />
+        </button>
+      </div>
 
       {/* Overlay */}
       {isOpen && (
