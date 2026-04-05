@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import Hls from "hls.js";
 
 interface HlsPlayerProps {
@@ -17,7 +17,7 @@ interface HlsPlayerProps {
   className?: string;
 }
 
-export function HlsPlayer({
+export const HlsPlayer = forwardRef<HTMLVideoElement, HlsPlayerProps>(function HlsPlayer({
   src,
   type,
   poster,
@@ -25,8 +25,9 @@ export function HlsPlayer({
   onTimeUpdate,
   onEnded,
   className = "",
-}: HlsPlayerProps) {
+}: HlsPlayerProps, ref) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  useImperativeHandle(ref, () => videoRef.current!, []);
   const hlsRef = useRef<Hls | null>(null);
   const seekedRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
@@ -131,4 +132,4 @@ export function HlsPlayer({
       className={`w-full h-full ${className}`}
     />
   );
-}
+});
