@@ -4,11 +4,11 @@
 
 A browser-based tool that lets the admin extract and store the teacher's body pose keypoints from lesson videos. These keypoints serve as the "ground truth" reference that Sub-project 2 (Real-Time Analysis Engine) compares the student's live pose against.
 
-The admin clicks "Extract Keypoints" on a lesson in the Course Content Manager. The browser streams the video, runs MediaPipe Pose in a Web Worker at 4fps, and uploads the results in batches to Postgres. No server-side ML infrastructure required.
+The admin clicks "Extract Keypoints" on a lesson in the Course Content Manager. The browser streams the video, runs MediaPipe Pose in a Web Worker at 3fps, and uploads the results in batches to Postgres. No server-side ML infrastructure required.
 
 **Key decisions:**
 - Browser-based extraction — no server GPU, no Python, no infrastructure changes
-- 4fps sampling (every 250ms) — sufficient for dance comparison, ~3,600 keypoints per 15min lesson
+- 3fps sampling (every ~333ms) — sufficient for dance comparison, ~2,700 keypoints per 15min lesson
 - Web Worker + OffscreenCanvas — extraction runs off main thread, UI stays responsive
 - Audio transcription deferred to Sub-project 3 — keeps v1 simple
 - Batch upload (500 at a time) — prevents memory issues, enables progress tracking
@@ -28,6 +28,7 @@ Stores the teacher's reference pose landmarks per timestamp for each lesson.
 | version | integer | not null, default 1 |
 | timestamp_ms | integer | not null (ms into video) |
 | landmarks | jsonb | not null |
+| processed_at | timestamp | not null, default now() |
 | created_at | timestamp | not null, default now() |
 
 Index on `(lesson_id, version, timestamp_ms)`.
@@ -44,8 +45,8 @@ Index on `(lesson_id, version, timestamp_ms)`.
 
 **Storage estimate:**
 - Each row: ~300 bytes (33 landmarks × ~9 bytes each)
-- 15min lesson @ 4fps: 3,600 rows × 300 bytes = ~1.1MB
-- 50 lessons: ~55MB total
+- 15min lesson @ 3fps: 2,700 rows × 300 bytes = ~810KB
+- 50 lessons: ~40MB total
 
 ### Modified table: `course_lessons` (add columns)
 
@@ -82,7 +83,7 @@ Admin clicks "Extract Keypoints"
     ├── Load MediaPipe Pose WASM (~3-5MB, cached after first load)
     ├── Create OffscreenCanvas
     ├── Stream video from Bunny CDN signed URL
-    └── Loop: seek to next 250ms mark
+    └── Loop: seek to next 333ms mark
               ├── Draw frame to OffscreenCanvas
               ├── Run MediaPipe Pose detection
               ├── Post landmarks + timestamp to main thread
@@ -134,7 +135,7 @@ The worker cannot use `<video>` elements (no DOM in workers). Instead:
 3. Worker uses `fetch()` to download video chunks
 4. Worker decodes frames using `VideoDecoder` API (Web Codecs) or falls back to seeking a hidden `<video>` element on the main thread that posts frames via `OffscreenCanvas.transferToImageBitmap()`
 
-**Practical approach for v1:** Keep a hidden `<video>` element on the main thread. Seek to each 250ms mark, capture the frame via a `<canvas>`, transfer the `ImageBitmap` to the worker for pose detection. This is simpler and has broad browser support.
+**Practical approach for v1:** Keep a hidden `<video>` element on the main thread. Seek to each 333ms mark, capture the frame via a `<canvas>`, transfer the `ImageBitmap` to the worker for pose detection. This is simpler and has broad browser support.
 
 ```
 Main thread:
@@ -177,6 +178,7 @@ adminCourses.keypoints.uploadBatch({ lessonId, version, keypoints: Array<{ times
   - adminProcedure
   - Validates status is "extracting" and version matches
   - Inserts batch of keypoints (up to 500 per call)
+  - Client retries failed uploads up to 3 times with exponential backoff (1s, 2s, 4s)
 
 adminCourses.keypoints.complete({ lessonId, version, keypointCount }) → { ok }
   - adminProcedure
@@ -223,7 +225,10 @@ Inline on each lesson card in `client/src/pages/admin/CourseContentManager.tsx`.
 ```
 [lesson title]  [video status badge]
                 [Extract Keypoints]  ← fuchsia outline button, only visible if video is "ready"
+                Estimated time: ~7 min  ← calculated from lesson.durationSeconds
 ```
+
+Before extraction starts, show a confirmation: "This process takes 6–10 minutes. Please keep this tab open and use a desktop browser (Chrome/Edge recommended)."
 
 **Extracting (status = "extracting"):**
 ```
@@ -248,8 +253,8 @@ Inline on each lesson card in `client/src/pages/admin/CourseContentManager.tsx`.
 
 ### Progress calculation
 
-- Total frames = `durationMs / 250` (known from `lesson.durationSeconds`)
-- Current frame = latest `timestampMs / 250`
+- Total frames = `durationMs / 333` (known from `lesson.durationSeconds`)
+- Current frame = latest `timestampMs / 333`
 - Progress % = current / total
 - ETA = elapsed time × (remaining / completed)
 
@@ -297,7 +302,7 @@ Admin extraction is a one-time operation — only needs to work on the admin's b
 ## Cost
 
 - **Compute**: Zero — runs in the admin's browser
-- **Storage**: ~1.1MB per lesson in Postgres, ~55MB for 50 lessons
+- **Storage**: ~810KB per lesson in Postgres, ~40MB for 50 lessons
 - **API calls**: Zero for v1 (no Gemini transcription)
 - **CDN**: Normal Bunny bandwidth for streaming the video during extraction
 
