@@ -2,6 +2,8 @@ import Stripe from 'stripe';
 import { Request, Response } from 'express';
 import * as db from '../db';
 import { getDb } from '../db';
+import * as storeDb from '../storeDb';
+import { adminNotifications } from '../events';
 
 const stripe = process.env.STRIPE_SECRET_KEY
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { apiVersion: '2025-12-15.clover' })
@@ -71,6 +73,12 @@ export async function handleStripeWebhook(req: Request, res: Response) {
  * Handle checkout session completion (both subscriptions and one-time payments)
  */
 async function handleCheckoutSessionCompleted(session: Stripe.Checkout.Session) {
+  // Handle store orders
+  if (session.metadata?.type === "store_order") {
+    await handleStoreOrderCompleted(session);
+    return;
+  }
+
   const userId = parseInt(session.client_reference_id || '0');
   const discountCode = session.metadata?.discountCode;
   const courseId = session.metadata?.course_id ? parseInt(session.metadata.course_id) : null;
@@ -220,4 +228,113 @@ async function handleInvoicePaid(invoice: Stripe.Invoice) {
   }
 
   console.log(`Invoice paid: ${invoice.id} for subscription ${subscriptionId}`);
+}
+
+/**
+ * Handle store order completion — create order, decrement stock, clear cart.
+ */
+async function handleStoreOrderCompleted(session: Stripe.Checkout.Session) {
+  const metadata = session.metadata!;
+
+  // Idempotency: check if order already exists
+  const existing = await storeDb.getOrderByStripeSession(session.id);
+  if (existing) {
+    console.log(`[Store] Order for session ${session.id} already exists (#${existing.id}), skipping`);
+    return;
+  }
+
+  const userId = metadata.user_id ? parseInt(metadata.user_id) : null;
+  const discountCode = metadata.discount_code || null;
+  const discountAmount = metadata.discount_amount || "0";
+  const totalBeforeDiscount = metadata.total_before_discount || "0";
+  const shippingCost = metadata.shipping_cost || "0";
+  const customerNotes = metadata.customer_notes || null;
+  const cartItems = JSON.parse(metadata.cart_items || "[]") as Array<{
+    productId: number;
+    variantId: number;
+    variantKey: string;
+    quantity: number;
+    unitPrice: number;
+  }>;
+
+  // Extract shipping from Stripe session
+  const shipping = session.shipping_details;
+  const address = shipping?.address;
+
+  const order = await storeDb.createOrder(
+    {
+      userId,
+      email: session.customer_email || session.customer_details?.email || "unknown@email.com",
+      status: "paid",
+      currency: "EUR",
+      shippingName: shipping?.name || "N/A",
+      shippingAddress: [address?.line1, address?.line2].filter(Boolean).join(", ") || "N/A",
+      shippingCity: address?.city || "N/A",
+      shippingCountry: address?.country || "N/A",
+      shippingPostalCode: address?.postal_code || "N/A",
+      subtotal: totalBeforeDiscount,
+      totalBeforeDiscount,
+      discountCode,
+      discountAmount,
+      shippingCost,
+      total: String((session.amount_total ?? 0) / 100),
+      customerNotes,
+      stripeSessionId: session.id,
+      stripePaymentId: typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id || null,
+      hasStockIssue: false,
+    },
+    cartItems.map((item) => ({
+      orderId: 0, // Will be set by createOrder
+      productId: item.productId,
+      variantId: item.variantId,
+      variantKey: item.variantKey,
+      quantity: item.quantity,
+      unitPrice: String(item.unitPrice),
+    }))
+  );
+
+  console.log(`[Store] Order #${order.id} created for session ${session.id}`);
+
+  // Decrement stock + check for issues
+  let hasStockIssue = false;
+  for (const item of cartItems) {
+    const result = await storeDb.decrementVariantStock(item.variantId, item.quantity);
+    if (result.stock < 0) {
+      hasStockIssue = true;
+      console.warn(`[Store][STOCK_ISSUE] Order #${order.id}: ${result.variantKey} stock=${result.stock}`);
+      adminNotifications.emitStockIssue(order.id, result.variantKey, result.stock);
+    }
+  }
+
+  if (hasStockIssue) {
+    await storeDb.setOrderStockIssue(order.id);
+  }
+
+  // Record discount usage
+  if (discountCode) {
+    try {
+      const discount = await db.getDiscountCodeByCode(discountCode);
+      if (discount) {
+        await db.recordDiscountUsage({
+          discountCodeId: discount.id,
+          userId: userId || 0,
+          discountAmount: parseFloat(discountAmount),
+          originalAmount: parseFloat(totalBeforeDiscount),
+          finalAmount: (session.amount_total ?? 0) / 100,
+          transactionType: "product",
+          transactionId: String(order.id),
+        });
+      }
+    } catch (e) {
+      console.error(`[Store] Failed to record discount usage for order #${order.id}:`, e);
+    }
+  }
+
+  // Clear user's cart
+  if (userId) {
+    await storeDb.clearCart(userId);
+  }
+
+  // Emit admin notification
+  adminNotifications.emitStoreOrder(order);
 }
