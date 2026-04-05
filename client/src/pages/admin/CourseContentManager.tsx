@@ -33,7 +33,9 @@ import {
   Pencil,
   FolderUp,
   Video,
+  Brain,
 } from "lucide-react";
+import { useKeypointExtraction } from "@/hooks/useKeypointExtraction";
 
 type Tab = "thumbnail" | "checkout" | "course" | "options";
 
@@ -250,6 +252,152 @@ export default function CourseContentManager() {
   );
 }
 
+// Keypoint Extraction Button Component
+function KeypointExtractButton({ lesson }: { lesson: any }) {
+  const { progress, start, cancel, reset } = useKeypointExtraction();
+  const utils = trpc.useUtils();
+  const resetMutation = trpc.adminKeypoints.reset.useMutation({
+    onSuccess: () => {
+      utils.admin.courseContent.getLessons.invalidate();
+      toast.success("Keypoints cleared");
+    },
+  });
+
+  const isExtracting =
+    progress.state === "extracting" ||
+    progress.state === "loading-model" ||
+    progress.state === "uploading";
+  const estimatedMinutes = lesson.durationSeconds
+    ? Math.ceil((lesson.durationSeconds / 60) * 0.7)
+    : null;
+
+  // Lesson already has keypoints from a previous session (stored in DB)
+  if (lesson.keypointStatus === "complete" && progress.state === "idle") {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+          ✅ {lesson.keypointCount} keypoints
+        </span>
+        <button
+          onClick={() => {
+            if (confirm("Re-extract keypoints? This will replace the existing data.")) {
+              start(lesson.id);
+            }
+          }}
+          className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Re-extract
+        </button>
+      </div>
+    );
+  }
+
+  // Failed from a previous session
+  if (lesson.keypointStatus === "failed" && progress.state === "idle") {
+    return (
+      <button
+        onClick={() => start(lesson.id)}
+        className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-red-100 text-red-700 hover:bg-red-200 transition-colors"
+      >
+        ❌ Retry Extract
+      </button>
+    );
+  }
+
+  // Currently extracting
+  if (isExtracting) {
+    return (
+      <div className="flex flex-col gap-1 min-w-[180px]">
+        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+          <span className="animate-pulse">⚡</span>
+          <span>
+            {progress.state === "loading-model"
+              ? "Loading AI model..."
+              : progress.state === "uploading"
+              ? "Uploading batch..."
+              : `Extracting... ${progress.percent}%`}
+          </span>
+          {progress.etaSeconds !== null && progress.etaSeconds > 0 && (
+            <span>· ~{Math.ceil(progress.etaSeconds / 60)} min left</span>
+          )}
+        </div>
+        <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 transition-all duration-300"
+            style={{ width: `${progress.percent}%` }}
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={cancel}
+            className="text-[10px] text-red-500 hover:text-red-700 transition-colors"
+          >
+            Cancel
+          </button>
+          <span className="text-[10px] text-muted-foreground">⚠️ Keep tab open</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Complete (just finished in this session)
+  if (progress.state === "complete") {
+    return (
+      <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700">
+        ✅ Extraction complete
+      </span>
+    );
+  }
+
+  // Error (just failed in this session)
+  if (progress.state === "error") {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-red-100 text-red-700">
+          ❌ {progress.error}
+        </span>
+        <button
+          onClick={() => {
+            reset();
+            start(lesson.id);
+          }}
+          className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  // Idle — show extract button (only for ready videos)
+  if (lesson.videoStatus !== "ready") return null;
+
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        onClick={() => {
+          if (
+            confirm(
+              `Extract keypoints for "${lesson.title}"?\n\nThis takes about ${
+                estimatedMinutes ?? "6–10"
+              } minutes. Keep this tab open and use Chrome/Edge for best results.`
+            )
+          ) {
+            start(lesson.id);
+          }
+        }}
+        className="flex items-center gap-1 text-[10px] font-medium px-2 py-1 rounded-md border border-violet-300 text-violet-700 hover:bg-violet-50 transition-colors"
+      >
+        <Brain className="w-3 h-3" />
+        Extract Keypoints
+      </button>
+      {estimatedMinutes && (
+        <span className="text-[10px] text-muted-foreground">~{estimatedMinutes} min</span>
+      )}
+    </div>
+  );
+}
+
 // Module Card Component
 function ModuleCard({
   module,
@@ -385,6 +533,7 @@ function ModuleCard({
                       </span>
                     )}
                   </div>
+                  <KeypointExtractButton lesson={lesson} />
                 </div>
                 <EditLessonDialog lesson={lesson} />
                 <Button
