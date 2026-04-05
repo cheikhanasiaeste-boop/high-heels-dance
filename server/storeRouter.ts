@@ -189,8 +189,12 @@ export const storeRouter = router({
         }
       }
 
-      const shippingRateStr = await db.getSetting("store_shipping_flat_rate") ?? "5.00";
-      const freeThresholdStr = await db.getSetting("store_shipping_free_threshold") ?? "50.00";
+      const [shippingRateRaw, freeThresholdRaw] = await Promise.all([
+        db.getSetting("store_shipping_flat_rate"),
+        db.getSetting("store_shipping_free_threshold"),
+      ]);
+      const shippingRateStr = shippingRateRaw ?? "5.00";
+      const freeThresholdStr = freeThresholdRaw ?? "50.00";
       const shippingRate = parseFloat(shippingRateStr);
       const freeThreshold = parseFloat(freeThresholdStr);
       const afterDiscount = subtotal - discountAmount;

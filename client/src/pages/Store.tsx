@@ -436,6 +436,7 @@ function ProductModal({ slug, onClose, onOpenCart }: ProductModalProps) {
               <Button
                 onClick={handleAddToCart}
                 disabled={
+                  !matchedVariant ||
                   (!!matchedVariant && isOutOfStock) ||
                   addState === "loading" ||
                   addState === "success"
@@ -454,6 +455,8 @@ function ProductModal({ slug, onClose, onOpenCart }: ProductModalProps) {
                   </>
                 ) : matchedVariant && isOutOfStock ? (
                   "Out of Stock"
+                ) : !matchedVariant ? (
+                  "Select Options"
                 ) : (
                   <>
                     <ShoppingCart className="h-4 w-4 mr-2" />

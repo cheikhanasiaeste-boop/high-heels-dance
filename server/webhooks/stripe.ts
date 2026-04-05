@@ -295,14 +295,16 @@ async function handleStoreOrderCompleted(session: Stripe.Checkout.Session) {
 
   console.log(`[Store] Order #${order.id} created for session ${session.id}`);
 
-  // Decrement stock + check for issues
+  // Decrement stock + check for issues (parallel — each targets a different variant row)
+  const stockResults = await Promise.all(
+    cartItems.map((item) => storeDb.decrementVariantStock(item.variantId, item.quantity))
+  );
   let hasStockIssue = false;
-  for (const item of cartItems) {
-    const result = await storeDb.decrementVariantStock(item.variantId, item.quantity);
-    if (result.stock < 0) {
+  for (let i = 0; i < stockResults.length; i++) {
+    if (stockResults[i].stock < 0) {
       hasStockIssue = true;
-      console.warn(`[Store][STOCK_ISSUE] Order #${order.id}: ${result.variantKey} stock=${result.stock}`);
-      adminNotifications.emitStockIssue(order.id, result.variantKey, result.stock);
+      console.warn(`[Store][STOCK_ISSUE] Order #${order.id}: ${stockResults[i].variantKey} stock=${stockResults[i].stock}`);
+      adminNotifications.emitStockIssue(order.id, stockResults[i].variantKey, stockResults[i].stock);
     }
   }
 

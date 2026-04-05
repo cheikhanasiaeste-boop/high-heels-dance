@@ -1,7 +1,9 @@
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -116,6 +118,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // ── Server cart query (auth only) ──────────────────────────────────────────
   const cartQuery = trpc.store.cart.get.useQuery(undefined, {
     enabled: isAuthenticated,
+    staleTime: 60000,
   });
 
   // ── Mutations ──────────────────────────────────────────────────────────────
@@ -200,142 +203,154 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [isAuthenticated]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Derived items ──────────────────────────────────────────────────────────
-  const items: CartItem[] = isAuthenticated
-    ? (cartQuery.data ?? []).map((i) => ({
-        productId: i.productId,
-        variantId: i.variantId,
-        quantity: i.quantity,
-        title: i.title,
-        imageUrl: i.imageUrl,
-        variantKey: i.variantKey,
-        color: i.color,
-        size: i.size,
-        unitPrice: i.unitPrice,
-        stock: i.stock,
-      }))
-    : guestItems;
+  const items: CartItem[] = useMemo(
+    () =>
+      isAuthenticated
+        ? (cartQuery.data ?? []).map((i) => ({
+            productId: i.productId,
+            variantId: i.variantId,
+            quantity: i.quantity,
+            title: i.title,
+            imageUrl: i.imageUrl,
+            variantKey: i.variantKey,
+            color: i.color,
+            size: i.size,
+            unitPrice: i.unitPrice,
+            stock: i.stock,
+          }))
+        : guestItems,
+    [isAuthenticated, cartQuery.data, guestItems]
+  );
 
-  const count = items.reduce((sum, i) => sum + i.quantity, 0);
-  const subtotal = items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0);
+  const count = useMemo(
+    () => items.reduce((sum, i) => sum + i.quantity, 0),
+    [items]
+  );
+  const subtotal = useMemo(
+    () => items.reduce((sum, i) => sum + i.unitPrice * i.quantity, 0),
+    [items]
+  );
   const isLoading = isAuthenticated ? cartQuery.isLoading : false;
 
   // ── Cart actions ───────────────────────────────────────────────────────────
 
-  function addToCart(productId: number, variantId: number, qty: number): void;
-  function addToCart(
-    productId: number,
-    variantId: number,
-    qty: number,
-    enrichment?: Omit<CartItem, "productId" | "variantId" | "quantity">
-  ): void;
-  function addToCart(
-    productId: number,
-    variantId: number,
-    qty: number,
-    enrichment?: Omit<CartItem, "productId" | "variantId" | "quantity">
-  ): void {
-    if (isAuthenticated) {
-      addMutation.mutate({ productId, variantId, quantity: qty });
-    } else {
-      setGuestItems((prev) => {
-        const existing = prev.find(
-          (i) => i.productId === productId && i.variantId === variantId
-        );
-        let next: CartItem[];
-        if (existing) {
-          next = prev.map((i) =>
-            i.productId === productId && i.variantId === variantId
-              ? { ...i, quantity: i.quantity + qty }
-              : i
+  const addToCart = useCallback(
+    (
+      productId: number,
+      variantId: number,
+      qty: number,
+      enrichment?: Omit<CartItem, "productId" | "variantId" | "quantity">
+    ): void => {
+      if (isAuthenticated) {
+        addMutation.mutate({ productId, variantId, quantity: qty });
+      } else {
+        setGuestItems((prev) => {
+          const existing = prev.find(
+            (i) => i.productId === productId && i.variantId === variantId
           );
-        } else {
-          const newItem: CartItem = enrichment
-            ? { productId, variantId, quantity: qty, ...enrichment }
-            : {
-                productId,
-                variantId,
-                quantity: qty,
-                title: "",
-                imageUrl: null,
-                variantKey: "",
-                color: null,
-                size: null,
-                unitPrice: 0,
-                stock: 0,
-              };
-          next = [...prev, newItem];
-        }
-        writeLocalCart(next);
-        return next;
-      });
-    }
-  }
+          let next: CartItem[];
+          if (existing) {
+            next = prev.map((i) =>
+              i.productId === productId && i.variantId === variantId
+                ? { ...i, quantity: i.quantity + qty }
+                : i
+            );
+          } else {
+            const newItem: CartItem = enrichment
+              ? { productId, variantId, quantity: qty, ...enrichment }
+              : {
+                  productId,
+                  variantId,
+                  quantity: qty,
+                  title: "",
+                  imageUrl: null,
+                  variantKey: "",
+                  color: null,
+                  size: null,
+                  unitPrice: 0,
+                  stock: 0,
+                };
+            next = [...prev, newItem];
+          }
+          writeLocalCart(next);
+          return next;
+        });
+      }
+    },
+    [isAuthenticated, addMutation]
+  );
 
-  function removeFromCart(productId: number, variantId: number): void {
-    if (isAuthenticated) {
-      removeMutation.mutate({ productId, variantId });
-    } else {
-      setGuestItems((prev) => {
-        const next = prev.filter(
-          (i) => !(i.productId === productId && i.variantId === variantId)
-        );
-        writeLocalCart(next);
-        return next;
-      });
-    }
-  }
-
-  function updateQuantity(
-    productId: number,
-    variantId: number,
-    qty: number
-  ): void {
-    if (isAuthenticated) {
-      if (qty === 0) {
+  const removeFromCart = useCallback(
+    (productId: number, variantId: number): void => {
+      if (isAuthenticated) {
         removeMutation.mutate({ productId, variantId });
       } else {
-        updateMutation.mutate({ productId, variantId, quantity: qty });
+        setGuestItems((prev) => {
+          const next = prev.filter(
+            (i) => !(i.productId === productId && i.variantId === variantId)
+          );
+          writeLocalCart(next);
+          return next;
+        });
       }
-    } else {
-      setGuestItems((prev) => {
-        const next =
-          qty === 0
-            ? prev.filter(
-                (i) => !(i.productId === productId && i.variantId === variantId)
-              )
-            : prev.map((i) =>
-                i.productId === productId && i.variantId === variantId
-                  ? { ...i, quantity: qty }
-                  : i
-              );
-        writeLocalCart(next);
-        return next;
-      });
-    }
-  }
+    },
+    [isAuthenticated, removeMutation]
+  );
 
-  function clearCart(): void {
+  const updateQuantity = useCallback(
+    (productId: number, variantId: number, qty: number): void => {
+      if (isAuthenticated) {
+        if (qty === 0) {
+          removeMutation.mutate({ productId, variantId });
+        } else {
+          updateMutation.mutate({ productId, variantId, quantity: qty });
+        }
+      } else {
+        setGuestItems((prev) => {
+          const next =
+            qty === 0
+              ? prev.filter(
+                  (i) =>
+                    !(i.productId === productId && i.variantId === variantId)
+                )
+              : prev.map((i) =>
+                  i.productId === productId && i.variantId === variantId
+                    ? { ...i, quantity: qty }
+                    : i
+                );
+          writeLocalCart(next);
+          return next;
+        });
+      }
+    },
+    [isAuthenticated, removeMutation, updateMutation]
+  );
+
+  const clearCart = useCallback((): void => {
     if (isAuthenticated) {
       clearMutation.mutate();
     } else {
       clearLocalCart();
       setGuestItems([]);
     }
-  }
+  }, [isAuthenticated, clearMutation]);
+
+  const contextValue = useMemo(
+    () => ({
+      items,
+      count,
+      subtotal,
+      addToCart,
+      removeFromCart,
+      updateQuantity,
+      clearCart,
+      isLoading,
+    }),
+    [items, count, subtotal, addToCart, removeFromCart, updateQuantity, clearCart, isLoading]
+  );
 
   return (
-    <CartContext.Provider
-      value={{
-        items,
-        count,
-        subtotal,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        isLoading,
-      }}
-    >
+    <CartContext.Provider value={contextValue}>
       {children}
     </CartContext.Provider>
   );

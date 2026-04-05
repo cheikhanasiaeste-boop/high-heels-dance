@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -30,6 +30,22 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   const { items, count, subtotal, removeFromCart, updateQuantity, isLoading } =
     useCart();
   const { isAuthenticated } = useAuth();
+
+  // Escape key handler
+  useEffect(() => {
+    if (!isOpen) return;
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [isOpen, onClose]);
+
+  // Body scroll lock
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = ""; };
+    }
+  }, [isOpen]);
 
   // Discount code state
   const [discountInput, setDiscountInput] = useState("");
@@ -135,6 +151,7 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             transition={{ duration: 0.2 }}
             className="fixed inset-0 bg-black/50 z-40"
             onClick={onClose}
+            aria-hidden="true"
           />
 
           {/* Drawer panel */}
@@ -145,6 +162,9 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
             exit={{ x: "100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             className="fixed top-0 right-0 h-full w-full sm:w-[400px] bg-black/90 backdrop-blur-xl border-l border-[#E879F9]/10 z-50 flex flex-col"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Shopping cart"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-5 py-4 border-b border-[#E879F9]/10">
