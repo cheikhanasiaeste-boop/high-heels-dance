@@ -330,7 +330,10 @@ export const adminStoreRouter = router({
           isFeatured: z.boolean().optional(),
         })
       )
-      .mutation(({ input }) => storeDb.updateProduct(input)),
+      .mutation(({ input }) => {
+        const { id, ...data } = input;
+        return storeDb.updateProduct(id, data);
+      }),
 
     delete: adminProcedure
       .input(z.object({ id: z.number() }))
@@ -392,7 +395,7 @@ export const adminStoreRouter = router({
           stock: z.number().min(0),
         })
       )
-      .mutation(({ input }) => storeDb.addProductVariant(input)),
+      .mutation(({ input }) => storeDb.addProductVariant({ ...input, variantKey: "" })),
 
     update: adminProcedure
       .input(
@@ -403,7 +406,10 @@ export const adminStoreRouter = router({
           sku: z.string().max(50).optional(),
         })
       )
-      .mutation(({ input }) => storeDb.updateProductVariant(input)),
+      .mutation(({ input }) => {
+        const { id, ...data } = input;
+        return storeDb.updateProductVariant(id, data);
+      }),
 
     delete: adminProcedure
       .input(z.object({ id: z.number() }))
@@ -422,7 +428,9 @@ export const adminStoreRouter = router({
           priceModifier: z.string().optional(),
         })
       )
-      .mutation(({ input }) => storeDb.bulkCreateVariants(input)),
+      .mutation(({ input }) =>
+        storeDb.bulkCreateVariants(input.productId, input.colors, input.sizes, input.stock, input.priceModifier)
+      ),
   }),
 
   orders: router({
