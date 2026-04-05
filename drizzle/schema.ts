@@ -413,7 +413,7 @@ export const discountCodes = pgTable("discountCodes", {
   maxUses: integer("maxUses"),
   currentUses: integer("currentUses").default(0).notNull(),
   isActive: boolean("isActive").default(true).notNull(),
-  applicableTo: text("applicableTo").$type<"all" | "subscriptions" | "courses">().default("all").notNull(),
+  applicableTo: text("applicableTo").$type<"all" | "subscriptions" | "courses" | "products">().default("all").notNull(),
   createdBy: integer("createdBy").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
@@ -436,7 +436,7 @@ export const discountUsage = pgTable("discountUsage", {
   discountAmount: numeric("discountAmount", { precision: 10, scale: 2 }).notNull(),
   originalAmount: numeric("originalAmount", { precision: 10, scale: 2 }).notNull(),
   finalAmount: numeric("finalAmount", { precision: 10, scale: 2 }).notNull(),
-  transactionType: text("transactionType").$type<"subscription" | "course">().notNull(),
+  transactionType: text("transactionType").$type<"subscription" | "course" | "product">().notNull(),
   transactionId: varchar("transactionId", { length: 255 }),
 }, (table) => ({
   discountCodeIdIdx: index("discountUsage_discountCodeId_idx").on(table.discountCodeId),
@@ -594,3 +594,74 @@ export const storeProductVariants = pgTable("store_product_variants", {
 
 export type StoreProductVariant = typeof storeProductVariants.$inferSelect;
 export type InsertStoreProductVariant = typeof storeProductVariants.$inferInsert;
+
+/**
+ * Store cart items — persistent cart for authenticated users
+ */
+export const storeCartItems = pgTable("store_cart_items", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  productId: integer("product_id").notNull(),
+  variantId: integer("variant_id").notNull(),
+  quantity: integer("quantity").default(1).notNull(),
+  addedAt: timestamp("added_at").defaultNow().notNull(),
+}, (table) => [
+  unique("store_cart_user_product_variant").on(table.userId, table.productId, table.variantId),
+  index("store_cart_user_idx").on(table.userId),
+]);
+
+export type StoreCartItem = typeof storeCartItems.$inferSelect;
+export type InsertStoreCartItem = typeof storeCartItems.$inferInsert;
+
+/**
+ * Store orders — created by Stripe webhook after successful payment
+ */
+export const storeOrders = pgTable("store_orders", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id"),
+  email: varchar("email", { length: 255 }).notNull(),
+  status: varchar("status", { length: 20 }).default("pending").notNull(),
+  currency: varchar("currency", { length: 3 }).default("EUR").notNull(),
+  shippingName: varchar("shipping_name", { length: 255 }).notNull(),
+  shippingAddress: text("shipping_address").notNull(),
+  shippingCity: varchar("shipping_city", { length: 100 }).notNull(),
+  shippingCountry: varchar("shipping_country", { length: 100 }).notNull(),
+  shippingPostalCode: varchar("shipping_postal_code", { length: 20 }).notNull(),
+  shippingMethod: varchar("shipping_method", { length: 50 }),
+  subtotal: numeric("subtotal", { precision: 10, scale: 2 }).notNull(),
+  totalBeforeDiscount: numeric("total_before_discount", { precision: 10, scale: 2 }).notNull(),
+  discountCode: varchar("discount_code", { length: 50 }),
+  discountAmount: numeric("discount_amount", { precision: 10, scale: 2 }).default("0").notNull(),
+  shippingCost: numeric("shipping_cost", { precision: 10, scale: 2 }).default("0").notNull(),
+  total: numeric("total", { precision: 10, scale: 2 }).notNull(),
+  customerNotes: text("customer_notes"),
+  stripeSessionId: varchar("stripe_session_id", { length: 255 }),
+  stripePaymentId: varchar("stripe_payment_id", { length: 255 }),
+  hasStockIssue: boolean("has_stock_issue").default(false).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("store_orders_user_idx").on(table.userId),
+  index("store_orders_status_idx").on(table.status),
+  index("store_orders_stripe_session_idx").on(table.stripeSessionId),
+]);
+
+export type StoreOrder = typeof storeOrders.$inferSelect;
+export type InsertStoreOrder = typeof storeOrders.$inferInsert;
+
+/**
+ * Store order items — snapshot of purchased items with frozen prices
+ */
+export const storeOrderItems = pgTable("store_order_items", {
+  id: serial("id").primaryKey(),
+  orderId: integer("order_id").notNull(),
+  productId: integer("product_id").notNull(),
+  variantId: integer("variant_id"),
+  variantKey: varchar("variant_key", { length: 50 }),
+  quantity: integer("quantity").notNull(),
+  unitPrice: numeric("unit_price", { precision: 10, scale: 2 }).notNull(),
+}, (table) => [
+  index("store_order_items_order_idx").on(table.orderId),
+]);
+
+export type StoreOrderItem = typeof storeOrderItems.$inferSelect;
+export type InsertStoreOrderItem = typeof storeOrderItems.$inferInsert;

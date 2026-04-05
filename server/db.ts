@@ -62,6 +62,15 @@ import {
   storeProductVariants,
   StoreProductVariant,
   InsertStoreProductVariant,
+  storeCartItems,
+  StoreCartItem,
+  InsertStoreCartItem,
+  storeOrders,
+  StoreOrder,
+  InsertStoreOrder,
+  storeOrderItems,
+  StoreOrderItem,
+  InsertStoreOrderItem,
 } from "../drizzle/schema";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -2721,7 +2730,7 @@ export async function recordDiscountUsage(data: {
   discountAmount: number;
   originalAmount: number;
   finalAmount: number;
-  transactionType: 'subscription' | 'course';
+  transactionType: 'subscription' | 'course' | 'product';
   transactionId?: string;
 }) {
   const values: any = {
