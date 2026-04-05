@@ -13,6 +13,10 @@ import { CourseBreadcrumb } from "@/components/CourseBreadcrumb";
 import { useProgressiveAuth } from '@/hooks/useProgressiveAuth';
 import { ProgressiveAuthModal } from '@/components/ProgressiveAuthModal';
 import { HlsPlayer } from "@/components/HlsPlayer";
+import { useAiCoach } from "@/hooks/useAiCoach";
+import { AiCoachToggle } from "@/components/AiCoachToggle";
+import { AiCoachScoreWheel } from "@/components/AiCoachScoreWheel";
+import { AiCoachSkeleton } from "@/components/AiCoachSkeleton";
 
 /** Fetches a signed playback URL and renders HLS or direct video */
 function LessonVideoPlayer({
@@ -21,12 +25,14 @@ function LessonVideoPlayer({
   initialTime,
   onTimeUpdate,
   onEnded,
+  videoRef,
 }: {
   lesson: any;
   courseId: number;
   initialTime?: number;
   onTimeUpdate?: (time: number) => void;
   onEnded?: () => void;
+  videoRef?: React.RefObject<HTMLVideoElement>;
 }) {
   const hasBunnyVideo = lesson.bunnyVideoId && lesson.videoStatus === "ready";
   const hasDirectVideo = !!lesson.videoUrl;
@@ -71,6 +77,7 @@ function LessonVideoPlayer({
   return (
     <div className="aspect-video bg-black rounded-lg overflow-hidden mb-4">
       <HlsPlayer
+        ref={videoRef}
         src={playback.url}
         type={playback.type}
         poster={playback.thumbnailUrl}
@@ -95,6 +102,8 @@ export default function CourseLearn() {
   const [currentLessonId, setCurrentLessonId] = useState<number | null>(null);
   const [showCompletionModal, setShowCompletionModal] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [aiCoachEnabled, setAiCoachEnabled] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
   
   // Prompt authentication if not authenticated
   useEffect(() => {
@@ -248,6 +257,22 @@ export default function CourseLearn() {
   useEffect(() => {
     lastSavedRef.current = 0;
   }, [currentLessonId]);
+
+  // Keypoint metadata and AI Coach
+  const { data: keypointMeta } = trpc.keypoints.getMeta.useQuery(
+    { lessonId: currentLessonId! },
+    { enabled: !!currentLessonId }
+  );
+  const hasKeypoints = keypointMeta?.status === "complete";
+
+  const { score, jointScores, studentLandmarks, isReady, isActive, error: aiCoachError } = useAiCoach({
+    lessonId: currentLessonId || 0,
+    videoElement: videoRef.current,
+    enabled: aiCoachEnabled && hasKeypoints,
+  });
+
+  // Reset AI coach when lesson changes
+  useEffect(() => { setAiCoachEnabled(false); }, [currentLessonId]);
   
   // Redirect to course detail page if not authenticated and modal is closed
   // MUST be before any conditional returns to maintain hooks order
@@ -368,17 +393,22 @@ export default function CourseLearn() {
                 </div>
                 
                 {/* Video Player */}
-                <LessonVideoPlayer
-                  lesson={currentLesson}
-                  courseId={courseId}
-                  initialTime={lessonProgress?.watchedDuration ?? undefined}
-                  onTimeUpdate={handleTimeUpdate}
-                  onEnded={() => {
-                    if (currentLessonId && courseId && !isLessonCompleted(currentLessonId)) {
-                      handleMarkComplete();
-                    }
-                  }}
-                />
+                <div className="relative">
+                  <LessonVideoPlayer
+                    lesson={currentLesson}
+                    courseId={courseId}
+                    initialTime={lessonProgress?.watchedDuration ?? undefined}
+                    onTimeUpdate={handleTimeUpdate}
+                    onEnded={() => {
+                      if (currentLessonId && courseId && !isLessonCompleted(currentLessonId)) {
+                        handleMarkComplete();
+                      }
+                    }}
+                    videoRef={videoRef}
+                  />
+                  {aiCoachEnabled && isReady && <AiCoachScoreWheel score={score} />}
+                  {aiCoachEnabled && isActive && <AiCoachSkeleton landmarks={studentLandmarks} jointScores={jointScores} score={score} />}
+                </div>
                 
                 {/* Lesson Content */}
                 {currentLesson.content && (
@@ -388,7 +418,16 @@ export default function CourseLearn() {
                 )}
                 
                 {/* Mark Complete Button */}
-                <div className="flex justify-end">
+                <div className="flex items-center justify-between">
+                  {hasKeypoints && (
+                    <AiCoachToggle
+                      enabled={aiCoachEnabled}
+                      onToggle={setAiCoachEnabled}
+                      isReady={isReady}
+                      error={aiCoachError}
+                    />
+                  )}
+                  <div className="flex-1" />
                   <Button
                     onClick={handleMarkComplete}
                     disabled={!currentLessonId || isLessonCompleted(currentLessonId) || markCompleteMutation.isPending}
