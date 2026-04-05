@@ -1,4 +1,5 @@
 import { eq, and, desc, sql, ilike, inArray } from "drizzle-orm";
+import { TRPCError } from "@trpc/server";
 import { getDb } from "./db";
 import {
   storeProducts,
@@ -10,6 +11,9 @@ import {
   storeProductVariants,
   StoreProductVariant,
   InsertStoreProductVariant,
+  storeCartItems,
+  StoreCartItem,
+  InsertStoreCartItem,
 } from "../drizzle/schema";
 
 // ---------------------------------------------------------------------------
@@ -54,6 +58,17 @@ function mapStoreProductVariant(row: any): StoreProductVariant {
     sku: row.sku,
     priceModifier: row.price_modifier,
     stock: row.stock,
+  };
+}
+
+function mapStoreCartItem(row: any): StoreCartItem {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    productId: row.product_id,
+    variantId: row.variant_id,
+    quantity: row.quantity,
+    addedAt: row.added_at ? new Date(row.added_at) : new Date(),
   };
 }
 
@@ -999,4 +1014,443 @@ export async function bulkCreateVariants(
 
   if (error) throw new Error(error.message);
   return (data ?? []).map(mapStoreProductVariant);
+}
+
+// ---------------------------------------------------------------------------
+// Cart Functions
+// ---------------------------------------------------------------------------
+
+export interface EnrichedCartItem {
+  productId: number;
+  variantId: number;
+  quantity: number;
+  title: string;
+  imageUrl: string | null;
+  variantKey: string;
+  color: string | null;
+  size: string | null;
+  unitPrice: number;
+  stock: number;
+  basePrice: string;
+  priceModifier: string;
+  discountPercent: number | null;
+}
+
+/**
+ * Get all cart items for a user, enriched with product + variant details.
+ */
+export async function getCartItems(userId: number): Promise<EnrichedCartItem[]> {
+  const db = await getDb();
+  if (db) {
+    try {
+      const rows = await db
+        .select({
+          productId: storeCartItems.productId,
+          variantId: storeCartItems.variantId,
+          quantity: storeCartItems.quantity,
+          title: storeProducts.title,
+          basePrice: storeProducts.basePrice,
+          discountPercent: storeProducts.discountPercent,
+          variantKey: storeProductVariants.variantKey,
+          color: storeProductVariants.color,
+          size: storeProductVariants.size,
+          priceModifier: storeProductVariants.priceModifier,
+          stock: storeProductVariants.stock,
+        })
+        .from(storeCartItems)
+        .innerJoin(storeProducts, eq(storeProducts.id, storeCartItems.productId))
+        .innerJoin(storeProductVariants, eq(storeProductVariants.id, storeCartItems.variantId))
+        .where(eq(storeCartItems.userId, userId));
+
+      // Get first image per product
+      const productIds = [...new Set(rows.map((r) => r.productId))];
+      const images = productIds.length > 0
+        ? await db
+            .select()
+            .from(storeProductImages)
+            .where(inArray(storeProductImages.productId, productIds))
+            .orderBy(storeProductImages.displayOrder)
+        : [];
+
+      const imageMap = new Map<number, string>();
+      for (const img of images) {
+        if (!imageMap.has(img.productId)) {
+          imageMap.set(img.productId, img.imageUrl);
+        }
+      }
+
+      return rows.map((r) => ({
+        productId: r.productId,
+        variantId: r.variantId,
+        quantity: r.quantity,
+        title: r.title,
+        imageUrl: imageMap.get(r.productId) ?? null,
+        variantKey: r.variantKey,
+        color: r.color,
+        size: r.size,
+        unitPrice: parseFloat(r.basePrice) + parseFloat(r.priceModifier),
+        stock: r.stock,
+        basePrice: r.basePrice,
+        priceModifier: r.priceModifier,
+        discountPercent: r.discountPercent,
+      }));
+    } catch (e) {
+      console.warn("[Store] getCartItems direct query failed, trying REST:", (e as Error).message);
+    }
+  }
+
+  // REST API fallback
+  const { supabaseAdmin } = await import("./lib/supabase");
+  const { data: cartRows, error } = await supabaseAdmin
+    .from("store_cart_items")
+    .select("*")
+    .eq("user_id", userId);
+
+  if (error) throw new Error(error.message);
+  if (!cartRows || cartRows.length === 0) return [];
+
+  const productIds = [...new Set(cartRows.map((r: any) => r.product_id))];
+  const variantIds = cartRows.map((r: any) => r.variant_id);
+
+  const [productsRes, variantsRes, imagesRes] = await Promise.all([
+    supabaseAdmin.from("store_products").select("*").in("id", productIds),
+    supabaseAdmin.from("store_product_variants").select("*").in("id", variantIds),
+    supabaseAdmin.from("store_product_images").select("*").in("product_id", productIds).order("display_order", { ascending: true }),
+  ]);
+
+  const productMap = new Map((productsRes.data ?? []).map((p: any) => [p.id, p]));
+  const variantMap = new Map((variantsRes.data ?? []).map((v: any) => [v.id, v]));
+  const imageMap = new Map<number, string>();
+  for (const img of imagesRes.data ?? []) {
+    if (!imageMap.has(img.product_id)) imageMap.set(img.product_id, img.image_url);
+  }
+
+  return cartRows.map((row: any) => {
+    const product = productMap.get(row.product_id) as any;
+    const variant = variantMap.get(row.variant_id) as any;
+    return {
+      productId: row.product_id,
+      variantId: row.variant_id,
+      quantity: row.quantity,
+      title: product?.title ?? "Unknown",
+      imageUrl: imageMap.get(row.product_id) ?? null,
+      variantKey: variant?.variant_key ?? "",
+      color: variant?.color ?? null,
+      size: variant?.size ?? null,
+      unitPrice: parseFloat(product?.base_price ?? "0") + parseFloat(variant?.price_modifier ?? "0"),
+      stock: variant?.stock ?? 0,
+      basePrice: product?.base_price ?? "0",
+      priceModifier: variant?.price_modifier ?? "0",
+      discountPercent: product?.discount_percent ?? null,
+    };
+  });
+}
+
+/**
+ * Add item to cart. Upserts: if (user, product, variant) exists, increments quantity.
+ * Caps at available stock. Returns the new quantity.
+ */
+export async function addCartItem(
+  userId: number,
+  productId: number,
+  variantId: number,
+  quantity: number
+): Promise<{ quantity: number }> {
+  // Fetch current stock
+  const db = await getDb();
+  if (db) {
+    try {
+      const [variant] = await db
+        .select({ stock: storeProductVariants.stock })
+        .from(storeProductVariants)
+        .where(eq(storeProductVariants.id, variantId))
+        .limit(1);
+
+      if (!variant) throw new TRPCError({ code: "NOT_FOUND", message: "Variant not found" });
+
+      const [existing] = await db
+        .select()
+        .from(storeCartItems)
+        .where(
+          and(
+            eq(storeCartItems.userId, userId),
+            eq(storeCartItems.productId, productId),
+            eq(storeCartItems.variantId, variantId)
+          )
+        )
+        .limit(1);
+
+      const newQty = Math.min((existing?.quantity ?? 0) + quantity, variant.stock);
+      if (newQty <= 0) throw new TRPCError({ code: "BAD_REQUEST", message: "Out of stock" });
+
+      if (existing) {
+        await db
+          .update(storeCartItems)
+          .set({ quantity: newQty })
+          .where(eq(storeCartItems.id, existing.id));
+      } else {
+        await db.insert(storeCartItems).values({
+          userId,
+          productId,
+          variantId,
+          quantity: newQty,
+        });
+      }
+
+      return { quantity: newQty };
+    } catch (e) {
+      if (e instanceof TRPCError) throw e;
+      console.warn("[Store] addCartItem direct query failed, trying REST:", (e as Error).message);
+    }
+  }
+
+  // REST API fallback
+  const { supabaseAdmin } = await import("./lib/supabase");
+  const { data: variant } = await supabaseAdmin
+    .from("store_product_variants")
+    .select("stock")
+    .eq("id", variantId)
+    .single();
+
+  if (!variant) throw new TRPCError({ code: "NOT_FOUND", message: "Variant not found" });
+
+  const { data: existing } = await supabaseAdmin
+    .from("store_cart_items")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("product_id", productId)
+    .eq("variant_id", variantId)
+    .limit(1)
+    .single();
+
+  const newQty = Math.min((existing?.quantity ?? 0) + quantity, variant.stock);
+  if (newQty <= 0) throw new TRPCError({ code: "BAD_REQUEST", message: "Out of stock" });
+
+  if (existing) {
+    await supabaseAdmin
+      .from("store_cart_items")
+      .update({ quantity: newQty })
+      .eq("id", existing.id);
+  } else {
+    await supabaseAdmin
+      .from("store_cart_items")
+      .insert({ user_id: userId, product_id: productId, variant_id: variantId, quantity: newQty });
+  }
+
+  return { quantity: newQty };
+}
+
+/**
+ * Set exact quantity for a cart item. Capped at stock. Removes if qty <= 0.
+ */
+export async function updateCartItemQuantity(
+  userId: number,
+  productId: number,
+  variantId: number,
+  quantity: number
+): Promise<{ quantity: number }> {
+  if (quantity <= 0) {
+    await removeCartItem(userId, productId, variantId);
+    return { quantity: 0 };
+  }
+
+  const db = await getDb();
+  if (db) {
+    try {
+      const [variant] = await db
+        .select({ stock: storeProductVariants.stock })
+        .from(storeProductVariants)
+        .where(eq(storeProductVariants.id, variantId))
+        .limit(1);
+
+      if (!variant) throw new TRPCError({ code: "NOT_FOUND", message: "Variant not found" });
+
+      const cappedQty = Math.min(quantity, variant.stock);
+
+      await db
+        .update(storeCartItems)
+        .set({ quantity: cappedQty })
+        .where(
+          and(
+            eq(storeCartItems.userId, userId),
+            eq(storeCartItems.productId, productId),
+            eq(storeCartItems.variantId, variantId)
+          )
+        );
+
+      return { quantity: cappedQty };
+    } catch (e) {
+      if (e instanceof TRPCError) throw e;
+      console.warn("[Store] updateCartItemQuantity direct query failed, trying REST:", (e as Error).message);
+    }
+  }
+
+  // REST API fallback
+  const { supabaseAdmin } = await import("./lib/supabase");
+  const { data: variant } = await supabaseAdmin
+    .from("store_product_variants")
+    .select("stock")
+    .eq("id", variantId)
+    .single();
+
+  if (!variant) throw new TRPCError({ code: "NOT_FOUND", message: "Variant not found" });
+
+  const cappedQty = Math.min(quantity, variant.stock);
+
+  await supabaseAdmin
+    .from("store_cart_items")
+    .update({ quantity: cappedQty })
+    .eq("user_id", userId)
+    .eq("product_id", productId)
+    .eq("variant_id", variantId);
+
+  return { quantity: cappedQty };
+}
+
+/**
+ * Remove a specific item from the cart.
+ */
+export async function removeCartItem(
+  userId: number,
+  productId: number,
+  variantId: number
+): Promise<void> {
+  const db = await getDb();
+  if (db) {
+    try {
+      await db
+        .delete(storeCartItems)
+        .where(
+          and(
+            eq(storeCartItems.userId, userId),
+            eq(storeCartItems.productId, productId),
+            eq(storeCartItems.variantId, variantId)
+          )
+        );
+      return;
+    } catch (e) {
+      console.warn("[Store] removeCartItem direct query failed, trying REST:", (e as Error).message);
+    }
+  }
+
+  const { supabaseAdmin } = await import("./lib/supabase");
+  await supabaseAdmin
+    .from("store_cart_items")
+    .delete()
+    .eq("user_id", userId)
+    .eq("product_id", productId)
+    .eq("variant_id", variantId);
+}
+
+/**
+ * Clear all cart items for a user.
+ */
+export async function clearCart(userId: number): Promise<void> {
+  const db = await getDb();
+  if (db) {
+    try {
+      await db.delete(storeCartItems).where(eq(storeCartItems.userId, userId));
+      return;
+    } catch (e) {
+      console.warn("[Store] clearCart direct query failed, trying REST:", (e as Error).message);
+    }
+  }
+
+  const { supabaseAdmin } = await import("./lib/supabase");
+  await supabaseAdmin.from("store_cart_items").delete().eq("user_id", userId);
+}
+
+/**
+ * Merge localStorage cart into DB cart on login.
+ * DB quantity wins on conflicts, capped at stock.
+ */
+export async function mergeCart(
+  userId: number,
+  items: { productId: number; variantId: number; quantity: number }[]
+): Promise<EnrichedCartItem[]> {
+  for (const item of items) {
+    try {
+      const db = await getDb();
+      if (db) {
+        const [variant] = await db
+          .select({ stock: storeProductVariants.stock })
+          .from(storeProductVariants)
+          .where(eq(storeProductVariants.id, item.variantId))
+          .limit(1);
+
+        if (!variant || variant.stock <= 0) continue;
+
+        const [existing] = await db
+          .select()
+          .from(storeCartItems)
+          .where(
+            and(
+              eq(storeCartItems.userId, userId),
+              eq(storeCartItems.productId, item.productId),
+              eq(storeCartItems.variantId, item.variantId)
+            )
+          )
+          .limit(1);
+
+        const newQty = Math.min(
+          Math.max(existing?.quantity ?? 0, item.quantity),
+          variant.stock
+        );
+
+        if (existing) {
+          await db
+            .update(storeCartItems)
+            .set({ quantity: newQty })
+            .where(eq(storeCartItems.id, existing.id));
+        } else {
+          await db.insert(storeCartItems).values({
+            userId,
+            productId: item.productId,
+            variantId: item.variantId,
+            quantity: newQty,
+          });
+        }
+      } else {
+        // REST fallback
+        const { supabaseAdmin } = await import("./lib/supabase");
+        const { data: variant } = await supabaseAdmin
+          .from("store_product_variants")
+          .select("stock")
+          .eq("id", item.variantId)
+          .single();
+
+        if (!variant || variant.stock <= 0) continue;
+
+        const { data: existing } = await supabaseAdmin
+          .from("store_cart_items")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("product_id", item.productId)
+          .eq("variant_id", item.variantId)
+          .limit(1)
+          .single();
+
+        const newQty = Math.min(
+          Math.max(existing?.quantity ?? 0, item.quantity),
+          variant.stock
+        );
+
+        if (existing) {
+          await supabaseAdmin
+            .from("store_cart_items")
+            .update({ quantity: newQty })
+            .eq("id", existing.id);
+        } else {
+          await supabaseAdmin
+            .from("store_cart_items")
+            .insert({ user_id: userId, product_id: item.productId, variant_id: item.variantId, quantity: newQty });
+        }
+      }
+    } catch (e) {
+      // Skip silently — individual item merge failure shouldn't block others
+      console.warn(`[Store] mergeCart: skipping item ${item.productId}/${item.variantId}:`, (e as Error).message);
+    }
+  }
+
+  return getCartItems(userId);
 }
