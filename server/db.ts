@@ -71,6 +71,9 @@ import {
   storeOrderItems,
   StoreOrderItem,
   InsertStoreOrderItem,
+  lessonKeypoints,
+  LessonKeypoint,
+  InsertLessonKeypoint,
 } from "../drizzle/schema";
 
 let _db: ReturnType<typeof drizzle> | null = null;

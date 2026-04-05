@@ -10,6 +10,7 @@ import {
   uuid,
   unique,
   index,
+  jsonb,
 } from "drizzle-orm/pg-core";
 
 /**
@@ -322,6 +323,11 @@ export const courseLessons = pgTable("course_lessons", {
   order: integer("order").notNull().default(0),
   isPublished: boolean("isPublished").default(true).notNull(),
   isFree: boolean("isFree").default(false).notNull(),
+  // AI Coach keypoint extraction status
+  keypointStatus: text("keypointStatus").$type<"none" | "extracting" | "complete" | "failed">().default("none").notNull(),
+  keypointCount: integer("keypointCount").default(0).notNull(),
+  keypointVersion: integer("keypointVersion").default(0).notNull(),
+  keypointExtractedAt: timestamp("keypointExtractedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().notNull().$onUpdate(() => new Date()),
 }, (table) => ({
@@ -332,6 +338,26 @@ export const courseLessons = pgTable("course_lessons", {
 
 export type CourseLesson = typeof courseLessons.$inferSelect;
 export type InsertCourseLesson = typeof courseLessons.$inferInsert;
+
+/**
+ * Lesson keypoints — teacher's reference pose landmarks per timestamp
+ * Used by AI Coach to compare student movement in real time
+ */
+export const lessonKeypoints = pgTable("lesson_keypoints", {
+  id: serial("id").primaryKey(),
+  lessonId: integer("lessonId").notNull(),
+  version: integer("version").notNull().default(1),
+  timestampMs: integer("timestampMs").notNull(),
+  landmarks: jsonb("landmarks").notNull(),
+  processedAt: timestamp("processedAt").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => ({
+  lessonVersionTimestampIdx: index("keypoints_lesson_version_ts_idx").on(table.lessonId, table.version, table.timestampMs),
+  lessonIdIdx: index("keypoints_lessonId_idx").on(table.lessonId),
+}));
+
+export type LessonKeypoint = typeof lessonKeypoints.$inferSelect;
+export type InsertLessonKeypoint = typeof lessonKeypoints.$inferInsert;
 
 /**
  * User lesson progress - tracks which lessons users have completed
