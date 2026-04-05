@@ -48,7 +48,9 @@ import AccountSettings from "./pages/AccountSettings";
 import AdminBlog from "./pages/admin/Blog";
 import Unsubscribe from "./pages/Unsubscribe";
 import Store from "./pages/Store";
+import StoreSuccess from "./pages/StoreSuccess";
 import StoreManager from "./pages/admin/StoreManager";
+import { CartProvider } from "./contexts/CartContext";
 
 
 function Router() {
@@ -78,6 +80,7 @@ function Router() {
       <Route path="/account" component={AccountSettings} />
       <Route path="/unsubscribe" component={Unsubscribe} />
       <Route path="/store" component={Store} />
+      <Route path="/store/success" component={StoreSuccess} />
 
       <Route path="/admin">{() => <AdminGuard><AdminDashboard /></AdminGuard>}</Route>
       <Route path="/admin/courses">{() => <AdminGuard><AdminCourses /></AdminGuard>}</Route>
@@ -124,6 +127,7 @@ function App() {
   return (
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
+        <CartProvider>
         <TooltipProvider>
           <Toaster />
           <Router />
@@ -133,6 +137,7 @@ function App() {
             userName={user?.name || undefined}
           />
         </TooltipProvider>
+        </CartProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );
