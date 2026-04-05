@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
 
 export interface AdminNotification {
-  type: 'booking' | 'registration' | 'purchase' | 'testimonial';
+  type: 'booking' | 'registration' | 'purchase' | 'testimonial' | 'store_order' | 'stock_issue';
   title: string;
   message: string;
   timestamp: number;
@@ -49,6 +49,27 @@ class AdminNotificationEmitter extends EventEmitter {
       message: `${testimonial.userName} submitted a testimonial`,
       timestamp: Date.now(),
       data: testimonial,
+    };
+    this.emit('notification', notification);
+  }
+  emitStoreOrder(order: any) {
+    const notification: AdminNotification = {
+      type: 'store_order',
+      title: 'New Store Order',
+      message: `Order #${order.id} — €${order.total} from ${order.email}`,
+      timestamp: Date.now(),
+      data: order,
+    };
+    this.emit('notification', notification);
+  }
+
+  emitStockIssue(orderId: number, variantKey: string, stock: number) {
+    const notification: AdminNotification = {
+      type: 'stock_issue',
+      title: 'Stock Issue',
+      message: `Order #${orderId}: ${variantKey} went to stock=${stock}`,
+      timestamp: Date.now(),
+      data: { orderId, variantKey, stock },
     };
     this.emit('notification', notification);
   }
