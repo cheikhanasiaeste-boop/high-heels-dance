@@ -258,7 +258,7 @@ async function handleStoreOrderCompleted(session: Stripe.Checkout.Session) {
   }>;
 
   // Extract shipping from Stripe session
-  const shipping = session.shipping_details;
+  const shipping = (session as any).shipping_details;
   const address = shipping?.address;
 
   const order = await storeDb.createOrder(

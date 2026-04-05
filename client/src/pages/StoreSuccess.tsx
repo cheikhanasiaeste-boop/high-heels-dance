@@ -231,8 +231,8 @@ export default function StoreSuccess() {
             </h2>
             <div className="space-y-3">
               {order.items.map((item: {
-                productTitle: string;
-                variantKey: string;
+                productTitle?: string | undefined;
+                variantKey: string | null;
                 quantity: number;
                 unitPrice: number | string;
               }, idx: number) => {
@@ -244,10 +244,10 @@ export default function StoreSuccess() {
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-white/90 font-medium truncate">
-                        {item.productTitle}
+                        {item.productTitle ?? "Product"}
                       </p>
                       <p className="text-white/40 text-sm mt-0.5">
-                        {item.variantKey}
+                        {item.variantKey ?? ""}
                       </p>
                     </div>
                     <div className="text-right shrink-0">

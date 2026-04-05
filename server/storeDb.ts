@@ -1108,7 +1108,7 @@ export async function getCartItems(userId: number): Promise<EnrichedCartItem[]> 
         .where(eq(storeCartItems.userId, userId));
 
       // Get first image per product
-      const productIds = [...new Set(rows.map((r) => r.productId))];
+      const productIds = Array.from(new Set(rows.map((r) => r.productId)));
       const images = productIds.length > 0
         ? await db
             .select()
@@ -1154,7 +1154,7 @@ export async function getCartItems(userId: number): Promise<EnrichedCartItem[]> 
   if (error) throw new Error(error.message);
   if (!cartRows || cartRows.length === 0) return [];
 
-  const productIds = [...new Set(cartRows.map((r: any) => r.product_id))];
+  const productIds = Array.from(new Set(cartRows.map((r: any) => r.product_id)));
   const variantIds = cartRows.map((r: any) => r.variant_id);
 
   const [productsRes, variantsRes, imagesRes] = await Promise.all([
@@ -1608,7 +1608,7 @@ export async function getOrderByStripeSession(
         .leftJoin(storeProducts, eq(storeProducts.id, storeOrderItems.productId))
         .where(eq(storeOrderItems.orderId, order.id));
 
-      return { ...order, items };
+      return { ...order, items: items.map(i => ({ ...i, productTitle: i.productTitle ?? undefined })) };
     } catch (e) {
       console.warn("[Store] getOrderByStripeSession direct query failed, trying REST:", (e as Error).message);
     }
@@ -1631,7 +1631,7 @@ export async function getOrderByStripeSession(
     .select("*")
     .eq("order_id", order.id);
 
-  const productIds = [...new Set((itemsData ?? []).map((i: any) => i.product_id))];
+  const productIds = Array.from(new Set((itemsData ?? []).map((i: any) => i.product_id)));
   const { data: products } = await supabaseAdmin
     .from("store_products")
     .select("id, title")
@@ -1817,7 +1817,7 @@ export async function getOrderById(
         .leftJoin(storeProducts, eq(storeProducts.id, storeOrderItems.productId))
         .where(eq(storeOrderItems.orderId, id));
 
-      return { ...order, items };
+      return { ...order, items: items.map(i => ({ ...i, productTitle: i.productTitle ?? undefined })) };
     } catch (e) {
       console.warn("[Store] getOrderById direct query failed, trying REST:", (e as Error).message);
     }
@@ -1839,7 +1839,7 @@ export async function getOrderById(
     .select("*")
     .eq("order_id", id);
 
-  const productIds = [...new Set((itemsData ?? []).map((i: any) => i.product_id))];
+  const productIds = Array.from(new Set((itemsData ?? []).map((i: any) => i.product_id)));
   const { data: products } = await supabaseAdmin
     .from("store_products")
     .select("id, title")
