@@ -19,6 +19,18 @@ interface AiCoachOutput {
   isReady: boolean;
   isActive: boolean;
   error: string | null;
+  movementEnergy: number;
+  isDancing: boolean;
+  accumulatedStats: {
+    activeSeconds: number;
+    scores: number[];
+    jointScoreHistory: Map<string, number[]>;
+    bestScore: number;
+    worstScore: number;
+    feedbackCount: number;
+    lastScoreSampleTime: number;
+  };
+  incrementFeedbackCount: () => void;
 }
 
 export function useAiCoach({ lessonId, videoElement, enabled }: AiCoachInput): AiCoachOutput {
@@ -28,6 +40,18 @@ export function useAiCoach({ lessonId, videoElement, enabled }: AiCoachInput): A
   const [isReady, setIsReady] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [movementEnergy, setMovementEnergy] = useState(0);
+  const [isDancing, setIsDancing] = useState(true);
+  const nonDanceCountRef = useRef(0);
+  const accumulatedStatsRef = useRef({
+    activeSeconds: 0,
+    scores: [] as number[],
+    jointScoreHistory: new Map<string, number[]>(),
+    bestScore: 0,
+    worstScore: 100,
+    feedbackCount: 0,
+    lastScoreSampleTime: 0,
+  });
 
   const workerRef = useRef<Worker | null>(null);
   const cameraStreamRef = useRef<MediaStream | null>(null);
@@ -145,6 +169,32 @@ export function useAiCoach({ lessonId, videoElement, enabled }: AiCoachInput): A
 
         const currentMs = videoElement.currentTime * 1000;
 
+        // Compute movement energy from teacher reference keypoints
+        const currentRef = findClosestKeypoint(keypointsRef.current, currentMs);
+        const prevRef = findClosestKeypoint(keypointsRef.current, currentMs - 1000);
+
+        if (currentRef && prevRef) {
+          let totalDelta = 0;
+          for (let i = 0; i < Math.min(currentRef.length, prevRef.length); i++) {
+            const dx = currentRef[i].x - prevRef[i].x;
+            const dy = currentRef[i].y - prevRef[i].y;
+            totalDelta += Math.sqrt(dx * dx + dy * dy);
+          }
+          const energy = totalDelta / 33;
+          setMovementEnergy(energy);
+
+          if (energy < 0.008) {
+            nonDanceCountRef.current++;
+          } else {
+            nonDanceCountRef.current = 0;
+          }
+
+          const dancing = nonDanceCountRef.current < 9; // 3 seconds at 3fps
+          setIsDancing(dancing);
+
+          if (!dancing) return; // Skip comparison during non-dance
+        }
+
         // Prefetch next chunk if needed
         const chunkProgress = (currentMs - chunkStartRef.current) / CHUNK_DURATION_MS;
         if (chunkProgress > PREFETCH_THRESHOLD && chunkEndRef.current < currentMs + CHUNK_DURATION_MS) {
@@ -177,6 +227,23 @@ export function useAiCoach({ lessonId, videoElement, enabled }: AiCoachInput): A
                 const result = comparePoses(studentPose, teacherPose);
                 setScore(result.score);
                 setJointScores(result.jointScores);
+
+                // Accumulate stats for feedback system
+                const stats = accumulatedStatsRef.current;
+                stats.activeSeconds += SAMPLE_INTERVAL_MS / 1000;
+                stats.bestScore = Math.max(stats.bestScore, result.score);
+                stats.worstScore = Math.min(stats.worstScore, result.score);
+
+                if (stats.activeSeconds - stats.lastScoreSampleTime >= 3) {
+                  stats.scores.push(result.score);
+                  stats.lastScoreSampleTime = stats.activeSeconds;
+                }
+
+                for (const js of result.jointScores) {
+                  const history = stats.jointScoreHistory.get(js.name) || [];
+                  history.push(js.score);
+                  stats.jointScoreHistory.set(js.name, history);
+                }
               }
             } else if (e.data.type === "skip") {
               // No pose detected — clear student landmarks
@@ -239,6 +306,8 @@ export function useAiCoach({ lessonId, videoElement, enabled }: AiCoachInput): A
       setJointScores([]);
       setStudentLandmarks(null);
       setError(null);
+      setMovementEnergy(0);
+      setIsDancing(true);
     }
   }, [enabled]);
 
@@ -263,7 +332,17 @@ export function useAiCoach({ lessonId, videoElement, enabled }: AiCoachInput): A
     keypointsRef.current = [];
     chunkStartRef.current = 0;
     chunkEndRef.current = 0;
+    accumulatedStatsRef.current = {
+      activeSeconds: 0, scores: [], jointScoreHistory: new Map(),
+      bestScore: 0, worstScore: 100, feedbackCount: 0, lastScoreSampleTime: 0,
+    };
+    nonDanceCountRef.current = 0;
   }
 
-  return { score, jointScores, studentLandmarks, isReady, isActive, error };
+  return {
+    score, jointScores, studentLandmarks, isReady, isActive, error,
+    movementEnergy, isDancing,
+    accumulatedStats: accumulatedStatsRef.current,
+    incrementFeedbackCount: () => { accumulatedStatsRef.current.feedbackCount++; },
+  };
 }
